@@ -33,7 +33,7 @@ val Team.opponent: Team
 
 class HeroUnit(id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(id), Hero by heroModel {
 
-    val travelDistance: Int
+    val travelPower: Int
         get() = when (heroModel.moveType) {
             MoveType.CAVALRY -> 3
             MoveType.INFANTRY -> 2
@@ -118,9 +118,7 @@ class StationaryObject(id: Int, terrain: Terrain) : ChessPiece(id) {
 
     init {
         when (terrain) {
-            Terrain.WALL,
-            Terrain.OBSTACLE1,
-            Terrain.OBSTACLE2 -> Unit
+            Terrain.WALL -> Unit
             else -> throw IllegalArgumentException()
         }
     }
@@ -128,7 +126,22 @@ class StationaryObject(id: Int, terrain: Terrain) : ChessPiece(id) {
 
 enum class Terrain {
     WALL,
-    OBSTACLE1,
-    OBSTACLE2,
-    TREE
+    PLAIN,
+    FOREST,
+    MOUNTAIN,
+    TRENCH;
+
+    fun moveCost(moveType: MoveType): Int? {
+        return when (this) {
+            WALL -> null
+            PLAIN -> 1
+            FOREST -> when (moveType) {
+                MoveType.INFANTRY -> 2
+                MoveType.CAVALRY -> null
+                else -> 1
+            }
+            MOUNTAIN -> if (moveType == MoveType.FLYING) 1 else null
+            TRENCH -> if (moveType == MoveType.CAVALRY) 3 else 1
+        }
+    }
 }

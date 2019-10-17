@@ -12,6 +12,10 @@ object LanceFighter : HeroModel(MoveType.INFANTRY, IronLance, null, Stat(23, 13,
 object SwordFighter : HeroModel(MoveType.INFANTRY, IronSword, null, Stat(23, 17, 12, 8, 6), emptyList(), true)
 
 object TestMap : BattleMap {
+    override fun getTerrain(position: Position): Terrain {
+        return Terrain.PLAIN
+    }
+
     override val size: Position = Position(8,8)
     val map = mapOf(
         Position(1, 2) to HeroUnit(1, Alfonse, Team.PLAYER),

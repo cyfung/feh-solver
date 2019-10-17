@@ -12,12 +12,15 @@ class BattleState private constructor(
         NOTHING
     }
 
+    private val maxX: Int = battleMap.size.x - 1
+    private val maxY: Int = battleMap.size.y - 1
+
     var phrase = phrase
         private set
     val reverseMap = mutableMapOf<HeroUnit, Position>()
-    val unitIdMap = forwardMap.values.associateBy { it.id }
+    private val unitIdMap = forwardMap.values.associateBy { it.id }
     val playerUnits = reverseMap.keys.asSequence().filter { it.team == Team.PLAYER }
-    val enemyUnits = reverseMap.keys.asSequence().filter { it.team == Team.ENEMY }
+    private val enemyUnits = reverseMap.keys.asSequence().filter { it.team == Team.ENEMY }
 
     fun copy(): BattleState {
         val newForwardMap = mutableMapOf<Position, ChessPiece>()
@@ -347,9 +350,7 @@ class BattleState private constructor(
     }
 
     fun playerMove(unitMovement: UnitMovement): MovementResult {
-        if (phrase % 2 != 0) {
-            throw IllegalStateException()
-        }
+        check(phrase % 2 == 0)
         val movementResult = executeMove(unitMovement)
         if (movementResult != null) {
             return movementResult
@@ -372,12 +373,89 @@ class BattleState private constructor(
             executeMove(move)
             move
         }.toList()
+
+        unitsAndPos(Team.ENEMY).filter { it.key.available }.filterNot { it.key.isEmptyHanded }.map {
+
+        }
         turnEnd()
         return movements
     }
 
-    fun getHeroUnitPosition(id: Int): Position? {
-        val heroUnit = unitIdMap[id] ?: throw IllegalStateException()
-        return reverseMap[heroUnit]
+    fun moveTargets(heroUnit: HeroUnit): List<Position> {
+        return moveTargets(heroUnit, reverseMap[heroUnit] ?: throw IllegalArgumentException())
     }
+
+    private fun moveTargets(heroUnit: HeroUnit, position: Position): List<Position> {
+        val moveTargets = mutableSetOf<Position>()
+        val visited = mutableSetOf<Position>()
+        var processing = listOf(Movable(position, heroUnit.travelPower, false))
+        val moveType = heroUnit.moveType
+
+        while (processing.isNotEmpty()) {
+            processing = processing.asSequence().flatMap { movable ->
+                if (!movable.passThroughOnly) {
+                    moveTargets.add(movable.position)
+                }
+                if (movable.travelPower == 0) {
+                    return@flatMap emptySequence<Movable>()
+                }
+                movable.position.surroundings.mapNotNull {
+                    if (!visited.add(it)) {
+                        return@mapNotNull null
+                    }
+                    val passThroughOnly = when (val obstacle = forwardMap[it]) {
+                        is StationaryObject -> return@mapNotNull null
+                        is HeroUnit -> if (obstacle.team == heroUnit.team) {
+                            true
+                        } else {
+                            return@mapNotNull null
+                        }
+                        null -> false
+                    }
+                    val terrain = battleMap.getTerrain(it)
+                    val moveCost = terrain.moveCost(moveType) ?: return@mapNotNull null
+                    val remaining = movable.travelPower - moveCost
+                    if (remaining < 0) {
+                        return@mapNotNull null
+                    } else if (remaining == 0 && passThroughOnly) {
+                        return@mapNotNull null
+                    }
+                    Movable(it, remaining, passThroughOnly)
+                }
+            }.toList()
+        }
+        return moveTargets.toList()
+    }
+
+    fun attackTargets(
+        heroUnit: HeroUnit,
+        position: Position
+    ): Sequence<HeroUnit> {
+        if (heroUnit.isEmptyHanded) {
+            return emptySequence()
+        }
+        val range = heroUnit.weaponType.range
+
+        return unitsAndPos(heroUnit.team.opponent).filter { it.value.distanceTo(position) == range }.map { it.key }
+    }
+
+    private class Movable(val position: Position, val travelPower: Int, val passThroughOnly: Boolean)
+
+    private val Position.surroundings: Sequence<Position>
+        get() {
+            return sequence {
+                if (x > 0) {
+                    yield(Position(x - 1, y))
+                }
+                if (y > 0) {
+                    yield(Position(x, y - 1))
+                }
+                if (x < maxX) {
+                    yield(Position(x + 1, y))
+                }
+                if (y < maxY) {
+                    yield(Position(x, y + 1))
+                }
+            }
+        }
 }

@@ -19,7 +19,7 @@ class BattleSolver(private val battleMap: BattleMap) {
                 }
                 val newState = battleState.copy()
                 executeMove(newState, nextMove, steps)
-                if (newState.phrase > 0) {
+                if (newState.phrase > 10) {
                     lastPlayerMovement = nextMove
                     continue@mainLoop
                 }
@@ -65,9 +65,9 @@ class BattleSolver(private val battleMap: BattleMap) {
                     if (nextAvailableUnit == null) {
                         null
                     } else {
-                        val moveTargets = moveTargets(battleState, nextAvailableUnit).iterator()
+                        val moveTargets = battleState.moveTargets(nextAvailableUnit).iterator()
                         val move = moveTargets.next()
-                        val attackTargets = attackTargets(battleState, nextAvailableUnit, move).iterator()
+                        val attackTargets = battleState.attackTargets(nextAvailableUnit, move).iterator()
                         val attack = attackTargets.nextOrNull()
                         lastPlayerMovement.copy(
                             heroUnit = nextAvailableUnit,
@@ -80,7 +80,7 @@ class BattleSolver(private val battleMap: BattleMap) {
                     }
                 } else {
                     val attackTargets =
-                        attackTargets(battleState, lastPlayerMovement.heroUnit, nextMoveTarget).iterator()
+                        battleState.attackTargets(lastPlayerMovement.heroUnit, nextMoveTarget).iterator()
                     val attack = attackTargets.nextOrNull()
                     lastPlayerMovement.copy(
                         move = nextMoveTarget,
@@ -101,10 +101,9 @@ class BattleSolver(private val battleMap: BattleMap) {
                 throw IllegalStateException()
             }
             val heroUnit = availableUnits.next()
-            val moveTargets = moveTargets(battleState, heroUnit).iterator()
+            val moveTargets = battleState.moveTargets(heroUnit).iterator()
             val move = moveTargets.next()
-            val attackTargets = attackTargets(
-                battleState,
+            val attackTargets = battleState.attackTargets(
                 heroUnit,
                 move
             ).iterator()
@@ -137,47 +136,6 @@ class BattleSolver(private val battleMap: BattleMap) {
             next()
         } else {
             null
-        }
-    }
-
-    private fun attackTargets(
-        battleState: BattleState,
-        heroUnit: HeroUnit,
-        position: Position
-    ): Sequence<HeroUnit> {
-        if (heroUnit.isEmptyHanded) {
-            return emptySequence()
-        }
-        val range = heroUnit.weaponType.range
-
-        return battleState.unitsAndPos(Team.ENEMY).filter { it.value.distanceTo(position) == range }.map { it.key }
-    }
-
-    private fun moveTargets(battleState: BattleState, heroUnit: HeroUnit): Sequence<Position> {
-        val pos = battleState.reverseMap[heroUnit] ?: throw IllegalStateException()
-        return generateSequence(Position(0, 0)) {
-            nextPosition(it)
-        }.filter {
-            it == pos || battleState.forwardMap[it] == null
-        }.filter {
-            it.distanceTo(pos) <= heroUnit.travelDistance
-        }
-    }
-
-    private fun nextPosition(position: Position?): Position? {
-        if (position == null) {
-            return Position(0, 0)
-        }
-        val newX = position.x + 1
-        return if (newX == battleMap.size.x) {
-            val newY = position.y + 1
-            if (newY == battleMap.size.y) {
-                null
-            } else {
-                Position(0, newY)
-            }
-        } else {
-            Position(newX, position.y)
         }
     }
 
