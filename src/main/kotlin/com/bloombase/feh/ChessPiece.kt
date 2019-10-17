@@ -17,22 +17,7 @@ sealed class ChessPiece(val id: Int) {
     }
 }
 
-enum class Team {
-    PLAYER,
-    ENEMY;
-}
-
-val Team.opponent: Team
-    get() {
-        return when (this) {
-            Team.PLAYER -> Team.ENEMY
-            Team.ENEMY -> Team.PLAYER
-        }
-    }
-
-
 class HeroUnit(id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(id), Hero by heroModel {
-
     val travelPower: Int
         get() = when (heroModel.moveType) {
             MoveType.CAVALRY -> 3
@@ -60,6 +45,29 @@ class HeroUnit(id: Int, private val heroModel: HeroModel, val team: Team) : Ches
         newUnit.currentHp = currentHp
         newUnit.cooldown = cooldown
         return newUnit
+    }
+
+    fun getColorAdvantage(foe: HeroUnit): Int {
+        val attackerColor = weaponType.color
+        val defenderColor = foe.weaponType.color
+        return when (attackerColor) {
+            Color.RED -> when (defenderColor) {
+                Color.BLUE -> -20
+                Color.GREEN -> 20
+                else -> 0
+            }
+            Color.GREEN -> when (defenderColor) {
+                Color.BLUE -> 20
+                Color.RED -> -20
+                else -> 0
+            }
+            Color.BLUE -> when (defenderColor) {
+                Color.GREEN -> -20
+                Color.RED -> 20
+                else -> 0
+            }
+            Color.COLORLESS -> 0
+        }
     }
 
     fun takeDamage(damage: Int): Boolean {
@@ -124,24 +132,3 @@ class StationaryObject(id: Int, terrain: Terrain) : ChessPiece(id) {
     }
 }
 
-enum class Terrain {
-    WALL,
-    PLAIN,
-    FOREST,
-    MOUNTAIN,
-    TRENCH;
-
-    fun moveCost(moveType: MoveType): Int? {
-        return when (this) {
-            WALL -> null
-            PLAIN -> 1
-            FOREST -> when (moveType) {
-                MoveType.INFANTRY -> 2
-                MoveType.CAVALRY -> null
-                else -> 1
-            }
-            MOUNTAIN -> if (moveType == MoveType.FLYING) 1 else null
-            TRENCH -> if (moveType == MoveType.CAVALRY) 3 else 1
-        }
-    }
-}

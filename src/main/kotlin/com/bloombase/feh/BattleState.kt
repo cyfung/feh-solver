@@ -2,7 +2,7 @@ package com.bloombase.feh
 
 class BattleState private constructor(
     private val battleMap: BattleMap,
-    val forwardMap: MutableMap<Position, ChessPiece>,
+    private val forwardMap: MutableMap<Position, ChessPiece>,
     phrase: Int
 ) {
     enum class MovementResult {
@@ -22,7 +22,8 @@ class BattleState private constructor(
     val playerUnits = reverseMap.keys.asSequence().filter { it.team == Team.PLAYER }
     private val enemyUnits = reverseMap.keys.asSequence().filter { it.team == Team.ENEMY }
 
-    fun copy(): BattleState {
+    fun copyOnPlayerPhrase(): BattleState {
+        check(isPlayerPhrase())
         val newForwardMap = mutableMapOf<Position, ChessPiece>()
         forwardMap.mapValuesTo(newForwardMap) { it.value.copy() }
         return BattleState(battleMap, newForwardMap, phrase)
@@ -90,6 +91,10 @@ class BattleState private constructor(
                 it.apply(this, heroUnit)
             }
         }
+        if (team == Team.PLAYER)
+            unitsAndPos(team.opponent).forEach {
+
+            }
         return units
     }
 
@@ -242,6 +247,168 @@ class BattleState private constructor(
         return attackOrder
     }
 
+
+    private fun calculateDamage(
+        attacker: HeroUnit,
+        defender: HeroUnit,
+        attackerStat: Stat,
+        defenderStat: Stat
+    ): Int {
+        val targetRes = attacker.weaponType.targetRes
+        val defenderDefRes = if (targetRes) {
+            defenderStat.def
+        } else {
+            defenderStat.res
+        }
+        val effAtk = if (isEffective(attacker, defender)) {
+            attackerStat.atk * 3 / 2
+        } else {
+            attackerStat.atk
+        }
+        val colorAdvantage = attacker.getColorAdvantage(defender)
+        val atk = if (colorAdvantage != 0) {
+            effAtk + effAtk * colorAdvantage / 100
+        } else {
+            effAtk
+        }
+
+        return atk - defenderDefRes
+    }
+
+    private fun isEffective(attacker: HeroUnit, defender: HeroUnit): Boolean {
+        if (attacker.weaponType == Bow && defender.moveType == MoveType.FLYING) {
+            return true
+        }
+        return false
+    }
+
+    fun playerMove(unitMovement: UnitMovement): MovementResult {
+        check(isPlayerPhrase())
+        val movementResult = executeMove(unitMovement)
+        if (movementResult != null) {
+            return movementResult
+        }
+        if (playerUnits.none { it.available }) {
+            turnEnd()
+            return MovementResult.PHRASE_CHANGE
+        }
+        return MovementResult.NOTHING
+    }
+
+    private fun isPlayerPhrase() = phrase % 2 == 0
+
+    fun enemyMoves(): List<UnitMovement> {
+        val threadMap = unitsAndPos(Team.PLAYER).filterNot { it.key.isEmptyHanded }.flatMap {
+            moveTargets(it.key, it.value) { position, _ ->
+                when (forwardMap[position]) {
+                    is StationaryObject -> null
+                    else -> false
+                }
+            }.asSequence()
+        }.groupingBy { it }.eachCount()
+
+        val movements = unitsAndPos(Team.ENEMY).map {
+            val move = EnemyMovement(
+                heroUnit = it.key.id,
+                move = it.value,
+                attack = null,
+                assist = null
+            )
+            executeMove(move)
+            move
+        }.toList()
+
+        unitsAndPos(Team.ENEMY).filter { it.key.available }.filterNot { it.key.isEmptyHanded }.map {
+            moveTargets(it.key, it.value).sortedWith()
+        }
+        turnEnd()
+        return movements
+    }
+
+    fun moveTargets(heroUnit: HeroUnit): List<Position> {
+        return moveTargets(heroUnit, reverseMap[heroUnit] ?: throw IllegalArgumentException(), this::checkObstacle)
+    }
+
+    private fun checkObstacle(position: Position, team: Team): Boolean? {
+        return when (val obstacle = forwardMap[position]) {
+            is StationaryObject -> null
+            is HeroUnit -> if (obstacle.team == team) {
+                true
+            } else {
+                null
+            }
+            null -> false
+        }
+    }
+
+    private fun moveTargets(
+        heroUnit: HeroUnit,
+        position: Position,
+        passThroughCheck: (Position, Team) -> Boolean?
+    ): List<Position> {
+        val moveTargets = mutableSetOf<Position>()
+        val visited = mutableSetOf<Position>()
+        var processing = listOf(Movable(position, heroUnit.travelPower, false))
+        val moveType = heroUnit.moveType
+
+        while (processing.isNotEmpty()) {
+            processing = processing.asSequence().flatMap { movable ->
+                if (!movable.passThroughOnly) {
+                    moveTargets.add(movable.position)
+                }
+                if (movable.travelPower == 0) {
+                    return@flatMap emptySequence<Movable>()
+                }
+                movable.position.surroundings.mapNotNull {
+                    if (!visited.add(it)) {
+                        return@mapNotNull null
+                    }
+                    val passThroughOnly = passThroughCheck(it, heroUnit.team) ?: return@mapNotNull null
+                    val terrain = battleMap.getTerrain(it)
+                    val moveCost = terrain.moveCost(moveType) ?: return@mapNotNull null
+                    val remaining = movable.travelPower - moveCost
+                    if (remaining < 0) {
+                        return@mapNotNull null
+                    } else if (remaining == 0 && passThroughOnly) {
+                        return@mapNotNull null
+                    }
+                    Movable(it, remaining, passThroughOnly)
+                }
+            }.toList()
+        }
+        return moveTargets.toList()
+    }
+
+    fun attackTargets(
+        heroUnit: HeroUnit,
+        position: Position
+    ): Sequence<HeroUnit> {
+        if (heroUnit.isEmptyHanded) {
+            return emptySequence()
+        }
+        val range = heroUnit.weaponType.range
+
+        return unitsAndPos(heroUnit.team.opponent).filter { it.value.distanceTo(position) == range }.map { it.key }
+    }
+
+    private val Position.surroundings: Sequence<Position>
+        get() {
+            return sequence {
+                if (x > 0) {
+                    yield(Position(x - 1, y))
+                }
+                if (y > 0) {
+                    yield(Position(x, y - 1))
+                }
+                if (x < maxX) {
+                    yield(Position(x + 1, y))
+                }
+                if (y < maxY) {
+                    yield(Position(x, y + 1))
+                }
+            }
+        }
+
     private inline fun skillMethodAny(
         attacker: HeroUnit,
         defender: HeroUnit,
@@ -291,171 +458,19 @@ class BattleState private constructor(
                     )
                 }.ifEmpty { sequenceOf(Stat.ZERO) }.reduce(Stat::plus)
 
-
-    private fun calculateDamage(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        attackerStat: Stat,
-        defenderStat: Stat
-    ): Int {
-        val targetRes = attacker.weaponType.targetRes
-        val defenderDefRes = if (targetRes) {
-            defenderStat.def
-        } else {
-            defenderStat.res
-        }
-        val effAtk = if (isEffective(attacker, defender)) {
-            attackerStat.atk * 3 / 2
-        } else {
-            attackerStat.atk
-        }
-        val colorAdvantage = getColorAdvantage(attacker, defender)
-        val atk = if (colorAdvantage != 0) {
-            effAtk + effAtk * colorAdvantage / 100
-        } else {
-            effAtk
-        }
-
-        return atk - defenderDefRes
-    }
-
-    private fun isEffective(attacker: HeroUnit, defender: HeroUnit): Boolean {
-        if (attacker.weaponType == Bow && defender.moveType == MoveType.FLYING) {
-            return true
-        }
-        return false
-    }
-
-    private fun getColorAdvantage(attacker: HeroUnit, defender: HeroUnit): Int {
-        val attackerColor = attacker.weaponType.color
-        val defenderColor = defender.weaponType.color
-        return when (attackerColor) {
-            Color.RED -> when (defenderColor) {
-                Color.BLUE -> -20
-                Color.GREEN -> 20
-                else -> 0
+    private fun positionComparator(threadMap: Map<Position, Int>) = compareBy<Position>(
+        {
+            if (battleMap.getTerrain(it) == Terrain.DEFENSE_TILE) {
+                0
+            } else {
+                1
             }
-            Color.GREEN -> when (defenderColor) {
-                Color.BLUE -> 20
-                Color.RED -> -20
-                else -> 0
-            }
-            Color.BLUE -> when (defenderColor) {
-                Color.GREEN -> -20
-                Color.RED -> 20
-                else -> 0
-            }
-            Color.COLORLESS -> 0
+        },
+        {
+            threadMap[it] ?: 0
         }
-    }
-
-    fun playerMove(unitMovement: UnitMovement): MovementResult {
-        check(phrase % 2 == 0)
-        val movementResult = executeMove(unitMovement)
-        if (movementResult != null) {
-            return movementResult
-        }
-        if (playerUnits.none { it.available }) {
-            turnEnd()
-            return MovementResult.PHRASE_CHANGE
-        }
-        return MovementResult.NOTHING
-    }
-
-    fun enemyMoves(): List<UnitMovement> {
-        val movements = unitsAndPos(Team.ENEMY).map {
-            val move = EnemyMovement(
-                heroUnit = it.key.id,
-                move = it.value,
-                attack = null,
-                assist = null
-            )
-            executeMove(move)
-            move
-        }.toList()
-
-        unitsAndPos(Team.ENEMY).filter { it.key.available }.filterNot { it.key.isEmptyHanded }.map {
-
-        }
-        turnEnd()
-        return movements
-    }
-
-    fun moveTargets(heroUnit: HeroUnit): List<Position> {
-        return moveTargets(heroUnit, reverseMap[heroUnit] ?: throw IllegalArgumentException())
-    }
-
-    private fun moveTargets(heroUnit: HeroUnit, position: Position): List<Position> {
-        val moveTargets = mutableSetOf<Position>()
-        val visited = mutableSetOf<Position>()
-        var processing = listOf(Movable(position, heroUnit.travelPower, false))
-        val moveType = heroUnit.moveType
-
-        while (processing.isNotEmpty()) {
-            processing = processing.asSequence().flatMap { movable ->
-                if (!movable.passThroughOnly) {
-                    moveTargets.add(movable.position)
-                }
-                if (movable.travelPower == 0) {
-                    return@flatMap emptySequence<Movable>()
-                }
-                movable.position.surroundings.mapNotNull {
-                    if (!visited.add(it)) {
-                        return@mapNotNull null
-                    }
-                    val passThroughOnly = when (val obstacle = forwardMap[it]) {
-                        is StationaryObject -> return@mapNotNull null
-                        is HeroUnit -> if (obstacle.team == heroUnit.team) {
-                            true
-                        } else {
-                            return@mapNotNull null
-                        }
-                        null -> false
-                    }
-                    val terrain = battleMap.getTerrain(it)
-                    val moveCost = terrain.moveCost(moveType) ?: return@mapNotNull null
-                    val remaining = movable.travelPower - moveCost
-                    if (remaining < 0) {
-                        return@mapNotNull null
-                    } else if (remaining == 0 && passThroughOnly) {
-                        return@mapNotNull null
-                    }
-                    Movable(it, remaining, passThroughOnly)
-                }
-            }.toList()
-        }
-        return moveTargets.toList()
-    }
-
-    fun attackTargets(
-        heroUnit: HeroUnit,
-        position: Position
-    ): Sequence<HeroUnit> {
-        if (heroUnit.isEmptyHanded) {
-            return emptySequence()
-        }
-        val range = heroUnit.weaponType.range
-
-        return unitsAndPos(heroUnit.team.opponent).filter { it.value.distanceTo(position) == range }.map { it.key }
-    }
-
-    private class Movable(val position: Position, val travelPower: Int, val passThroughOnly: Boolean)
-
-    private val Position.surroundings: Sequence<Position>
-        get() {
-            return sequence {
-                if (x > 0) {
-                    yield(Position(x - 1, y))
-                }
-                if (y > 0) {
-                    yield(Position(x, y - 1))
-                }
-                if (x < maxX) {
-                    yield(Position(x + 1, y))
-                }
-                if (y < maxY) {
-                    yield(Position(x, y + 1))
-                }
-            }
-        }
+    )
 }
+
+private class Movable(val position: Position, val travelPower: Int, val passThroughOnly: Boolean)
+

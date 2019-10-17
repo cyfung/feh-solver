@@ -17,7 +17,7 @@ class BattleSolver(private val battleMap: BattleMap) {
                     battleState = lastPlayerMovement.state
                     continue@mainLoop
                 }
-                val newState = battleState.copy()
+                val newState = battleState.copyOnPlayerPhrase()
                 executeMove(newState, nextMove, steps)
                 if (newState.phrase > 10) {
                     lastPlayerMovement = nextMove
