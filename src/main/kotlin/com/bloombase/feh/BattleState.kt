@@ -23,7 +23,7 @@ class BattleState private constructor(
     private val enemyUnits = reverseMap.keys.asSequence().filter { it.team == Team.ENEMY }
 
     fun copyOnPlayerPhrase(): BattleState {
-        check(isPlayerPhrase())
+        check(isPlayerPhrase)
         val newForwardMap = mutableMapOf<Position, ChessPiece>()
         forwardMap.mapValuesTo(newForwardMap) { it.value.copy() }
         return BattleState(battleMap, newForwardMap, phrase)
@@ -283,7 +283,7 @@ class BattleState private constructor(
     }
 
     fun playerMove(unitMovement: UnitMovement): MovementResult {
-        check(isPlayerPhrase())
+        check(isPlayerPhrase)
         val movementResult = executeMove(unitMovement)
         if (movementResult != null) {
             return movementResult
@@ -295,7 +295,8 @@ class BattleState private constructor(
         return MovementResult.NOTHING
     }
 
-    private fun isPlayerPhrase() = phrase % 2 == 0
+    private val isPlayerPhrase
+        get() = phrase % 2 == 0
 
     fun enemyMoves(): List<UnitMovement> {
         val threadMap = unitsAndPos(Team.PLAYER).filterNot { it.key.isEmptyHanded }.flatMap {
@@ -304,8 +305,10 @@ class BattleState private constructor(
                     is StationaryObject -> null
                     else -> false
                 }
-            }.asSequence()
-        }.groupingBy { it }.eachCount()
+            }
+        }.groupingBy { it.position }.eachCount()
+
+        val comparator = positionComparator(threadMap)
 
         val movements = unitsAndPos(Team.ENEMY).map {
             val move = EnemyMovement(
@@ -319,14 +322,10 @@ class BattleState private constructor(
         }.toList()
 
         unitsAndPos(Team.ENEMY).filter { it.key.available }.filterNot { it.key.isEmptyHanded }.map {
-            moveTargets(it.key, it.value).sortedWith()
+            moveTargets(it.key, it.value).sortedWith(comparator)
         }
         turnEnd()
         return movements
-    }
-
-    fun moveTargets(heroUnit: HeroUnit): List<Position> {
-        return moveTargets(heroUnit, reverseMap[heroUnit] ?: throw IllegalArgumentException(), this::checkObstacle)
     }
 
     private fun checkObstacle(position: Position, team: Team): Boolean? {
@@ -341,42 +340,59 @@ class BattleState private constructor(
         }
     }
 
-    private fun moveTargets(
+    fun moveTargets(heroUnit: HeroUnit): Sequence<MoveStep> {
+        return moveTargets(heroUnit, reverseMap[heroUnit] ?: throw IllegalArgumentException())
+    }
+
+    private inline fun moveTargets(
         heroUnit: HeroUnit,
         position: Position,
-        passThroughCheck: (Position, Team) -> Boolean?
-    ): List<Position> {
-        val moveTargets = mutableSetOf<Position>()
+        crossinline passThroughCheck: (Position, Team) -> Boolean? = this::checkObstacle
+    ): Sequence<MoveStep> {
         val visited = mutableSetOf<Position>()
-        var processing = listOf(Movable(position, heroUnit.travelPower, false))
         val moveType = heroUnit.moveType
 
-        while (processing.isNotEmpty()) {
-            processing = processing.asSequence().flatMap { movable ->
-                if (!movable.passThroughOnly) {
-                    moveTargets.add(movable.position)
+        return generateSequence(
+            listOf(
+                MoveStepTemp(
+                    position,
+                    heroUnit.travelPower,
+                    false,
+                    battleMap.getTerrain(position),
+                    0
+                )
+            )
+        ) {
+            val next = it.asSequence().flatMap { moveStepTemp ->
+                if (moveStepTemp.travelPower == 0) {
+                    return@flatMap emptySequence<MoveStepTemp>()
                 }
-                if (movable.travelPower == 0) {
-                    return@flatMap emptySequence<Movable>()
-                }
-                movable.position.surroundings.mapNotNull {
-                    if (!visited.add(it)) {
+                moveStepTemp.position.surroundings.mapNotNull { position ->
+                    if (!visited.add(position)) {
                         return@mapNotNull null
                     }
-                    val passThroughOnly = passThroughCheck(it, heroUnit.team) ?: return@mapNotNull null
-                    val terrain = battleMap.getTerrain(it)
+                    val passThroughOnly = passThroughCheck(position, heroUnit.team) ?: return@mapNotNull null
+                    val terrain = battleMap.getTerrain(position)
                     val moveCost = terrain.moveCost(moveType) ?: return@mapNotNull null
-                    val remaining = movable.travelPower - moveCost
+                    val remaining = moveStepTemp.travelPower - moveCost
                     if (remaining < 0) {
                         return@mapNotNull null
                     } else if (remaining == 0 && passThroughOnly) {
                         return@mapNotNull null
                     }
-                    Movable(it, remaining, passThroughOnly)
+                    MoveStepTemp(position, remaining, passThroughOnly, terrain, moveStepTemp.distanceTravel + 1)
                 }
             }.toList()
+            if (next.isEmpty()) {
+                null
+            } else {
+                next
+            }
+        }.flatMap {
+            it.asSequence()
+        }.mapNotNull {
+            it.toMoveStep()
         }
-        return moveTargets.toList()
     }
 
     fun attackTargets(
@@ -458,19 +474,37 @@ class BattleState private constructor(
                     )
                 }.ifEmpty { sequenceOf(Stat.ZERO) }.reduce(Stat::plus)
 
-    private fun positionComparator(threadMap: Map<Position, Int>) = compareBy<Position>(
+    private fun positionComparator(threadMap: Map<Position, Int>) = compareBy<MoveStep>(
         {
-            if (battleMap.getTerrain(it) == Terrain.DEFENSE_TILE) {
+            if (it.terrain == Terrain.DEFENSE_TILE) {
                 0
             } else {
                 1
             }
         },
         {
-            threadMap[it] ?: 0
+            threadMap[it.position] ?: 0
+        },
+        {
+            it.terrain
         }
     )
 }
 
-private class Movable(val position: Position, val travelPower: Int, val passThroughOnly: Boolean)
+class MoveStep(val position: Position, val terrain: Terrain, val teleportRequired: Boolean, val distanceTravel: Int)
 
+private class MoveStepTemp(
+    val position: Position,
+    val travelPower: Int,
+    val passThroughOnly: Boolean,
+    val terrain: Terrain,
+    val distanceTravel: Int
+) {
+    fun toMoveStep(): MoveStep? {
+        return if (passThroughOnly) {
+            null
+        } else {
+            MoveStep(position, terrain, false, distanceTravel)
+        }
+    }
+}

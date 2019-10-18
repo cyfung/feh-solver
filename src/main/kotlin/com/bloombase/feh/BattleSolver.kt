@@ -65,7 +65,7 @@ class BattleSolver(private val battleMap: BattleMap) {
                     if (nextAvailableUnit == null) {
                         null
                     } else {
-                        val moveTargets = battleState.moveTargets(nextAvailableUnit).iterator()
+                        val moveTargets = battleState.moveTargets(nextAvailableUnit).map { it.position }.iterator()
                         val move = moveTargets.next()
                         val attackTargets = battleState.attackTargets(nextAvailableUnit, move).iterator()
                         val attack = attackTargets.nextOrNull()
@@ -97,11 +97,9 @@ class BattleSolver(private val battleMap: BattleMap) {
             }
         } else {
             val availableUnits = availableUnits(battleState).iterator()
-            if (!availableUnits.hasNext()) {
-                throw IllegalStateException()
-            }
+            check(availableUnits.hasNext())
             val heroUnit = availableUnits.next()
-            val moveTargets = battleState.moveTargets(heroUnit).iterator()
+            val moveTargets = battleState.moveTargets(heroUnit).map { it.position }.iterator()
             val move = moveTargets.next()
             val attackTargets = battleState.attackTargets(
                 heroUnit,
