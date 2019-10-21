@@ -13,7 +13,7 @@ object SwordFighter : HeroModel(MoveType.INFANTRY, IronSword, null, Stat(23, 17,
 
 object TestMap : BattleMap {
     override fun getTerrain(position: Position): Terrain {
-        return Terrain.PLAIN
+        return Terrain.REGULAR
     }
 
     override val size: Position = Position(8,8)

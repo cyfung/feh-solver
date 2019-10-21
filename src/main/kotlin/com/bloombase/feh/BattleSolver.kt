@@ -17,7 +17,7 @@ class BattleSolver(private val battleMap: BattleMap) {
                     battleState = lastPlayerMovement.state
                     continue@mainLoop
                 }
-                val newState = battleState.copyOnPlayerPhrase()
+                val newState = battleState.copy()
                 executeMove(newState, nextMove, steps)
                 if (newState.phrase > 10) {
                     lastPlayerMovement = nextMove
@@ -36,7 +36,7 @@ class BattleSolver(private val battleMap: BattleMap) {
         steps: LinkedList<Step>
     ) {
         when (newState.playerMove(nextMove)) {
-            BattleState.MovementResult.WIN -> {
+            BattleState.MovementResult.PLAYER_WIN -> {
                 println(steps)
                 throw RuntimeException("win")
             }
@@ -144,15 +144,3 @@ class BattleSolver(private val battleMap: BattleMap) {
 
 sealed class BattleSolution
 object NoSolution : BattleSolution()
-
-private fun <T> Sequence<T>.nextOrNull(predicate: (T) -> Boolean): T? {
-    var takeNext = false
-    return firstOrNull {
-        if (takeNext) {
-            return@firstOrNull true
-        } else if (predicate(it)) {
-            takeNext = true
-        }
-        return@firstOrNull false
-    }
-}

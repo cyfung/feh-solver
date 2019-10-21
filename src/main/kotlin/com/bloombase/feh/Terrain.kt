@@ -2,22 +2,22 @@ package com.bloombase.feh
 
 enum class Terrain {
     WALL,
-    PLAIN,
-    FOREST,
-    MOUNTAIN,
     DEFENSE_TILE,
-    TRENCH;
+    FLIER_ONLY,
+    FOREST,
+    TRENCH,
+    REGULAR;
 
     fun moveCost(moveType: MoveType): Int? {
         return when (this) {
             WALL -> null
-            DEFENSE_TILE, PLAIN -> 1
+            DEFENSE_TILE, REGULAR -> 1
             FOREST -> when (moveType) {
                 MoveType.INFANTRY -> 2
                 MoveType.CAVALRY -> null
                 else -> 1
             }
-            MOUNTAIN -> if (moveType == MoveType.FLYING) 1 else null
+            FLIER_ONLY -> if (moveType == MoveType.FLYING) 1 else null
             TRENCH -> if (moveType == MoveType.CAVALRY) 3 else 1
         }
     }

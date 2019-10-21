@@ -5,6 +5,10 @@ interface Skill {
         get() = null
     val coolDownCountAdj: Int
         get() = 0
+    val debuffer: Int
+        get() = 0
+    val hasSpecialDebuff: Boolean
+        get() = false
 
     val startOfTurn: MapSkillMethod?
         get() = null
@@ -54,18 +58,20 @@ class SkillSet(skills: List<Skill>) {
     val postCombat = this.skills.mapNotNull(Skill::postCombat)
 }
 
-abstract class Weapon(val weaponType: WeaponType) : Skill
+abstract class Weapon(val weaponType: WeaponType) : Skill {
+}
+
 abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) {
     override val extraStat = Stat(atk = might)
 }
 
-abstract class Special(val coolDownCount: Int): Skill
-interface Assists: Skill
+abstract class Special(val coolDownCount: Int) : Skill
+interface Assists : Skill
 
 interface Passive : Skill
 
 interface CombatSkillMethod<T> {
-    fun apply(battleState: BattleState, self: HeroUnit, opponent:HeroUnit, attack: Boolean): T
+    fun apply(battleState: BattleState, self: HeroUnit, opponent: HeroUnit, attack: Boolean): T
 }
 
 interface MapSkillMethod {
