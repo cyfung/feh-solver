@@ -315,14 +315,19 @@ class BattleState private constructor(
         get() = phrase % 2 == 0
 
     fun enemyMoves(): List<UnitMovement> {
-        val threadMap = unitsAndPos(Team.PLAYER).filterNot { it.key.isEmptyHanded }.flatMap {
-            moveTargets(it.key, it.value) { position, _ ->
+        val enemyDistance = unitsAndPos(Team.PLAYER).filterNot { it.key.isEmptyHanded }.associate {
+            val step = calculateDistance(it.key, it.value, Int.MAX_VALUE) { position, _ ->
                 when (forwardMap[position]) {
                     is StationaryObject -> null
                     else -> false
                 }
             }
-        }.groupingBy { it.position }.eachCount()
+            it.key to step
+        }
+
+        val threadMap = enemyDistance.asSequence()
+            .flatMap { (heroUnit, steps) -> steps.filter { it.distanceTravel <= heroUnit.travelPower } }
+            .groupingBy { it.position }.eachCount()
 
         val comparator = positionComparator(threadMap)
 
@@ -339,7 +344,7 @@ class BattleState private constructor(
 
         val attackTargets = unitsAndPos(Team.ENEMY).filter { it.key.available }.filterNot { it.key.isEmptyHanded }
             .associateWith { (heroUnit, position) ->
-                moveTargets(heroUnit, position).sortedWith(comparator).flatMap { moveStep ->
+                calculateDistance(heroUnit, position).sortedWith(comparator).flatMap { moveStep ->
                     attackTargets(heroUnit, moveStep.position).map {
                         moveStep to it
                     }
@@ -399,22 +404,25 @@ class BattleState private constructor(
     }
 
     fun moveTargets(heroUnit: HeroUnit): Sequence<MoveStep> {
-        return moveTargets(heroUnit, reverseMap[heroUnit] ?: throw IllegalArgumentException())
+        return calculateDistance(
+            heroUnit,
+            reverseMap[heroUnit] ?: throw IllegalArgumentException(),
+            heroUnit.travelPower
+        )
     }
 
-    private inline fun moveTargets(
+    private inline fun calculateDistance(
         heroUnit: HeroUnit,
         position: Position,
+        maxDistance: Int = heroUnit.travelPower,
         crossinline passThroughCheck: (Position, Team) -> Boolean? = this::checkObstacle
     ): Sequence<MoveStep> {
-        val visited = mutableSetOf<Position>()
         val moveType = heroUnit.moveType
 
         return generateSequence(
             listOf(
                 MoveStepTemp(
                     position,
-                    heroUnit.travelPower,
                     false,
                     battleMap.getTerrain(position),
                     0
@@ -422,7 +430,7 @@ class BattleState private constructor(
             )
         ) {
             val next = it.asSequence().flatMap { moveStepTemp ->
-                if (moveStepTemp.travelPower == 0) {
+                if (moveStepTemp.distanceTravel >= maxDistance) {
                     return@flatMap emptySequence<MoveStepTemp>()
                 }
                 moveStepTemp.position.surroundings.mapNotNull { position ->
@@ -432,13 +440,13 @@ class BattleState private constructor(
                     val passThroughOnly = passThroughCheck(position, heroUnit.team) ?: return@mapNotNull null
                     val terrain = battleMap.getTerrain(position)
                     val moveCost = terrain.moveCost(moveType) ?: return@mapNotNull null
-                    val remaining = moveStepTemp.travelPower - moveCost
-                    if (remaining < 0) {
+                    val distanceTravel = moveStepTemp.distanceTravel + moveCost
+                    if (distanceTravel > maxDistance) {
                         return@mapNotNull null
-                    } else if (remaining == 0 && passThroughOnly) {
+                    } else if (distanceTravel == maxDistance && passThroughOnly) {
                         return@mapNotNull null
                     }
-                    MoveStepTemp(position, remaining, passThroughOnly, terrain, moveStepTemp.distanceTravel + 1)
+                    MoveStepTemp(position, passThroughOnly, terrain, distanceTravel)
                 }
             }.toList()
             if (next.isEmpty()) {
@@ -627,7 +635,6 @@ class MoveStep(val position: Position, val terrain: Terrain, val teleportRequire
 
 private class MoveStepTemp(
     val position: Position,
-    val travelPower: Int,
     val passThroughOnly: Boolean,
     val terrain: Terrain,
     val distanceTravel: Int
