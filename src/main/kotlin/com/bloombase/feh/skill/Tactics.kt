@@ -6,7 +6,7 @@ import com.bloombase.feh.MapSkillMethod
 import com.bloombase.feh.Stat
 import java.lang.IllegalStateException
 
-class Tactics(private val stat: Stat) : MapSkillMethod {
+class Tactics(private val stat: Stat) : MapSkillMethod<Unit> {
 
     override fun apply(battleState: BattleState, self: HeroUnit) {
         val pos = battleState.reverseMap[self]?: throw IllegalStateException()

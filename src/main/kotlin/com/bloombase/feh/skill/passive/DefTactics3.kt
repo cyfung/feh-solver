@@ -4,6 +4,6 @@ import com.bloombase.feh.*
 import com.bloombase.feh.skill.Tactics
 
 object DefTactics3 : Passive {
-    override val startOfTurn: MapSkillMethod?
+    override val startOfTurn: MapSkillMethod<Unit>?
         get() = Tactics(Stat(def = 6))
 }

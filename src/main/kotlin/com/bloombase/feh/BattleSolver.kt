@@ -4,6 +4,8 @@ import java.util.*
 
 class BattleSolver(private val battleMap: BattleMap) {
 
+    var count = 0
+
     fun solve(): BattleSolution {
         var lastPlayerMovement: PlayerMovement? = null
         val steps = LinkedList<Step>()
@@ -19,7 +21,7 @@ class BattleSolver(private val battleMap: BattleMap) {
                 }
                 val newState = battleState.copy()
                 executeMove(newState, nextMove, steps)
-                if (newState.phrase > 10) {
+                if (newState.phrase > 5) {
                     lastPlayerMovement = nextMove
                     continue@mainLoop
                 }
@@ -44,6 +46,7 @@ class BattleSolver(private val battleMap: BattleMap) {
             BattleState.MovementResult.PHRASE_CHANGE -> {
                 steps.add(nextMove)
                 steps.add(TurnEnd)
+                println("count ${count++}")
                 steps.addAll(newState.enemyMoves())
                 steps.add(TurnEnd)
             }

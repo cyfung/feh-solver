@@ -7,6 +7,7 @@ interface Hero {
     val moveType: MoveType
     val isEmptyHanded: Boolean
     val weaponType: WeaponType
+    val assist: Assist?
     val stat: Stat
     val cooldownCount: Int?
     val skillSet: SkillSet
@@ -25,6 +26,7 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
 open class HeroModel(
     override val moveType: MoveType,
     weapon: Weapon,
+    final override val assist: Assist?,
     special: Special?,
     stat: Stat,
     passives: List<Passive>,
@@ -32,7 +34,7 @@ open class HeroModel(
 ) : Hero {
     final override val isEmptyHanded: Boolean = weapon is EmptyWeapon
     final override val weaponType = weapon.weaponType
-    final override val skillSet = SkillSet(passives.asSequence().plus(weapon).plusIfNotNull(special).toList())
+    final override val skillSet = SkillSet(passives.asSequence().plus(weapon).plusIfNotNull(assist).plusIfNotNull(special).toList())
     final override val debuffer: Int = skillSet.skills.map { it.debuffer }.max() ?: 0
     final override val hasSpecialDebuff: Boolean = skillSet.skills.any { it.hasSpecialDebuff }
 

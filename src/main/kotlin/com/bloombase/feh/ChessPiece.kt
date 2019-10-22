@@ -1,23 +1,10 @@
 package com.bloombase.feh
 
-sealed class ChessPiece(val id: Int) {
+sealed class ChessPiece {
     abstract fun copy(): ChessPiece
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is ChessPiece) return false
-
-        if (id != other.id) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return id
-    }
 }
 
-class HeroUnit(id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(id), Hero by heroModel {
+class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(), Hero by heroModel {
     val travelPower: Int
         get() = when (heroModel.moveType) {
             MoveType.CAVALRY -> 3
@@ -119,16 +106,9 @@ class HeroUnit(id: Int, private val heroModel: HeroModel, val team: Team) : Ches
     }
 }
 
-class StationaryObject(id: Int, terrain: Terrain) : ChessPiece(id) {
+class Obstacle(var health: Int) : ChessPiece() {
     override fun copy(): ChessPiece {
-        return this
-    }
-
-    init {
-        when (terrain) {
-            Terrain.WALL -> Unit
-            else -> throw IllegalArgumentException()
-        }
+        return Obstacle(health)
     }
 }
 

@@ -10,7 +10,9 @@ interface Skill {
     val hasSpecialDebuff: Boolean
         get() = false
 
-    val startOfTurn: MapSkillMethod?
+    val startOfTurn: MapSkillMethod<Unit>?
+        get() = null
+    val pass: MapSkillMethod<Boolean>?
         get() = null
 
     val ignoreRange: CombatSkillMethod<Boolean>?
@@ -44,7 +46,10 @@ interface Skill {
 
 class SkillSet(skills: List<Skill>) {
     val skills = skills.toList()
+
     val startOfTurn = this.skills.mapNotNull(Skill::startOfTurn)
+    val pass = this.skills.mapNotNull(Skill::pass)
+
     val ignoreRange = this.skills.mapNotNull(Skill::ignoreRange)
     val disablePriorityChange = this.skills.mapNotNull(Skill::disablePriorityChange)
     val desperation = this.skills.mapNotNull(Skill::desperation)
@@ -66,7 +71,13 @@ abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponTy
 }
 
 abstract class Special(val coolDownCount: Int) : Skill
-interface Assists : Skill
+interface Assist : Skill {
+    enum class Type {
+        MOVEMENT,
+        REFRESH,
+        OTHERS
+    }
+}
 
 interface Passive : Skill
 
@@ -74,8 +85,8 @@ interface CombatSkillMethod<T> {
     fun apply(battleState: BattleState, self: HeroUnit, opponent: HeroUnit, attack: Boolean): T
 }
 
-interface MapSkillMethod {
-    fun apply(battleState: BattleState, self: HeroUnit)
+interface MapSkillMethod<T> {
+    fun apply(battleState: BattleState, self: HeroUnit): T
 }
 
 open class ConstantCombatSkillMethod<T>(private val value: T) : CombatSkillMethod<T> {
