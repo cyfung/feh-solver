@@ -1,7 +1,10 @@
 package com.bloombase.feh.test
 
 import com.bloombase.feh.*
+import com.bloombase.feh.mcts.FehBoard
+import com.bloombase.feh.mcts.FehMove
 import com.bloombase.feh.skill.weapon.*
+import me.kumatheta.mcts.Mcts
 
 object Alfonse : HeroModel(MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31, 10, 13, 9), emptyList(), true)
 object Sharena : HeroModel(MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
@@ -31,5 +34,18 @@ object TestMap : BattleMap {
 }
 
 fun main() {
-    BattleSolver(TestMap).solve()
+    val solver = BattleSolver(TestMap, 10)
+    solver.solve()
+
+//    val state = BattleState(TestMap)
+//    val board = FehBoard(10, state)
+//    val mcts = Mcts(board)
+//    mcts.run(1000)
+//    val bestMoves = mcts.getBestMoves()
+//    println(bestMoves)
+//    val test = board.copy()
+//    bestMoves.forEach {
+//        test.applyMove(it)
+//    }
+//    println(test.score)
 }

@@ -1,14 +1,19 @@
 package com.bloombase.feh
 
+import java.lang.IllegalStateException
 import java.util.*
 
-class BattleSolver(private val battleMap: BattleMap) {
+private class PlayerMovement(
+    val unitMovement: UnitMovement,
+    val beforeState: BattleState,
+    val moveIterator: Iterator<UnitMovement>
+)
 
-    var count = 0
+class BattleSolver(private val battleMap: BattleMap, private val phraseLimit: Int) {
 
     fun solve(): BattleSolution {
         var lastPlayerMovement: PlayerMovement? = null
-        val steps = LinkedList<Step>()
+        val steps = LinkedList<PlayerMovement>()
         var battleState = BattleState(battleMap)
 
         mainLoop@ while (true) {
@@ -16,13 +21,13 @@ class BattleSolver(private val battleMap: BattleMap) {
                 val nextMove = getNextMovement(lastPlayerMovement, battleState)
                 if (nextMove == null) {
                     lastPlayerMovement = rollback(steps) ?: return NoSolution
-                    battleState = lastPlayerMovement.state
+                    battleState = lastPlayerMovement.beforeState
                     continue@mainLoop
                 }
                 val newState = battleState.copy()
                 executeMove(newState, nextMove, steps)
-                if (newState.phrase > 5) {
-                    lastPlayerMovement = nextMove
+                if (newState.phrase > phraseLimit) {
+                    lastPlayerMovement = rollback(steps) ?: throw IllegalStateException()
                     continue@mainLoop
                 }
                 battleState = newState
@@ -35,9 +40,9 @@ class BattleSolver(private val battleMap: BattleMap) {
     private fun executeMove(
         newState: BattleState,
         nextMove: PlayerMovement,
-        steps: LinkedList<Step>
+        steps: LinkedList<PlayerMovement>
     ) {
-        when (newState.playerMove(nextMove)) {
+        when (newState.playerMove(nextMove.unitMovement)) {
             BattleState.MovementResult.PLAYER_WIN -> {
                 println(steps)
                 throw RuntimeException("win")
@@ -45,10 +50,7 @@ class BattleSolver(private val battleMap: BattleMap) {
             BattleState.MovementResult.PLAYER_UNIT_DIED -> throw RuntimeException("died")
             BattleState.MovementResult.PHRASE_CHANGE -> {
                 steps.add(nextMove)
-                steps.add(TurnEnd)
-                println("count ${count++}")
-                steps.addAll(newState.enemyMoves())
-                steps.add(TurnEnd)
+                newState.enemyMoves()
             }
             BattleState.MovementResult.NOTHING -> {
                 steps.add(nextMove)
@@ -61,75 +63,32 @@ class BattleSolver(private val battleMap: BattleMap) {
         battleState: BattleState
     ): PlayerMovement? {
         return if (lastPlayerMovement != null) {
-            if (lastPlayerMovement.attackTargetId == null) {
-                val nextMoveTarget = lastPlayerMovement.moveTargets.nextOrNull()
-                if (nextMoveTarget == null) {
-                    val nextAvailableUnit = lastPlayerMovement.availableUnits.nextOrNull()
-                    if (nextAvailableUnit == null) {
-                        null
-                    } else {
-                        val moveTargets = battleState.moveTargets(nextAvailableUnit).map { it.position }.iterator()
-                        val move = moveTargets.next()
-                        val attackTargets = battleState.attackTargets(nextAvailableUnit, move).iterator()
-                        val attack = attackTargets.nextOrNull()
-                        lastPlayerMovement.copy(
-                            heroUnit = nextAvailableUnit,
-                            move = move,
-                            attack = attack,
-                            assist = null,
-                            moveTargets = moveTargets,
-                            attackTargets = attackTargets
-                        )
-                    }
-                } else {
-                    val attackTargets =
-                        battleState.attackTargets(lastPlayerMovement.heroUnit, nextMoveTarget).iterator()
-                    val attack = attackTargets.nextOrNull()
-                    lastPlayerMovement.copy(
-                        move = nextMoveTarget,
-                        attack = attack,
-                        assist = null,
-                        attackTargets = attackTargets
-                    )
-                }
+            val nextMove = lastPlayerMovement.moveIterator.nextOrNull()
+            if (nextMove == null) {
+                null
             } else {
-                lastPlayerMovement.copy(
-                    attack = lastPlayerMovement.attackTargets.nextOrNull(),
-                    assist = null
+                PlayerMovement(
+                    nextMove,
+                    battleState,
+                    lastPlayerMovement.moveIterator
                 )
             }
         } else {
-            val availableUnits = availableUnits(battleState).iterator()
-            check(availableUnits.hasNext())
-            val heroUnit = availableUnits.next()
-            val moveTargets = battleState.moveTargets(heroUnit).map { it.position }.iterator()
-            val move = moveTargets.next()
-            val attackTargets = battleState.attackTargets(
-                heroUnit,
-                move
-            ).iterator()
-            val attack = attackTargets.nextOrNull()
+            val moveIterator = battleState.getAllPlayerMovements().iterator()
             PlayerMovement(
-                heroUnit = heroUnit,
-                move = move,
-                attack = attack,
-                assist = null,
-                availableUnits = availableUnits,
-                moveTargets = moveTargets,
-                attackTargets = attackTargets,
-                state = battleState
+                moveIterator.next(),
+                beforeState = battleState,
+                moveIterator = moveIterator
             )
         }
     }
 
-    private fun rollback(steps: LinkedList<Step>): PlayerMovement? {
-        while (steps.isNotEmpty()) {
-            val last = steps.removeLast()
-            if (last is PlayerMovement) {
-                return last
-            }
+    private fun rollback(steps: LinkedList<PlayerMovement>): PlayerMovement? {
+        return if (steps.isNotEmpty()) {
+            steps.removeLast()
+        } else {
+            null
         }
-        return null
     }
 
     private fun <T> Iterator<T>.nextOrNull(): T? {
@@ -140,9 +99,6 @@ class BattleSolver(private val battleMap: BattleMap) {
         }
     }
 
-    private fun availableUnits(battleState: BattleState): Sequence<HeroUnit> {
-        return battleState.playerUnits.filter { it.available }
-    }
 }
 
 sealed class BattleSolution

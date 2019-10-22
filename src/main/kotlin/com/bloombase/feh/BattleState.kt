@@ -406,17 +406,17 @@ class BattleState private constructor(
 
         unitsAndPos(myTeam).filter { it.key.available }.filter { it.key.assist != null }
             .sortedWith(assistAllyComparator(distanceFromEnemy)).firstOrNull {
-
+                true
             }
 
 
         // FIXME : fake moves
         val movements = unitsAndPos(Team.ENEMY).map {
-            val move = EnemyMovement(
-                heroUnit = it.key.id,
+            val move = UnitMovement(
+                heroUnitId = it.key.id,
                 move = it.value,
-                attack = null,
-                assist = null
+                attackTargetId = null,
+                assistTargetId = null
             )
             executeMove(move)
             move
@@ -607,6 +607,28 @@ class BattleState private constructor(
                         false
                     )
                 }.ifEmpty { sequenceOf(Stat.ZERO) }.reduce(Stat::plus)
+
+    fun getAllPlayerMovements(): Sequence<UnitMovement> {
+        return playerUnits.filter { it.available }.flatMap { heroUnit ->
+            moveTargets(heroUnit).map { it.position }.flatMap { move ->
+                attackTargets(heroUnit, move).map { attackTarget ->
+                    UnitMovement(
+                        heroUnitId = heroUnit.id,
+                        move = move,
+                        attackTargetId = attackTarget.id,
+                        assistTargetId = null
+                    )
+                }.plus(
+                    UnitMovement(
+                        heroUnitId = heroUnit.id,
+                        move = move,
+                        attackTargetId = null,
+                        assistTargetId = null
+                    )
+                )
+            }
+        }
+    }
 
     private fun positionComparator(enemyThreat: Map<Position, Int>) = compareBy<MoveStep>(
         {
