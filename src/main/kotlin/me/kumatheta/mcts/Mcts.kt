@@ -1,11 +1,11 @@
 package me.kumatheta.mcts
 
 import kotlin.IllegalStateException
+import kotlin.math.sqrt
 import kotlin.random.Random
 
-class Mcts<T : Move>(board: Board<T>) {
-    private val random = Random
-    private val rootNode = Node(board.copy(), null, random, null)
+class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
+    private val rootNode = Node(board.copy(), explorationConstant, Random)
 
     fun run(times: Int) {
         repeat(times) {

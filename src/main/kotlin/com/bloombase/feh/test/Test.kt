@@ -34,18 +34,20 @@ object TestMap : BattleMap {
 }
 
 fun main() {
-    val solver = BattleSolver(TestMap, 10)
-    solver.solve()
+//    val solver = BattleSolver(TestMap, 10)
+//    solver.solve()
 
-//    val state = BattleState(TestMap)
-//    val board = FehBoard(10, state)
-//    val mcts = Mcts(board)
-//    mcts.run(1000)
-//    val bestMoves = mcts.getBestMoves()
-//    println(bestMoves)
-//    val test = board.copy()
-//    bestMoves.forEach {
-//        test.applyMove(it)
-//    }
-//    println(test.score)
+    val state = BattleState(TestMap)
+    val board = FehBoard(3, state)
+    val mcts = Mcts(board)
+    repeat(10) {
+        mcts.run(1000)
+        val bestMoves = mcts.getBestMoves()
+        println(bestMoves)
+        val test = board.copy()
+        bestMoves.forEach {
+            test.applyMove(it)
+        }
+        println(test.score)
+    }
 }

@@ -1,19 +1,31 @@
 package me.kumatheta.mcts
 
 import kotlin.math.ln
+import kotlin.math.max
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class Node<T : Move>(
+class Node<T : Move> private constructor(
     private val board: Board<T>,
-    private val parent: Node<T>?,
+    private val explorationConstant: Double,
     private val random: Random,
+    private val parent: Node<T>?,
     val lastMove: T?,
-    movesAndScore: Pair<List<T>, Double>? = null
+    movesAndScore: Pair<List<T>, Double>?
 ) {
+    constructor(board: Board<T>, explorationConstant: Double, random: Random) : this(
+        board,
+        explorationConstant,
+        random,
+        null,
+        null,
+        null
+    )
+
     val playOutMove = movesAndScore?.first
     var score: Double = movesAndScore?.second ?: 0.0
         private set
+    var bestScore = score
     var tries: Int = if (movesAndScore == null) 0 else 1
         private set
 
@@ -21,8 +33,10 @@ class Node<T : Move>(
     private val children = mutableListOf<Node<T>>()
 
     private val isTerminalNode = !moveIterator.hasNext()
+    private var isPruned = false
 
     private fun updateScore(newScore: Double) {
+        bestScore = max(bestScore, newScore)
         score += newScore
         tries++
         parent?.updateScore(newScore)
@@ -30,25 +44,31 @@ class Node<T : Move>(
 
     fun getBestChild(): Node<T>? {
         return children.maxBy {
-            it.score / it.tries
+            it.bestScore
         }
     }
 
     fun selectAndPlayOut(): Node<T>? {
-        if (isTerminalNode) {
-            updateScore(board.score ?: throw IllegalStateException())
+        check(!isTerminalNode)
+        if (isPruned) {
+            check(parent == null)
+            return null
         }
         return if (moveIterator.hasNext()) {
             val move = moveIterator.next()
             val copy = board.copy()
             copy.applyMove(move)
             val movesAndScore = copy.playOut(random)
-            val child = Node(copy, this, random, move, movesAndScore)
+            val child = Node(copy, explorationConstant, random, this, move, movesAndScore)
+            updateScore(movesAndScore.second)
             children.add(child)
             null
         } else {
-            val child = children.maxBy {
-                it.score / it.tries + 2 * sqrt(ln(tries.toDouble()) / tries)
+            val child = children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.isPruned }.maxBy {
+                it.score / it.tries + explorationConstant * sqrt(ln(tries.toDouble()) / it.tries.toDouble())
+            }
+            if (child == null) {
+                isPruned = true
             }
             child
         }
