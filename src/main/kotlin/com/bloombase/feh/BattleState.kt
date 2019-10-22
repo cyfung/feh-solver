@@ -314,14 +314,33 @@ class BattleState private constructor(
     private val isPlayerPhrase
         get() = phrase % 2 == 0
 
+    private fun assistAllyComparator(distanceFromEnemy: Map<HeroUnit, Map<Position, Int>>) =
+        compareBy<Map.Entry<HeroUnit, Position>>({
+            if (it.key.isEmptyHanded) {
+                0
+            } else {
+                1
+            }
+        }, { (_, position) ->
+            -(distanceFromEnemy.values.asSequence().mapNotNull {
+                it[position]
+            }.min() ?: Int.MAX_VALUE)
+        }, {
+            it.key.id
+        })
+
+
     fun enemyMoves(): List<UnitMovement> {
-        val movementRanges = units(Team.PLAYER).associateWith {
+        val myTeam = Team.ENEMY
+        val foeTeam = Team.ENEMY.opponent
+
+        val movementRanges = units(foeTeam).associateWith {
             it.travelPower
         }
 
         val obstacles = forwardMap.toMutableMap()
 
-        val distanceFromEnemy = unitsAndPos(Team.PLAYER).filterNot { it.key.isEmptyHanded }.associate {
+        val distanceFromEnemy = unitsAndPos(foeTeam).filterNot { it.key.isEmptyHanded }.associate {
             val resultMap = mutableMapOf<Position, Int>()
             calculateDistance(it.key, it.value, object : DistanceReceiver {
                 override fun isOverMaxDistance(distance: Int): Boolean {
@@ -336,22 +355,11 @@ class BattleState private constructor(
             it.key to resultMap.toMap()
         }
 
-        val enemyThreat = calculateThreat(movementRanges, obstacles, Team.PLAYER)
+        val enemyThreat = calculateThreat(movementRanges, obstacles, foeTeam)
 
         val comparator = positionComparator(enemyThreat)
 
-        val movements = unitsAndPos(Team.ENEMY).map {
-            val move = EnemyMovement(
-                heroUnit = it.key.id,
-                move = it.value,
-                attack = null,
-                assist = null
-            )
-            executeMove(move)
-            move
-        }.toList()
-
-        val attackTargets = unitsAndPos(Team.ENEMY).filter { it.key.available }.filterNot { it.key.isEmptyHanded }
+        val attackTargets = unitsAndPos(myTeam).filter { it.key.available }.filterNot { it.key.isEmptyHanded }
             .associateWith { (heroUnit, position) ->
                 moveTargets(heroUnit, position).sortedWith(comparator).flatMap { moveStep ->
                     attackTargets(heroUnit, moveStep.position).map {
@@ -395,6 +403,24 @@ class BattleState private constructor(
                     )
                 }.sortedWith(bestAttackTarget).firstOrNull()
             }
+
+        unitsAndPos(myTeam).filter { it.key.available }.filter { it.key.assist != null }
+            .sortedWith(assistAllyComparator(distanceFromEnemy)).firstOrNull {
+
+            }
+
+
+        // FIXME : fake moves
+        val movements = unitsAndPos(Team.ENEMY).map {
+            val move = EnemyMovement(
+                heroUnit = it.key.id,
+                move = it.value,
+                attack = null,
+                assist = null
+            )
+            executeMove(move)
+            move
+        }.toList()
 
         turnEnd()
         return movements
@@ -614,6 +640,7 @@ class DistanceReceiverRealMovement(
     override fun isOverMaxDistance(distance: Int): Boolean {
         return distance > travelPower
     }
+
     val result
         get() = resultMap.values.asSequence().filter {
             it.distanceTravel > 0
@@ -782,7 +809,12 @@ private val bestAttacker = compareBy<CombatResult>(
 )
 
 
-data class MoveStep(val position: Position, val terrain: Terrain, val teleportRequired: Boolean, val distanceTravel: Int) {
+data class MoveStep(
+    val position: Position,
+    val terrain: Terrain,
+    val teleportRequired: Boolean,
+    val distanceTravel: Int
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is MoveStep) return false
