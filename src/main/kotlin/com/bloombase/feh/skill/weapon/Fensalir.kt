@@ -8,7 +8,7 @@ object Fensalir : BasicWeapon(Lance, 16) {
         get() = object: MapSkillMethod<Unit> {
             override fun apply(battleState: BattleState, self: HeroUnit) {
                 val position = battleState.reverseMap[self]?: throw IllegalStateException()
-                battleState.unitsAndPos(self.team.opponent).filter { it.value.distanceTo(position) <= 2 }.forEach {
+                battleState.unitsAndPosSeq(self.team.opponent).filter { it.value.distanceTo(position) <= 2 }.forEach {
                     it.key.applyDebuff(Stat(atk = -4))
                 }
             }

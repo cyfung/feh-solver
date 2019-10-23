@@ -26,8 +26,6 @@ class BattleState private constructor(
         private set
     val reverseMap = mutableMapOf<HeroUnit, Position>()
     private val unitIdMap = forwardMap.values.filterIsInstance<HeroUnit>().associateBy { it.id }
-    val playerUnits = reverseMap.keys.asSequence().filter { it.team == Team.PLAYER }
-    private val enemyUnits = reverseMap.keys.asSequence().filter { it.team == Team.ENEMY }
 
     fun copy(): BattleState {
         val newForwardMap = mutableMapOf<Position, ChessPiece>()
@@ -49,7 +47,9 @@ class BattleState private constructor(
         startOfTurn(Team.PLAYER)
     }
 
-    fun unitsAndPos(team: Team): Sequence<Map.Entry<HeroUnit, Position>> {
+    private fun unitsSeq(team: Team) = reverseMap.keys.asSequence().filter { it.team == team }
+
+    fun unitsAndPosSeq(team: Team): Sequence<Map.Entry<HeroUnit, Position>> {
         return reverseMap.asSequence().filter { it.key.team == team }
     }
 
@@ -104,7 +104,7 @@ class BattleState private constructor(
     }
 
     private fun startOfTurn(team: Team): List<HeroUnit> {
-        val units = units(team)
+        val units = unitsSeq(team).toList()
         units.forEach(HeroUnit::startOfTurn)
         units.forEach { heroUnit ->
             heroUnit.skillSet.startOfTurn.forEach {
@@ -113,8 +113,6 @@ class BattleState private constructor(
         }
         return units
     }
-
-    private fun units(team: Team) = reverseMap.keys.asSequence().filter { it.team == team }.toList()
 
     private fun fight(attacker: HeroUnit, defender: HeroUnit): FightResult {
         val attackerStat = attacker.stat + attacker.buff + attacker.debuff + skillMethodSumStat(
@@ -151,7 +149,7 @@ class BattleState private constructor(
             when (deadTeam) {
                 Team.PLAYER -> return FightResult.PLAYER_UNIT_DIED
                 Team.ENEMY -> {
-                    if (enemyUnits.none()) {
+                    if (unitsSeq(Team.ENEMY).none()) {
                         return FightResult.PLAYER_WIN
                     }
                     true
@@ -304,7 +302,7 @@ class BattleState private constructor(
         if (movementResult != null) {
             return movementResult
         }
-        if (playerUnits.none { it.available }) {
+        if (unitsSeq(Team.PLAYER).none { it.available }) {
             turnEnd()
             return MovementResult.PHRASE_CHANGE
         }
@@ -334,13 +332,13 @@ class BattleState private constructor(
         val myTeam = Team.ENEMY
         val foeTeam = Team.ENEMY.opponent
 
-        val movementRanges = units(foeTeam).associateWith {
+        val movementRanges = unitsSeq(foeTeam).associateWith {
             it.travelPower
         }
 
         val obstacles = forwardMap.toMutableMap()
 
-        val distanceFromEnemy = unitsAndPos(foeTeam).filterNot { it.key.isEmptyHanded }.associate {
+        val distanceFromEnemy = unitsAndPosSeq(foeTeam).filterNot { it.key.isEmptyHanded }.associate {
             val resultMap = mutableMapOf<Position, Int>()
             calculateDistance(it.key, it.value, object : DistanceReceiver {
                 override fun isOverMaxDistance(distance: Int): Boolean {
@@ -359,59 +357,43 @@ class BattleState private constructor(
 
         val comparator = positionComparator(enemyThreat)
 
-        val attackTargets = unitsAndPos(myTeam).filter { it.key.available }.filterNot { it.key.isEmptyHanded }
-            .associateWith { (heroUnit, position) ->
-                moveTargets(heroUnit, position).sortedWith(comparator).flatMap { moveStep ->
-                    attackTargets(heroUnit, moveStep.position).map {
+        val possibleMoves = unitsAndPosSeq(myTeam).filter { it.key.available }
+            .associate { (heroUnit, position) ->
+                heroUnit to moveTargets(heroUnit, position).sortedWith(comparator).toList()
+            }
+        val possibleAttacks = possibleMoves.mapValues { (heroUnit, moves) ->
+            autoBattleAttacks(heroUnit, moves)
+        }
+
+        unitsAndPosSeq(myTeam).filter { it.key.available && it.key.assist != null }
+            .sortedWith(assistAllyComparator(distanceFromEnemy))
+            .map { it.key }
+            .mapNotNull {
+                val attacks = possibleAttacks[it]
+                val win = attacks?.firstOrNull()?.winLoss == WinLoss.WIN
+                if (win) {
+                    null
+                } else {
+                    it to attacks
+                }
+            }
+            .filter { it.first.assist!!.isValidPreCombat(it.first, it.second, possibleAttacks) }
+            .map { (heroUnit, _) ->
+                val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
+                moves.asSequence().flatMap { moveStep ->
+                    assistTargets(heroUnit, moveStep.position).map {
                         moveStep to it
                     }
-                }.distinctBy { it.second }.map { (movePosition, foe) ->
-                    val testBattle = copy()
-                    val heroUnitId = heroUnit.id
-                    val foeId = foe.id
-                    val winLoss = when (testBattle.executeMove(heroUnitId, movePosition.position, foeId, null)) {
-                        FightResult.PLAYER_UNIT_DIED -> -1
-                        FightResult.PLAYER_WIN, FightResult.ENEMY_UNIT_DIED -> 1
-                        FightResult.NOTHING -> 0
-                    }
-                    val testUnit = testBattle.getUnit(heroUnitId)
-                    val testFoe = testBattle.getUnit(foeId)
-                    // warning - not sure if this is correct
-                    val debuffSuccess = if (heroUnit.debuffer > 0) {
-                        if (testFoe.debuff.def + testFoe.debuff.res + 2 <= foe.debuff.def + foe.debuff.res) {
-                            -heroUnit.debuffer
-                        } else {
-                            0
-                        }
-                    } else {
-                        0
-                    }
-                    val damageDealt = foe.currentHp - testFoe.currentHp
-                    val damageReceived = heroUnit.currentHp - testUnit.currentHp
-                    val cooldownChange = (testUnit.cooldownCount ?: 0) - (heroUnit.cooldownCount ?: 0)
-                    val cooldownChangeFoe = (testFoe.cooldownCount ?: 0) - (foe.cooldownCount ?: 0)
-                    CombatResult(
-                        heroUnit,
-                        position,
-                        foe,
-                        winLoss,
-                        debuffSuccess,
-                        damageDealt,
-                        damageReceived,
-                        cooldownChange,
-                        cooldownChangeFoe
-                    )
-                }.sortedWith(bestAttackTarget).firstOrNull()
+                }.distinctBy { it.second }.filter {
+                    heroUnit.assist!!.isValidPreCombatTarget(heroUnit, it.second)
+                }
             }
-
-        unitsAndPos(myTeam).filter { it.key.available }.filter { it.key.assist != null }
-            .sortedWith(assistAllyComparator(distanceFromEnemy)).firstOrNull {
+            .firstOrNull {
                 true
             }
 
-
         // FIXME : fake moves
-        val movements = unitsAndPos(Team.ENEMY).map {
+        val movements = unitsAndPosSeq(Team.ENEMY).map {
             val move = UnitMovement(
                 heroUnitId = it.key.id,
                 move = it.value,
@@ -426,12 +408,58 @@ class BattleState private constructor(
         return movements
     }
 
+    private fun autoBattleAttacks(
+        heroUnit: HeroUnit,
+        moves: List<MoveStep>
+    ): List<CombatResult> {
+        return moves.asSequence().flatMap { moveStep ->
+            attackTargets(heroUnit, moveStep.position).map {
+                moveStep to it
+            }
+        }.distinctBy { it.second }.map { (movePosition, foe) ->
+            val testBattle = copy()
+            val heroUnitId = heroUnit.id
+            val foeId = foe.id
+            val winLoss = when (testBattle.executeMove(heroUnitId, movePosition.position, foeId, null)) {
+                FightResult.PLAYER_UNIT_DIED -> WinLoss.LOSS
+                FightResult.PLAYER_WIN, FightResult.ENEMY_UNIT_DIED -> WinLoss.WIN
+                FightResult.NOTHING -> WinLoss.DRAW
+            }
+            val testUnit = testBattle.getUnit(heroUnitId)
+            val testFoe = testBattle.getUnit(foeId)
+            // warning - not sure if this is correct
+            val debuffSuccess = if (heroUnit.debuffer > 0) {
+                if (testFoe.debuff.def + testFoe.debuff.res + 2 <= foe.debuff.def + foe.debuff.res) {
+                    -heroUnit.debuffer
+                } else {
+                    0
+                }
+            } else {
+                0
+            }
+            val damageDealt = foe.currentHp - testFoe.currentHp
+            val damageReceived = heroUnit.currentHp - testUnit.currentHp
+            val cooldownChange = (testUnit.cooldownCount ?: 0) - (heroUnit.cooldownCount ?: 0)
+            val cooldownChangeFoe = (testFoe.cooldownCount ?: 0) - (foe.cooldownCount ?: 0)
+            CombatResult(
+                heroUnit,
+                foe,
+                winLoss,
+                debuffSuccess,
+                damageDealt,
+                damageReceived,
+                cooldownChange,
+                cooldownChangeFoe
+            )
+        }.sortedWith(bestAttackTarget).toList()
+    }
+
     private fun calculateThreat(
         movementRanges: Map<HeroUnit, Int>,
         obstacles: MutableMap<Position, ChessPiece>,
         team: Team
     ): Map<Position, Int> {
-        return unitsAndPos(team).filterNot { it.key.isEmptyHanded }.flatMap { (heroUnit, position) ->
+        return unitsAndPosSeq(team).filterNot { it.key.isEmptyHanded }.flatMap { (heroUnit, position) ->
             val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
             val movementRange = movementRanges[heroUnit] ?: throw IllegalStateException()
             val threatReceiver = if (pass) {
@@ -529,7 +557,14 @@ class BattleState private constructor(
         }
     }
 
-    fun attackTargets(
+    private fun assistTargets(
+        heroUnit: HeroUnit,
+        position: Position
+    ): Sequence<HeroUnit> {
+        return unitsAndPosSeq(heroUnit.team).filter { it.value.distanceTo(position) == 1 }.map { it.key }
+    }
+
+    private fun attackTargets(
         heroUnit: HeroUnit,
         position: Position
     ): Sequence<HeroUnit> {
@@ -538,7 +573,7 @@ class BattleState private constructor(
         }
         val range = heroUnit.weaponType.range
 
-        return unitsAndPos(heroUnit.team.opponent).filter { it.value.distanceTo(position) == range }.map { it.key }
+        return unitsAndPosSeq(heroUnit.team.opponent).filter { it.value.distanceTo(position) == range }.map { it.key }
     }
 
     private val Position.surroundings: Sequence<Position>
@@ -609,7 +644,7 @@ class BattleState private constructor(
                 }.ifEmpty { sequenceOf(Stat.ZERO) }.reduce(Stat::plus)
 
     fun getAllPlayerMovements(): Sequence<UnitMovement> {
-        return playerUnits.filter { it.available }.flatMap { heroUnit ->
+        return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
             moveTargets(heroUnit).map { it.position }.flatMap { move ->
                 attackTargets(heroUnit, move).map { attackTarget ->
                     UnitMovement(
@@ -760,20 +795,6 @@ private class ThreatWithPass(
             }
         }
     }
-}
-
-private class CombatResult(
-    val heroUnit: HeroUnit,
-    val position: Position,
-    val foe: HeroUnit,
-    val winLoss: Int,
-    val debuffSuccess: Int,
-    val damageDealt: Int,
-    val damageReceived: Int,
-    val cooldownChange: Int,
-    val cooldownChangeFoe: Int
-) {
-    val damageRatio = -(damageDealt * 3 - damageReceived)
 }
 
 private val bestAttackTarget = compareBy<CombatResult>(
