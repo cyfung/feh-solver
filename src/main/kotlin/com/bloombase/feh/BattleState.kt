@@ -62,6 +62,17 @@ class BattleState private constructor(
         )
     }
 
+    private fun moveAndFight(
+        heroUnitId: Int,
+        movePosition: Position,
+        attackTargetId: Int
+    ): Pair<FightResult, Int> {
+        val heroUnit = getUnit(heroUnitId)
+        move(heroUnit, movePosition)
+        val target = getUnit(attackTargetId)
+        return fight(heroUnit, target)
+    }
+
     private fun executeMove(
         heroUnitId: Int,
         movePosition: Position,
@@ -72,7 +83,7 @@ class BattleState private constructor(
         move(heroUnit, movePosition)
         return if (attackTargetId != null) {
             val target = getUnit(attackTargetId)
-            fight(heroUnit, target)
+            fight(heroUnit, target).first
         } else {
             standStill(heroUnit)
             FightResult.NOTHING
@@ -114,7 +125,7 @@ class BattleState private constructor(
         return units
     }
 
-    private fun fight(attacker: HeroUnit, defender: HeroUnit): FightResult {
+    private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<FightResult, Int> {
         val attackerStat = attacker.stat + attacker.buff + attacker.debuff + skillMethodSumStat(
             attacker,
             defender,
@@ -132,8 +143,10 @@ class BattleState private constructor(
 
         val attackOrder = createAttackOrder(attacker, defender, spdDiff)
 
-        val enemyDied = attackOrder.any { attackerTurn ->
-            val deadTeam = if (attackerTurn) {
+        val potentialDamage = attackOrder.asSequence().filter { true }.count() * calculateDamage(attacker, defender, attackerStat, defenderStat)
+
+        val deadTeam = attackOrder.asSequence().mapNotNull { attackerTurn ->
+            if (attackerTurn) {
                 if (singleAttack(attacker, defender, attackerStat, defenderStat)) {
                     defender.team
                 } else {
@@ -146,23 +159,27 @@ class BattleState private constructor(
                     null
                 }
             }
-            when (deadTeam) {
-                Team.PLAYER -> return FightResult.PLAYER_UNIT_DIED
-                Team.ENEMY -> {
-                    if (unitsSeq(Team.ENEMY).none()) {
-                        return FightResult.PLAYER_WIN
-                    }
-                    true
-                }
-                null -> false
-            }
-        }
+        }.firstOrNull()
+
 
         if (!attacker.isDead) {
             attacker.endOfTurn()
         }
+
         skillMethodApply(attacker, defender, SkillSet::postCombat)
-        return if (enemyDied) FightResult.ENEMY_UNIT_DIED else FightResult.NOTHING
+
+        val fightResult = when (deadTeam) {
+            Team.PLAYER -> FightResult.PLAYER_UNIT_DIED
+            Team.ENEMY -> {
+                if (unitsSeq(Team.ENEMY).none()) {
+                    FightResult.PLAYER_WIN
+                } else {
+                    FightResult.ENEMY_UNIT_DIED
+                }
+            }
+            null -> FightResult.NOTHING
+        }
+        return Pair(fightResult, potentialDamage)
     }
 
     private fun singleAttack(
@@ -365,27 +382,34 @@ class BattleState private constructor(
             autoBattleAttacks(heroUnit, moves)
         }
 
-        unitsAndPosSeq(myTeam).filter { it.key.available && it.key.assist != null }
+        unitsAndPosSeq(myTeam).filter { it.key.available }
             .sortedWith(assistAllyComparator(distanceFromEnemy))
-            .map { it.key }
+            .mapNotNull { it.key }
             .mapNotNull {
+                val assist = it.assist as? NormalAssist ?: return@mapNotNull null
                 val attacks = possibleAttacks[it]
                 val win = attacks?.firstOrNull()?.winLoss == WinLoss.WIN
                 if (win) {
                     null
                 } else {
-                    it to attacks
+                    Triple(it, assist, attacks)
                 }
             }
-            .filter { it.first.assist!!.isValidPreCombat(it.first, it.second, possibleAttacks) }
-            .map { (heroUnit, _) ->
+            .filter { (heroUnit, assist, selfAttacks) ->
+                assist.isValidPreCombat(
+                    heroUnit,
+                    selfAttacks,
+                    possibleAttacks
+                )
+            }
+            .map { (heroUnit, assist, _) ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
                 moves.asSequence().flatMap { moveStep ->
                     assistTargets(heroUnit, moveStep.position).map {
                         moveStep to it
                     }
                 }.distinctBy { it.second }.filter {
-                    heroUnit.assist!!.isValidPreCombatTarget(heroUnit, it.second)
+                    assist.preCombatAssistEffect(heroUnit, it.second)
                 }
             }
             .firstOrNull {
@@ -420,7 +444,8 @@ class BattleState private constructor(
             val testBattle = copy()
             val heroUnitId = heroUnit.id
             val foeId = foe.id
-            val winLoss = when (testBattle.executeMove(heroUnitId, movePosition.position, foeId, null)) {
+            val (fightResult, potentialDamage) = testBattle.moveAndFight(heroUnitId, movePosition.position, foeId)
+            val winLoss = when (fightResult) {
                 FightResult.PLAYER_UNIT_DIED -> WinLoss.LOSS
                 FightResult.PLAYER_WIN, FightResult.ENEMY_UNIT_DIED -> WinLoss.WIN
                 FightResult.NOTHING -> WinLoss.DRAW
@@ -442,14 +467,15 @@ class BattleState private constructor(
             val cooldownChange = (testUnit.cooldownCount ?: 0) - (heroUnit.cooldownCount ?: 0)
             val cooldownChangeFoe = (testFoe.cooldownCount ?: 0) - (foe.cooldownCount ?: 0)
             CombatResult(
-                heroUnit,
-                foe,
-                winLoss,
-                debuffSuccess,
-                damageDealt,
-                damageReceived,
-                cooldownChange,
-                cooldownChangeFoe
+                heroUnit = heroUnit,
+                foe = foe,
+                winLoss = winLoss,
+                debuffSuccess = debuffSuccess,
+                potentialDamage = potentialDamage,
+                damageDealt = damageDealt,
+                damageReceived = damageReceived,
+                cooldownChange = cooldownChange,
+                cooldownChangeFoe = cooldownChangeFoe
             )
         }.sortedWith(bestAttackTarget).toList()
     }

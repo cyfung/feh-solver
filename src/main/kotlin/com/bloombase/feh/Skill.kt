@@ -71,26 +71,6 @@ abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponTy
 }
 
 abstract class Special(val coolDownCount: Int) : Skill
-abstract class Assist(val type: Type) : Skill {
-    abstract fun isValidPreCombat(
-        self: HeroUnit,
-        selfAttacks: List<CombatResult>?,
-        possibleAttacks: Map<HeroUnit, List<CombatResult>>
-    ): Boolean
-
-    val isMovement
-        get() = type == Type.MOVEMENT
-
-    enum class Type {
-        MOVEMENT,
-        REFRESH,
-        HEAL,
-        DONOR_HEAL,
-        RALLY
-    }
-
-    abstract fun isValidPreCombatTarget(self: HeroUnit, target: HeroUnit): Boolean
-}
 
 interface Passive : Skill
 

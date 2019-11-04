@@ -5,19 +5,21 @@ import com.bloombase.feh.CombatResult
 import com.bloombase.feh.HeroUnit
 import com.bloombase.feh.NormalAssist
 
-abstract class Heal(private val threshold: Int) : NormalAssist() {
+private const val HEAL_AMOUNT = 10
+
+object ArdentSacrifice: NormalAssist() {
     override fun isValidPreCombat(
         self: HeroUnit,
         selfAttacks: List<CombatResult>?,
         possibleAttacks: Map<HeroUnit, List<CombatResult>>
     ): Boolean {
-        return true
+        return self.isEmptyHanded && self.currentHp > HEAL_AMOUNT
     }
 
     override fun preCombatAssistEffect(self: HeroUnit, target: HeroUnit): AssistEffect? {
-        if (target.stat.hp - target.currentHp < threshold) {
+        if (target.stat.hp - target.currentHp < HEAL_AMOUNT) {
             return null
         }
-        return AssistEffect(AssistEffect.Type.HEAL)
+        return AssistEffect(AssistEffect.Type.DONOR_HEAL)
     }
 }
