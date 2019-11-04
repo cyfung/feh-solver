@@ -20,7 +20,7 @@ abstract class Rally : NormalAssist() {
             }
         } else {
             selfAttacks.all {
-                it.potentialDamage < 5 && it.debuffSuccess > 0
+                it.potentialDamage < 5 && it.debuffSuccess == 0
             }
         }
     }

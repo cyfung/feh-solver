@@ -1,11 +1,8 @@
 package com.bloombase.feh.skill.assist
 
-import com.bloombase.feh.Assist
-import com.bloombase.feh.CombatResult
-import com.bloombase.feh.HeroUnit
-import com.bloombase.feh.WinLoss
+import com.bloombase.feh.*
 
-abstract class Restore : Assist(Type.HEAL) {
+abstract class Restore : NormalAssist() {
     override fun isValidPreCombat(
         self: HeroUnit,
         selfAttacks: List<CombatResult>?,
