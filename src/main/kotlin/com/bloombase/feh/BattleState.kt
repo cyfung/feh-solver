@@ -334,20 +334,18 @@ class BattleState private constructor(
     private val isPlayerPhrase
         get() = phrase % 2 == 0
 
-    private fun assistAllyComparator(distanceFromEnemy: Map<HeroUnit, Map<Position, Int>>) =
-        compareBy<Map.Entry<HeroUnit, Position>>({
-            if (it.key.isEmptyHanded) {
-                0
-            } else {
-                1
-            }
-        }, { (_, position) ->
-            -(distanceFromEnemy.values.asSequence().mapNotNull {
-                it[position]
-            }.min() ?: Int.MAX_VALUE)
-        }, {
-            it.key.id
-        })
+    private fun assistAllyComparator(
+        distanceFromAlly: Map<HeroUnit, Map<Position, Int>>,
+        foeTeam: Team
+    ): Comparator<HeroUnit> =
+        compareByDescending<HeroUnit> { heroUnit ->
+            val distanceMap = distanceFromAlly[heroUnit] ?: return@compareByDescending Int.MAX_VALUE
+            unitsAndPosSeq(foeTeam).mapNotNull {
+                distanceMap[it.value]
+            }.min() ?: Int.MAX_VALUE
+        }.thenComparing { heroUnit: HeroUnit ->
+            heroUnit.id
+        }
 
 
     fun enemyMoves(): List<UnitMovement> {
@@ -360,7 +358,7 @@ class BattleState private constructor(
 
         val obstacles = forwardMap.toMutableMap()
 
-        val distanceFromEnemy = unitsAndPosSeq(foeTeam).filterNot { it.key.isEmptyHanded }.associate {
+        val distanceFromAlly = unitsAndPosSeq(myTeam).filterNot { it.key.isEmptyHanded }.associate {
             val resultMap = mutableMapOf<Position, Int>()
             calculateDistance(it.key, it.value, object : DistanceReceiver {
                 override fun isOverMaxDistance(distance: Int): Boolean {
@@ -387,9 +385,8 @@ class BattleState private constructor(
             autoBattleAttacks(heroUnit, moves)
         }
 
-        unitsAndPosSeq(myTeam).filter { it.key.available }
-            .sortedWith(assistAllyComparator(distanceFromEnemy))
-            .mapNotNull { it.key }
+        unitsSeq(myTeam).filter { it.available }
+            .sortedWith(assistAllyComparator(distanceFromAlly, foeTeam))
             .mapNotNull {
                 val assist = it.assist as? NormalAssist ?: return@mapNotNull null
                 val attacks = possibleAttacks[it].orEmpty()

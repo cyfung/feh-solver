@@ -19,7 +19,7 @@ object ArdentSacrifice : NormalAssist() {
             target.stat.hp - target.currentHp >= HEAL_AMOUNT
         }.maxWith(compareBy(
             { it.currentStatTotal },
-            { -it.id }
+            { it.id }
         ))
     }
 
