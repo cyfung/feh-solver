@@ -1,33 +1,28 @@
 package com.bloombase.feh.skill.assist
 
-import com.bloombase.feh.AssistEffect
 import com.bloombase.feh.CombatResult
 import com.bloombase.feh.HeroUnit
 import com.bloombase.feh.NormalAssist
+import com.bloombase.feh.min
+import kotlin.math.min
 
 private const val HEAL_AMOUNT = 10
 
 object Sacrifice : NormalAssist() {
     override fun isValidPreCombat(
         self: HeroUnit,
-        selfAttacks: List<CombatResult>?,
-        possibleAttacks: Map<HeroUnit, List<CombatResult>>
+        selfAttacks: List<CombatResult>
     ): Boolean {
-        return selfAttacks?.all {
+        return selfAttacks.all {
             it.potentialDamage < 5
-        } ?: true
+        }
     }
 
-    override fun preCombatAssistEffect(self: HeroUnit, target: HeroUnit): AssistEffect? {
-        return if (
-            target.stat.hp > target.currentHp &&
-            self.currentHp > target.currentHp &&
-            target.stat.hp >= self.currentHp &&
-            self.stat.hp >= target.currentHp
-        ) {
-            AssistEffect(AssistEffect.Type.DONOR_HEAL)
-        } else {
-            null
-        }
+    override fun preCombatBestTarget(self: HeroUnit, targets: Set<HeroUnit>): HeroUnit? {
+        return targets.asSequence().map { target ->
+            target to min(target.stat.hp - target.currentHp, self.currentHp - 1)
+        }.filter {
+            it.second > 0
+        }.bestHealTarget()
     }
 }

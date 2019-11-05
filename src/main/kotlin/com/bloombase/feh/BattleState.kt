@@ -143,7 +143,12 @@ class BattleState private constructor(
 
         val attackOrder = createAttackOrder(attacker, defender, spdDiff)
 
-        val potentialDamage = attackOrder.asSequence().filter { true }.count() * calculateDamage(attacker, defender, attackerStat, defenderStat)
+        val potentialDamage = attackOrder.asSequence().filter { true }.count() * calculateDamage(
+            attacker,
+            defender,
+            attackerStat,
+            defenderStat
+        )
 
         val deadTeam = attackOrder.asSequence().mapNotNull { attackerTurn ->
             if (attackerTurn) {
@@ -387,8 +392,8 @@ class BattleState private constructor(
             .mapNotNull { it.key }
             .mapNotNull {
                 val assist = it.assist as? NormalAssist ?: return@mapNotNull null
-                val attacks = possibleAttacks[it]
-                val win = attacks?.firstOrNull()?.winLoss == WinLoss.WIN
+                val attacks = possibleAttacks[it].orEmpty()
+                val win = attacks.firstOrNull()?.winLoss == WinLoss.WIN
                 if (win) {
                     null
                 } else {
@@ -396,21 +401,16 @@ class BattleState private constructor(
                 }
             }
             .filter { (heroUnit, assist, selfAttacks) ->
-                assist.isValidPreCombat(
-                    heroUnit,
-                    selfAttacks,
-                    possibleAttacks
-                )
+                assist.isValidPreCombat(heroUnit, selfAttacks)
             }
             .map { (heroUnit, assist, _) ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
-                moves.asSequence().flatMap { moveStep ->
+                val assistTargets = moves.asSequence().flatMap { moveStep ->
                     assistTargets(heroUnit, moveStep.position).map {
-                        moveStep to it
+                        it to moveStep
                     }
-                }.distinctBy { it.second }.filter {
-                    assist.preCombatAssistEffect(heroUnit, it.second)
-                }
+                }.distinctBy { it.first }.associate { it }
+                assist.preCombatBestTarget(heroUnit, assistTargets.keys)
             }
             .firstOrNull {
                 true

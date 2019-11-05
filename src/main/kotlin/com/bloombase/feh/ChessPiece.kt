@@ -5,6 +5,10 @@ sealed class ChessPiece {
 }
 
 class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(), Hero by heroModel {
+    val currentStatTotal: Int
+        get() {
+            return stat.totalExceptHp + buff.totalExceptHp + debuff.totalExceptHp
+        }
     val travelPower: Int
         get() = when (heroModel.moveType) {
             MoveType.CAVALRY -> 3

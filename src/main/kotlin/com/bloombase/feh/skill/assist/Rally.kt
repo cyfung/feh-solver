@@ -6,14 +6,7 @@ import com.bloombase.feh.NormalAssist
 import com.bloombase.feh.WinLoss
 
 abstract class Rally : NormalAssist() {
-    override fun isValidPreCombat(
-        self: HeroUnit,
-        selfAttacks: List<CombatResult>?,
-        possibleAttacks: Map<HeroUnit, List<CombatResult>>
-    ): Boolean {
-        if (selfAttacks == null) {
-            return true
-        }
+    override fun isValidPreCombat(self: HeroUnit, selfAttacks: List<CombatResult>): Boolean {
         return if (self.hasSpecialDebuff) {
             selfAttacks.all {
                 it.potentialDamage < 5 && it.debuffSuccess == 0 && it.winLoss == WinLoss.LOSS

@@ -6,11 +6,10 @@ abstract class MovementAssist : Assist()
 abstract class NormalAssist : Assist() {
     abstract fun isValidPreCombat(
         self: HeroUnit,
-        selfAttacks: List<CombatResult>?,
-        possibleAttacks: Map<HeroUnit, List<CombatResult>>
+        selfAttacks: List<CombatResult>
     ): Boolean
 
-    abstract fun preCombatAssistEffect(self: HeroUnit, target: HeroUnit): AssistEffect?
+    abstract fun preCombatBestTarget(self: HeroUnit, targets: Set<HeroUnit>): HeroUnit?
 }
 
 class AssistEffect(val type: Type) {
