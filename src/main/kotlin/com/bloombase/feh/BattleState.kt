@@ -334,27 +334,9 @@ class BattleState private constructor(
     private val isPlayerPhrase
         get() = phrase % 2 == 0
 
-    private fun assistAllyComparator(
-        distanceFromAlly: Map<HeroUnit, Map<Position, Int>>,
-        foeTeam: Team
-    ): Comparator<HeroUnit> =
-        compareByDescending<HeroUnit> { heroUnit ->
-            val distanceMap = distanceFromAlly[heroUnit] ?: return@compareByDescending Int.MAX_VALUE
-            unitsAndPosSeq(foeTeam).mapNotNull {
-                distanceMap[it.value]
-            }.min() ?: Int.MAX_VALUE
-        }.thenComparing { heroUnit: HeroUnit ->
-            heroUnit.id
-        }
-
-
     fun enemyMoves(): List<UnitMovement> {
         val myTeam = Team.ENEMY
         val foeTeam = Team.ENEMY.opponent
-
-        val movementRanges = unitsSeq(foeTeam).associateWith {
-            it.travelPower
-        }
 
         val obstacles = forwardMap.toMutableMap()
 
@@ -373,9 +355,25 @@ class BattleState private constructor(
             it.key to resultMap.toMap()
         }
 
-        val enemyThreat = calculateThreat(movementRanges, obstacles, foeTeam)
+        val distanceToClosestEnemy = unitsSeq(myTeam).associateWith { heroUnit ->
+            val distanceMap = distanceFromAlly[heroUnit] ?: return@associateWith Int.MAX_VALUE
+            unitsAndPosSeq(foeTeam).mapNotNull {
+                distanceMap[it.value]
+            }.min() ?: Int.MAX_VALUE
+        }
 
-        val comparator = positionComparator(enemyThreat)
+        val foeThreat = calculateThreat(obstacles, foeTeam).flatMap { it.second }.groupingBy { it }.eachCount()
+
+        val lazyAllyThreat = lazy {
+            calculateThreat(obstacles, myTeam).filter { (_, threatenedSeq) ->
+                val threatened = threatenedSeq.toList()
+                unitsAndPosSeq(foeTeam).any { threatened.contains(it.value) }
+            }.map {
+                it.first
+            }.toSet()
+        }
+
+        val comparator = positionComparator(foeThreat)
 
         val possibleMoves = unitsAndPosSeq(myTeam).filter { it.key.available }
             .associate { (heroUnit, position) ->
@@ -385,8 +383,13 @@ class BattleState private constructor(
             autoBattleAttacks(heroUnit, moves)
         }
 
-        unitsSeq(myTeam).filter { it.available }
-            .sortedWith(assistAllyComparator(distanceFromAlly, foeTeam))
+        distanceToClosestEnemy.asSequence().filter { it.key.available }
+            .sortedWith(compareByDescending<Map.Entry<HeroUnit, Int>> { it.value }.thenBy {
+                it.key.id
+            })
+            .map {
+                it.key
+            }
             .mapNotNull {
                 val assist = it.assist as? NormalAssist ?: return@mapNotNull null
                 val attacks = possibleAttacks[it].orEmpty()
@@ -407,7 +410,7 @@ class BattleState private constructor(
                         it to moveStep
                     }
                 }.distinctBy { it.first }.associate { it }
-                assist.preCombatBestTarget(heroUnit, assistTargets.keys)
+                assist.preCombatBestTarget(heroUnit, assistTargets.keys, lazyAllyThreat, distanceToClosestEnemy)
             }
             .firstOrNull {
                 true
@@ -478,20 +481,19 @@ class BattleState private constructor(
     }
 
     private fun calculateThreat(
-        movementRanges: Map<HeroUnit, Int>,
         obstacles: MutableMap<Position, ChessPiece>,
         team: Team
-    ): Map<Position, Int> {
-        return unitsAndPosSeq(team).filterNot { it.key.isEmptyHanded }.flatMap { (heroUnit, position) ->
+    ): Sequence<Pair<HeroUnit, Sequence<Position>>> {
+        return unitsAndPosSeq(team).filterNot { it.key.isEmptyHanded }.map { (heroUnit, position) ->
             val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
-            val movementRange = movementRanges[heroUnit] ?: throw IllegalStateException()
+            val travelPower = heroUnit.travelPower
             val threatReceiver = if (pass) {
-                ThreatWithPass(movementRange, obstacles, team)
+                ThreatWithPass(travelPower, obstacles, team)
             } else {
-                ThreatWithoutPass(movementRange, obstacles)
+                ThreatWithoutPass(travelPower, obstacles)
             }
             calculateDistance(heroUnit, position, threatReceiver)
-            threatReceiver.result.flatMap {
+            heroUnit to threatReceiver.result.flatMap {
                 if (heroUnit.isEmptyHanded) {
                     emptySequence()
                 } else {
@@ -503,7 +505,7 @@ class BattleState private constructor(
                     }
                 }
             }.distinct()
-        }.groupingBy { it }.eachCount()
+        }
     }
 
     private fun getUnit(heroUnitId: Int) =

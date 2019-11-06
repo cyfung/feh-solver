@@ -9,7 +9,12 @@ abstract class NormalAssist : Assist() {
         selfAttacks: List<CombatResult>
     ): Boolean
 
-    abstract fun preCombatBestTarget(self: HeroUnit, targets: Set<HeroUnit>): HeroUnit?
+    abstract fun preCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        distanceToClosestEnemy: Map<HeroUnit, Int>
+    ): HeroUnit?
 }
 
 class AssistEffect(val type: Type) {

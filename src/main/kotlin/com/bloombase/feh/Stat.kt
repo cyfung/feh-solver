@@ -25,6 +25,13 @@ data class Stat(
         }
     }
 
+    fun rallyGain(bonus: Stat): Int {
+        return max(bonus.atk - atk, 0) +
+                max(bonus.spd - spd, 0) +
+                max(bonus.def - def, 0) +
+                max(bonus.res - res, 0)
+    }
+
 }
 
 fun min(s1: Stat, s2: Stat): Stat {

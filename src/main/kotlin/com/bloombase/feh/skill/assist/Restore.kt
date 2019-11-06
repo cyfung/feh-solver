@@ -7,7 +7,12 @@ import com.bloombase.feh.Stat
 private const val THRESHOLD = 10
 
 abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
-    override fun preCombatBestTarget(self: HeroUnit, targets: Set<HeroUnit>): HeroUnit? {
+    override fun preCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        distanceToClosestEnemy: Map<HeroUnit, Int>
+    ): HeroUnit? {
         val (noDebuff, hasDebuff) = targets.partition { it.debuff == Stat.ZERO }
         return preCombatNoDebuffBestTarget(self, noDebuff) ?: preCombatHasDebuffBestTarget(hasDebuff)
     }
@@ -15,7 +20,7 @@ abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
     private fun preCombatHasDebuffBestTarget(
         targets: List<HeroUnit>
     ): HeroUnit? {
-        return targets.minBy { it.id }
+        return targets.maxBy { it.id }
     }
 
     private fun preCombatNoDebuffBestTarget(
@@ -23,13 +28,10 @@ abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
         targets: List<HeroUnit>
     ): HeroUnit? {
         return targets.asSequence().map { target ->
-            target to healAmount(self, target)
+            target to healAmount(baseHeal, self, target)
         }.filter {
             it.second >= THRESHOLD
         }.bestHealTarget()
     }
 
-    private fun healAmount(self: HeroUnit, target: HeroUnit): Int {
-        return baseHeal
-    }
 }

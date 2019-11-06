@@ -8,9 +8,10 @@ interface Hero {
     val isEmptyHanded: Boolean
     val weaponType: WeaponType
     val assist: Assist?
+    val special: Special?
+    val skillSet: SkillSet
     val stat: Stat
     val cooldownCount: Int?
-    val skillSet: SkillSet
     val hasSpecialDebuff: Boolean
 }
 
@@ -27,7 +28,7 @@ open class HeroModel(
     override val moveType: MoveType,
     weapon: Weapon,
     final override val assist: Assist?,
-    special: Special?,
+    final override val special: Special?,
     stat: Stat,
     passives: List<Passive>,
     isFinalStat: Boolean = false

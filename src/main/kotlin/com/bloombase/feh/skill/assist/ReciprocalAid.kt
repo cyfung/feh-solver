@@ -12,7 +12,12 @@ object ReciprocalAid : NormalAssist() {
         return self.isEmptyHanded
     }
 
-    override fun preCombatBestTarget(self: HeroUnit, targets: Set<HeroUnit>): HeroUnit? {
+    override fun preCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        distanceToClosestEnemy: Map<HeroUnit, Int>
+    ): HeroUnit? {
         return targets.asSequence().filter { target ->
             target.stat.hp > target.currentHp &&
                     self.currentHp > target.currentHp &&

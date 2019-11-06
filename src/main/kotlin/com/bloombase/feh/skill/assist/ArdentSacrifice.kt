@@ -14,13 +14,15 @@ object ArdentSacrifice : NormalAssist() {
         return self.isEmptyHanded && self.currentHp > HEAL_AMOUNT
     }
 
-    override fun preCombatBestTarget(self: HeroUnit, targets: Set<HeroUnit>): HeroUnit? {
+    override fun preCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        distanceToClosestEnemy: Map<HeroUnit, Int>
+    ): HeroUnit? {
         return targets.asSequence().filter { target ->
             target.stat.hp - target.currentHp >= HEAL_AMOUNT
-        }.maxWith(compareBy(
-            { it.currentStatTotal },
-            { it.id }
-        ))
+        }.minWith(BASE_ASSIST_COMPARATOR)
     }
 
 }

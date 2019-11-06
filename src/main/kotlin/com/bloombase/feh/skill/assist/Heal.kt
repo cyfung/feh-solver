@@ -3,17 +3,30 @@ package com.bloombase.feh.skill.assist
 import com.bloombase.feh.CombatResult
 import com.bloombase.feh.HeroUnit
 import com.bloombase.feh.NormalAssist
+import com.bloombase.feh.skill.special.Imbue
+import com.bloombase.feh.util.compareByDescending
 
-val HEAL_COMPARATOR = compareBy<Pair<HeroUnit, Int>>({
-    it.second
+val BASE_ASSIST_COMPARATOR = compareByDescending<HeroUnit>({
+    it.currentStatTotal
 }, {
-    it.first.currentStatTotal
-}, {
-    it.first.id
+    it.id
 })
 
+val HEAL_COMPARATOR = compareByDescending<Pair<HeroUnit, Int>> {
+    it.second
+}.thenBy(BASE_ASSIST_COMPARATOR) { it.first }
+
 fun Sequence<Pair<HeroUnit, Int>>.bestHealTarget(): HeroUnit? {
-    return maxWith(HEAL_COMPARATOR)?.first
+    return minWith(HEAL_COMPARATOR)?.first
+}
+
+fun healAmount(baseHeal: Int, self: HeroUnit, target: HeroUnit): Int {
+    val maxHealAmount = if(self.special == Imbue && self.cooldownCount == 0) {
+        baseHeal + Imbue.healBonus
+    } else {
+        baseHeal
+    }
+    return Integer.min(maxHealAmount, target.stat.hp - target.currentHp)
 }
 
 abstract class Heal(private val threshold: Int) : NormalAssist() {
@@ -24,7 +37,12 @@ abstract class Heal(private val threshold: Int) : NormalAssist() {
         return true
     }
 
-    final override fun preCombatBestTarget(self: HeroUnit, targets: Set<HeroUnit>): HeroUnit? {
+    final override fun preCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        distanceToClosestEnemy: Map<HeroUnit, Int>
+    ): HeroUnit? {
         return targets.asSequence().map { target ->
             target to healAmount(self, target)
         }.filter {
