@@ -53,13 +53,25 @@ class BattleState private constructor(
         return reverseMap.asSequence().filter { it.key.team == team }
     }
 
-    private fun executeMove(unitMovement: UnitMovement): FightResult {
-        return executeMove(
-            unitMovement.heroUnitId,
-            unitMovement.move,
-            unitMovement.attackTargetId,
-            unitMovement.assistTargetId
-        )
+    private fun executeMove(unitAction: UnitAction): FightResult {
+        val heroUnit = getUnit(unitAction.heroUnitId)
+        move(heroUnit, unitAction.moveTarget)
+        return when (unitAction) {
+            is MoveOnly -> {
+                standStill(heroUnit)
+                FightResult.NOTHING
+            }
+            is MoveAndAttack -> {
+                val target = getUnit(unitAction.attackTargetId)
+                fight(heroUnit, target).first
+            }
+            is MoveAndAssist -> {
+                val assist = heroUnit.assist ?: throw IllegalStateException()
+                val target = getUnit(unitAction.assistTargetId)
+                assist.apply(heroUnit, target)
+                FightResult.NOTHING
+            }
+        }
     }
 
     private fun moveAndFight(
@@ -318,9 +330,9 @@ class BattleState private constructor(
         return false
     }
 
-    fun playerMove(unitMovement: UnitMovement): MovementResult {
+    fun playerMove(unitAction: UnitAction): MovementResult {
         check(isPlayerPhrase)
-        val movementResult = executeMove(unitMovement).movementResult
+        val movementResult = executeMove(unitAction).movementResult
         if (movementResult != null) {
             return movementResult
         }
@@ -334,7 +346,7 @@ class BattleState private constructor(
     private val isPlayerPhrase
         get() = phrase % 2 == 0
 
-    fun enemyMoves(): List<UnitMovement> {
+    fun enemyMoves(): List<UnitAction> {
         val myTeam = Team.ENEMY
         val foeTeam = Team.ENEMY.opponent
 
@@ -383,14 +395,12 @@ class BattleState private constructor(
             autoBattleAttacks(heroUnit, moves)
         }
 
-        distanceToClosestEnemy.asSequence().filter { it.key.available }
+        val preCombatAssist = distanceToClosestEnemy.asSequence().filter { it.key.available }
             .sortedWith(compareByDescending<Map.Entry<HeroUnit, Int>> { it.value }.thenBy {
                 it.key.id
-            })
-            .map {
+            }).map {
                 it.key
-            }
-            .mapNotNull {
+            }.mapNotNull {
                 val assist = it.assist as? NormalAssist ?: return@mapNotNull null
                 val attacks = possibleAttacks[it].orEmpty()
                 val win = attacks.firstOrNull()?.winLoss == WinLoss.WIN
@@ -399,30 +409,35 @@ class BattleState private constructor(
                 } else {
                     Triple(it, assist, attacks)
                 }
-            }
-            .filter { (heroUnit, assist, selfAttacks) ->
+            }.filter { (heroUnit, assist, selfAttacks) ->
                 assist.isValidPreCombat(heroUnit, selfAttacks)
-            }
-            .map { (heroUnit, assist, _) ->
+            }.mapNotNull { (heroUnit, assist, _) ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
                 val assistTargets = moves.asSequence().flatMap { moveStep ->
                     assistTargets(heroUnit, moveStep.position).map {
                         it to moveStep
                     }
                 }.distinctBy { it.first }.associate { it }
-                assist.preCombatBestTarget(heroUnit, assistTargets.keys, lazyAllyThreat, distanceToClosestEnemy)
-            }
-            .firstOrNull {
-                true
-            }
+                val target =
+                    assist.preCombatBestTarget(heroUnit, assistTargets.keys, lazyAllyThreat, distanceToClosestEnemy)
+                if (target == null) {
+                    null
+                } else {
+                    val moveStep = assistTargets[target]?: throw IllegalStateException()
+                    MoveAndAssist(target.id, moveStep.position, target.id)
+                }
+            }.firstOrNull()
+
+        if (preCombatAssist != null) {
+            executeMove(preCombatAssist)
+        }
+
 
         // FIXME : fake moves
         val movements = unitsAndPosSeq(Team.ENEMY).map {
-            val move = UnitMovement(
+            val move = MoveOnly(
                 heroUnitId = it.key.id,
-                move = it.value,
-                attackTargetId = null,
-                assistTargetId = null
+                moveTarget = it.value
             )
             executeMove(move)
             move
@@ -668,22 +683,19 @@ class BattleState private constructor(
                     )
                 }.ifEmpty { sequenceOf(Stat.ZERO) }.reduce(Stat::plus)
 
-    fun getAllPlayerMovements(): Sequence<UnitMovement> {
+    fun getAllPlayerMovements(): Sequence<UnitAction> {
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
             moveTargets(heroUnit).map { it.position }.flatMap { move ->
                 attackTargets(heroUnit, move).map { attackTarget ->
-                    UnitMovement(
+                    MoveAndAttack(
                         heroUnitId = heroUnit.id,
-                        move = move,
-                        attackTargetId = attackTarget.id,
-                        assistTargetId = null
+                        moveTarget = move,
+                        attackTargetId = attackTarget.id
                     )
                 }.plus(
-                    UnitMovement(
+                    MoveOnly(
                         heroUnitId = heroUnit.id,
-                        move = move,
-                        attackTargetId = null,
-                        assistTargetId = null
+                        moveTarget = move
                     )
                 )
             }

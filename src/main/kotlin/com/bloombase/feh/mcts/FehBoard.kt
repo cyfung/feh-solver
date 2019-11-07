@@ -2,7 +2,7 @@ package com.bloombase.feh.mcts
 
 import com.bloombase.feh.BattleState
 import com.bloombase.feh.Team
-import com.bloombase.feh.UnitMovement
+import com.bloombase.feh.UnitAction
 import me.kumatheta.mcts.Board
 import me.kumatheta.mcts.Move
 
@@ -42,7 +42,7 @@ class FehBoard private constructor(
 
     override fun applyMove(move: FehMove) {
         check(score == null)
-        val nextMove = move.unitMovement
+        val nextMove = move.unitAction
         when (state.playerMove(nextMove)) {
             BattleState.MovementResult.PLAYER_WIN -> {
                 score = calculateScore()
@@ -66,4 +66,4 @@ class FehBoard private constructor(
 
 }
 
-data class FehMove(val unitMovement: UnitMovement) : Move
+data class FehMove(val unitAction: UnitAction) : Move

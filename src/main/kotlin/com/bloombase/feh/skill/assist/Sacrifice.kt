@@ -5,9 +5,21 @@ import com.bloombase.feh.HeroUnit
 import com.bloombase.feh.NormalAssist
 import kotlin.math.min
 
-private const val HEAL_AMOUNT = 10
-
 object Sacrifice : NormalAssist() {
+    override fun apply(self: HeroUnit, target: HeroUnit) {
+        val heal = min(target.stat.hp - target.currentHp, self.currentHp - 1)
+        if (heal > 0) {
+            target.heal(heal)
+            self.takeNonLethalDamage(heal)
+        }
+        target.applyBuff(-target.debuff)
+        target.clearPenalty()
+    }
+
+    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+        return target.debuff.isNotZero() || (target.currentHp < target.stat.hp && self.currentHp > 1)
+    }
+
     override fun isValidPreCombat(
         self: HeroUnit,
         selfAttacks: List<CombatResult>

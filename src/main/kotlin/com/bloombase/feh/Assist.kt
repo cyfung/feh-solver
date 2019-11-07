@@ -1,6 +1,9 @@
 package com.bloombase.feh
 
-sealed class Assist : Skill
+sealed class Assist : Skill {
+    abstract fun apply(self: HeroUnit, target: HeroUnit)
+    abstract fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean
+}
 abstract class MovementAssist : Assist()
 
 abstract class NormalAssist : Assist() {

@@ -13,7 +13,7 @@ abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
         distanceToClosestEnemy: Map<HeroUnit, Int>
     ): HeroUnit? {
-        val (noDebuff, hasDebuff) = targets.partition { it.debuff == Stat.ZERO }
+        val (noDebuff, hasDebuff) = targets.partition { it.debuff.isZero() }
         return preCombatNoDebuffBestTarget(self, noDebuff) ?: preCombatHasDebuffBestTarget(hasDebuff)
     }
 

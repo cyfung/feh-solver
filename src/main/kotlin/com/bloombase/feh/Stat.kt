@@ -3,7 +3,7 @@ package com.bloombase.feh
 import kotlin.math.max
 import kotlin.math.min
 
-data class Stat(
+class Stat(
     val hp: Int = 0,
     val atk: Int = 0,
     val spd: Int = 0,
@@ -19,8 +19,8 @@ data class Stat(
 
     operator fun plus(o: Stat): Stat {
         return when {
-            this == ZERO -> o
-            o == ZERO -> this
+            this === ZERO -> o
+            o === ZERO -> this
             else -> Stat(hp + o.hp, atk + o.atk, spd + o.spd, def + o.def, res + o.res)
         }
     }
@@ -32,6 +32,23 @@ data class Stat(
                 max(bonus.res - res, 0)
     }
 
+    fun isZero(): Boolean {
+        return this === ZERO || (hp == 0 && atk == 0 && spd == 0 && def == 0 && res == 0)
+    }
+
+    fun isNotZero(): Boolean {
+        return !isZero()
+    }
+
+    operator fun unaryMinus(): Stat {
+        return Stat(
+            hp = -hp,
+            atk = -atk,
+            spd = -spd,
+            def = -def,
+            res = -res
+        )
+    }
 }
 
 fun min(s1: Stat, s2: Stat): Stat {

@@ -61,6 +61,17 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
         }
     }
 
+    fun takeNonLethalDamage(damage: Int): Int {
+        currentHp -= damage
+        return if (currentHp < 1) {
+            val actualDamage = damage - (1 - currentHp)
+            currentHp = 1
+            actualDamage
+        } else {
+            damage
+        }
+    }
+
     fun takeDamage(damage: Int): Boolean {
         currentHp -= damage
         if (currentHp <= 0) {
@@ -87,7 +98,7 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
         buff = max(buff, stat)
     }
 
-    private fun clearPenalty() {
+    fun clearPenalty() {
         debuff = Stat.ZERO
     }
 
@@ -107,6 +118,17 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
 
     override fun toString(): String {
         return heroModel.toString() //"HeroUnit(heroModel=$heroModel, team=$team, available=$available, buff=$buff, debuff=$debuff, currentHp=$currentHp, cooldown=$cooldown)"
+    }
+
+    fun heal(healAmount: Int): Int {
+        currentHp += healAmount
+        return if (currentHp > stat.hp) {
+            val actualHeal = healAmount - (currentHp - stat.hp)
+            currentHp = stat.hp
+            actualHeal
+        } else {
+            healAmount
+        }
     }
 }
 

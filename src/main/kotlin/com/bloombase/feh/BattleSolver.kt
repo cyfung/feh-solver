@@ -4,9 +4,9 @@ import java.lang.IllegalStateException
 import java.util.*
 
 private class PlayerMovement(
-    val unitMovement: UnitMovement,
+    val unitAction: UnitAction,
     val beforeState: BattleState,
-    val moveIterator: Iterator<UnitMovement>
+    val moveIterator: Iterator<UnitAction>
 )
 
 class BattleSolver(private val battleMap: BattleMap, private val phraseLimit: Int) {
@@ -42,7 +42,7 @@ class BattleSolver(private val battleMap: BattleMap, private val phraseLimit: In
         nextMove: PlayerMovement,
         steps: LinkedList<PlayerMovement>
     ) {
-        when (newState.playerMove(nextMove.unitMovement)) {
+        when (newState.playerMove(nextMove.unitAction)) {
             BattleState.MovementResult.PLAYER_WIN -> {
                 println(steps)
                 throw RuntimeException("win")
