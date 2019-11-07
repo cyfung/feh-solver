@@ -85,23 +85,6 @@ class BattleState private constructor(
         return fight(heroUnit, target)
     }
 
-    private fun executeMove(
-        heroUnitId: Int,
-        movePosition: Position,
-        attackTargetId: Int?,
-        assistTargetId: Int?
-    ): FightResult {
-        val heroUnit = getUnit(heroUnitId)
-        move(heroUnit, movePosition)
-        return if (attackTargetId != null) {
-            val target = getUnit(attackTargetId)
-            fight(heroUnit, target).first
-        } else {
-            standStill(heroUnit)
-            FightResult.NOTHING
-        }
-    }
-
     private fun turnEnd() {
         val nextTeam = if (++phrase % 2 == 0) {
             Team.PLAYER
@@ -526,23 +509,7 @@ class BattleState private constructor(
     private fun getUnit(heroUnitId: Int) =
         unitIdMap[heroUnitId] ?: throw IllegalStateException()
 
-    private fun checkObstacle(
-        position: Position,
-        team: Team,
-        obstacles: Map<Position, ChessPiece>
-    ): Boolean? {
-        return when (val obstacle = obstacles[position]) {
-            is Obstacle -> null
-            is HeroUnit -> if (obstacle.team == team) {
-                true
-            } else {
-                null
-            }
-            null -> false
-        }
-    }
-
-    fun moveTargets(
+    private fun moveTargets(
         heroUnit: HeroUnit,
         position: Position = reverseMap[heroUnit] ?: throw IllegalArgumentException()
     ): Sequence<MoveStep> {
@@ -906,21 +873,6 @@ data class MoveStep(
 
     override fun hashCode(): Int {
         return position.hashCode()
-    }
-}
-
-private class MoveStepTemp(
-    val position: Position,
-    val passThroughOnly: Boolean,
-    val terrain: Terrain,
-    val distanceTravel: Int
-) {
-    fun toMoveStep(): MoveStep? {
-        return if (passThroughOnly) {
-            null
-        } else {
-            MoveStep(position, terrain, false, distanceTravel)
-        }
     }
 }
 
