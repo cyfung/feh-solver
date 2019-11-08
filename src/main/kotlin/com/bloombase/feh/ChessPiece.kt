@@ -18,6 +18,7 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
         }
 
     var available = false
+        private set
     var buff = Stat.ZERO
         private set
     var debuff = Stat.ZERO
@@ -105,6 +106,10 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
     fun endOfTurn() {
         clearPenalty()
         available = false
+    }
+
+    fun refresh() {
+        available = true
     }
 
     fun startOfTurn() {

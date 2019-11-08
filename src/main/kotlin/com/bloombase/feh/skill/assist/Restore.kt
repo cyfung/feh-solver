@@ -7,6 +7,15 @@ import com.bloombase.feh.Stat
 private const val THRESHOLD = 10
 
 abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
+    override fun apply(self: HeroUnit, target: HeroUnit) {
+        target.heal(healAmount(baseHeal, self, target))
+        target.clearPenalty()
+    }
+
+    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+        return target.currentHp < target.stat.hp || target.debuff.isNotZero()
+    }
+
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,

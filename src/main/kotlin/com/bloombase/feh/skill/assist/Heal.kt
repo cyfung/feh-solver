@@ -30,6 +30,14 @@ fun healAmount(baseHeal: Int, self: HeroUnit, target: HeroUnit): Int {
 }
 
 abstract class Heal(private val threshold: Int) : NormalAssist() {
+    override fun apply(self: HeroUnit, target: HeroUnit) {
+        target.heal(healAmount(self, target))
+    }
+
+    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+        return target.currentHp < target.stat.hp
+    }
+
     final override fun isValidPreCombat(
         self: HeroUnit,
         selfAttacks: List<CombatResult>

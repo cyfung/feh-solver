@@ -5,6 +5,14 @@ import com.bloombase.feh.HeroUnit
 import com.bloombase.feh.NormalAssist
 
 abstract class Refresh : NormalAssist() {
+    override fun apply(self: HeroUnit, target: HeroUnit) {
+        target.refresh()
+    }
+
+    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+        return !target.available
+    }
+
     final override fun isValidPreCombat(
         self: HeroUnit,
         selfAttacks: List<CombatResult>
