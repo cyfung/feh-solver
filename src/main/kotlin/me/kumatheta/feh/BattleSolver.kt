@@ -4,23 +4,23 @@ import java.lang.IllegalStateException
 import java.util.*
 
 private class PlayerMovement(
-    val unitAction: me.kumatheta.feh.UnitAction,
-    val beforeState: me.kumatheta.feh.BattleState,
-    val moveIterator: Iterator<me.kumatheta.feh.UnitAction>
+    val unitAction: UnitAction,
+    val beforeState: BattleState,
+    val moveIterator: Iterator<UnitAction>
 )
 
-class BattleSolver(private val battleMap: me.kumatheta.feh.BattleMap, private val phraseLimit: Int) {
+class BattleSolver(private val battleMap: BattleMap, private val phraseLimit: Int) {
 
-    fun solve(): me.kumatheta.feh.BattleSolution {
-        var lastPlayerMovement: me.kumatheta.feh.PlayerMovement? = null
-        val steps = LinkedList<me.kumatheta.feh.PlayerMovement>()
-        var battleState = me.kumatheta.feh.BattleState(battleMap)
+    fun solve(): BattleSolution {
+        var lastPlayerMovement: PlayerMovement? = null
+        val steps = LinkedList<PlayerMovement>()
+        var battleState = BattleState(battleMap)
 
         mainLoop@ while (true) {
             while (true) {
                 val nextMove = getNextMovement(lastPlayerMovement, battleState)
                 if (nextMove == null) {
-                    lastPlayerMovement = rollback(steps) ?: return me.kumatheta.feh.NoSolution
+                    lastPlayerMovement = rollback(steps) ?: return NoSolution
                     battleState = lastPlayerMovement.beforeState
                     continue@mainLoop
                 }
@@ -38,36 +38,36 @@ class BattleSolver(private val battleMap: me.kumatheta.feh.BattleMap, private va
     }
 
     private fun executeMove(
-        newState: me.kumatheta.feh.BattleState,
-        nextMove: me.kumatheta.feh.PlayerMovement,
-        steps: LinkedList<me.kumatheta.feh.PlayerMovement>
+        newState: BattleState,
+        nextMove: PlayerMovement,
+        steps: LinkedList<PlayerMovement>
     ) {
         when (newState.playerMove(nextMove.unitAction)) {
-            me.kumatheta.feh.BattleState.MovementResult.PLAYER_WIN -> {
+            BattleState.MovementResult.PLAYER_WIN -> {
                 println(steps)
                 throw RuntimeException("win")
             }
-            me.kumatheta.feh.BattleState.MovementResult.PLAYER_UNIT_DIED -> throw RuntimeException("died")
-            me.kumatheta.feh.BattleState.MovementResult.PHRASE_CHANGE -> {
+            BattleState.MovementResult.PLAYER_UNIT_DIED -> throw RuntimeException("died")
+            BattleState.MovementResult.PHRASE_CHANGE -> {
                 steps.add(nextMove)
                 newState.enemyMoves()
             }
-            me.kumatheta.feh.BattleState.MovementResult.NOTHING -> {
+            BattleState.MovementResult.NOTHING -> {
                 steps.add(nextMove)
             }
         }
     }
 
     private fun getNextMovement(
-        lastPlayerMovement: me.kumatheta.feh.PlayerMovement?,
-        battleState: me.kumatheta.feh.BattleState
-    ): me.kumatheta.feh.PlayerMovement? {
+        lastPlayerMovement: PlayerMovement?,
+        battleState: BattleState
+    ): PlayerMovement? {
         return if (lastPlayerMovement != null) {
             val nextMove = lastPlayerMovement.moveIterator.nextOrNull()
             if (nextMove == null) {
                 null
             } else {
-                me.kumatheta.feh.PlayerMovement(
+                PlayerMovement(
                     nextMove,
                     battleState,
                     lastPlayerMovement.moveIterator
@@ -75,7 +75,7 @@ class BattleSolver(private val battleMap: me.kumatheta.feh.BattleMap, private va
             }
         } else {
             val moveIterator = battleState.getAllPlayerMovements().iterator()
-            me.kumatheta.feh.PlayerMovement(
+            PlayerMovement(
                 moveIterator.next(),
                 beforeState = battleState,
                 moveIterator = moveIterator
@@ -83,7 +83,7 @@ class BattleSolver(private val battleMap: me.kumatheta.feh.BattleMap, private va
         }
     }
 
-    private fun rollback(steps: LinkedList<me.kumatheta.feh.PlayerMovement>): me.kumatheta.feh.PlayerMovement? {
+    private fun rollback(steps: LinkedList<PlayerMovement>): PlayerMovement? {
         return if (steps.isNotEmpty()) {
             steps.removeLast()
         } else {
@@ -102,4 +102,4 @@ class BattleSolver(private val battleMap: me.kumatheta.feh.BattleMap, private va
 }
 
 sealed class BattleSolution
-object NoSolution : me.kumatheta.feh.BattleSolution()
+object NoSolution : BattleSolution()

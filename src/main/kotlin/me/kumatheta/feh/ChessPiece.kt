@@ -5,6 +5,7 @@ sealed class ChessPiece {
 }
 
 class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(), Hero by heroModel {
+    var position: Position = Position(0, 0)
     val currentStatTotal: Int
         get() {
             return stat.totalExceptHp + buff.totalExceptHp + debuff.totalExceptHp
@@ -36,6 +37,7 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
         newUnit.debuff = debuff
         newUnit.currentHp = currentHp
         newUnit.cooldown = cooldown
+        newUnit.position = position
         return newUnit
     }
 

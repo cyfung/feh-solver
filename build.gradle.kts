@@ -4,7 +4,7 @@ plugins {
     kotlin("jvm") version "1.3.50"
 }
 
-group = "com.kumatheta.feh"
+group = "me.kumatheta.feh"
 version = "1.0-SNAPSHOT"
 
 repositories {

@@ -28,6 +28,12 @@ object TestMap : me.kumatheta.feh.BattleMap {
         Position(3, 3) to HeroUnit(5, LanceFighter, Team.ENEMY),
         Position(3,4) to HeroUnit(6, SwordFighter, Team.ENEMY)
     )
+
+    init {
+        map.forEach {(position, heroUnit) ->
+            heroUnit.position = position
+        }
+    }
     override fun toChessPieceMap(): Map<Position, ChessPiece> {
         return map
     }
@@ -41,6 +47,7 @@ fun main() {
     val board = FehBoard(3, state)
     val mcts = Mcts(board)
     repeat(10) {
+        println("starting")
         mcts.run(1000)
         val bestMoves = mcts.getBestMoves()
         println(bestMoves)

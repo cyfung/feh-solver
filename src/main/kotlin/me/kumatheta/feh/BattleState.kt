@@ -1,8 +1,8 @@
 package me.kumatheta.feh
 
 class BattleState private constructor(
-    private val battleMap: me.kumatheta.feh.BattleMap,
-    private val forwardMap: MutableMap<Position, ChessPiece>,
+    private val battleMap: BattleMap,
+    private val locationMap: MutableMap<Position, ChessPiece>,
     phrase: Int
 ) {
     enum class MovementResult {
@@ -24,34 +24,20 @@ class BattleState private constructor(
 
     var phrase = phrase
         private set
-    val reverseMap = mutableMapOf<HeroUnit, Position>()
-    private val unitIdMap = forwardMap.values.filterIsInstance<HeroUnit>().associateBy { it.id }
+    private val unitIdMap = locationMap.values.filterIsInstance<HeroUnit>().associateBy { it.id }
 
     fun copy(): BattleState {
         val newForwardMap = mutableMapOf<Position, ChessPiece>()
-        forwardMap.mapValuesTo(newForwardMap) { it.value.copy() }
+        locationMap.mapValuesTo(newForwardMap) { it.value.copy() }
         return BattleState(battleMap, newForwardMap, phrase)
     }
 
-    init {
-        forwardMap.entries.asSequence().mapNotNull {
-            if (it.value is HeroUnit) {
-                Pair(it.value as HeroUnit, it.key)
-            } else {
-                null
-            }
-        }.associateTo(reverseMap) { it }
-    }
-
-    constructor(battleMap: me.kumatheta.feh.BattleMap) : this(battleMap, battleMap.toChessPieceMap().toMutableMap(), 0) {
+    constructor(battleMap: BattleMap) : this(battleMap, battleMap.toChessPieceMap().toMutableMap(), 0) {
         startOfTurn(Team.PLAYER)
     }
 
-    private fun unitsSeq(team: Team) = reverseMap.keys.asSequence().filter { it.team == team }
-
-    fun unitsAndPosSeq(team: Team): Sequence<Map.Entry<HeroUnit, Position>> {
-        return reverseMap.asSequence().filter { it.key.team == team }
-    }
+    fun unitsSeq(team: Team) =
+        locationMap.values.asSequence().filterIsInstance<HeroUnit>().filter { it.team == team }
 
     private fun executeMove(unitAction: UnitAction): FightResult {
         val heroUnit = getUnit(unitAction.heroUnitId)
@@ -95,10 +81,11 @@ class BattleState private constructor(
     }
 
     private fun move(heroUnit: HeroUnit, position: Position) {
-        val originalPosition = reverseMap.put(heroUnit, position) ?: throw IllegalStateException()
+        val originalPosition = heroUnit.position
         if (originalPosition != position) {
-            forwardMap.remove(originalPosition)
-            val piece = forwardMap.put(position, heroUnit)
+            heroUnit.position = position
+            locationMap.remove(originalPosition)
+            val piece = locationMap.put(position, heroUnit)
             check(piece == null) {
                 piece.toString()
             }
@@ -162,9 +149,7 @@ class BattleState private constructor(
         }.firstOrNull()
 
 
-        if (!attacker.isDead) {
-            attacker.endOfTurn()
-        }
+        attacker.endOfTurn()
 
         skillMethodApply(attacker, defender, SkillSet::postCombat)
 
@@ -203,8 +188,7 @@ class BattleState private constructor(
                     ?: 0
             defender.reduceCooldown(1 + defenderCooldownIncrease - defenderCooldownReduce)
         } else {
-            val position = reverseMap.remove(defender) ?: throw IllegalStateException()
-            forwardMap.remove(position)
+            locationMap.remove(defender.position)
         }
         return dead
     }
@@ -220,7 +204,7 @@ class BattleState private constructor(
             else -> skillMethodAny(attacker, defender, SkillSet::ignoreRange)
         }
 
-        val counter = rangeMatch
+        val canCounter = rangeMatch
 
         val disablePriorityChange = skillMethodAny(attacker, defender, SkillSet::disablePriorityChange)
 
@@ -248,7 +232,7 @@ class BattleState private constructor(
         val attackOrder = mutableListOf<Boolean>()
 
         if (vantage) {
-            if (counter) {
+            if (canCounter) {
                 attackOrder.add(false)
             }
             attackOrder.add(true)
@@ -261,7 +245,7 @@ class BattleState private constructor(
         }
 
         if (!vantage) {
-            if (counter) {
+            if (canCounter) {
                 attackOrder.add(false)
             }
         }
@@ -271,7 +255,7 @@ class BattleState private constructor(
         }
 
         if (defenderFollowup) {
-            if (counter) {
+            if (canCounter) {
                 attackOrder.add(false)
             }
         }
@@ -333,11 +317,11 @@ class BattleState private constructor(
         val myTeam = Team.ENEMY
         val foeTeam = Team.ENEMY.opponent
 
-        val obstacles = forwardMap.toMutableMap()
+        val obstacles = locationMap.toMutableMap()
 
-        val distanceFromAlly = unitsAndPosSeq(myTeam).filterNot { it.key.isEmptyHanded }.associate {
+        val distanceFromAlly = unitsSeq(myTeam).filterNot { it.isEmptyHanded }.associate {
             val resultMap = mutableMapOf<Position, Int>()
-            calculateDistance(it.key, it.value, object : DistanceReceiver {
+            calculateDistance(it, object : DistanceReceiver {
                 override fun isOverMaxDistance(distance: Int): Boolean {
                     return false
                 }
@@ -347,13 +331,13 @@ class BattleState private constructor(
                 }
 
             })
-            it.key to resultMap.toMap()
+            it to resultMap.toMap()
         }
 
         val distanceToClosestEnemy = unitsSeq(myTeam).associateWith { heroUnit ->
             val distanceMap = distanceFromAlly[heroUnit] ?: return@associateWith Int.MAX_VALUE
-            unitsAndPosSeq(foeTeam).mapNotNull {
-                distanceMap[it.value]
+            unitsSeq(foeTeam).mapNotNull {
+                distanceMap[it.position]
             }.min() ?: Int.MAX_VALUE
         }
 
@@ -362,7 +346,7 @@ class BattleState private constructor(
         val lazyAllyThreat = lazy {
             calculateThreat(obstacles, myTeam).filter { (_, threatenedSeq) ->
                 val threatened = threatenedSeq.toList()
-                unitsAndPosSeq(foeTeam).any { threatened.contains(it.value) }
+                unitsSeq(foeTeam).any { threatened.contains(it.position) }
             }.map {
                 it.first
             }.toSet()
@@ -370,10 +354,8 @@ class BattleState private constructor(
 
         val comparator = positionComparator(foeThreat)
 
-        val possibleMoves = unitsAndPosSeq(myTeam).filter { it.key.available }
-            .associate { (heroUnit, position) ->
-                heroUnit to moveTargets(heroUnit, position).sortedWith(comparator).toList()
-            }
+        val possibleMoves = unitsSeq(myTeam).filter { it.available }
+            .associateWith { heroUnit -> moveTargets(heroUnit).sortedWith(comparator).toList() }
         val possibleAttacks = possibleMoves.mapValues { (heroUnit, moves) ->
             autoBattleAttacks(heroUnit, moves)
         }
@@ -384,7 +366,7 @@ class BattleState private constructor(
             }).map {
                 it.key
             }.mapNotNull {
-                val assist = it.assist as? me.kumatheta.feh.NormalAssist ?: return@mapNotNull null
+                val assist = it.assist as? NormalAssist ?: return@mapNotNull null
                 val attacks = possibleAttacks[it].orEmpty()
                 val win = attacks.firstOrNull()?.winLoss == WinLoss.WIN
                 if (win) {
@@ -406,7 +388,7 @@ class BattleState private constructor(
                 if (target == null) {
                     null
                 } else {
-                    val moveStep = assistTargets[target]?: throw IllegalStateException()
+                    val moveStep = assistTargets[target] ?: throw IllegalStateException()
                     MoveAndAssist(target.id, moveStep.position, target.id)
                 }
             }.firstOrNull()
@@ -417,16 +399,17 @@ class BattleState private constructor(
 
 
         // FIXME : fake moves
-        val movements = unitsAndPosSeq(Team.ENEMY).map {
+        val movements = unitsSeq(Team.ENEMY).map {
             val move = MoveOnly(
-                heroUnitId = it.key.id,
-                moveTarget = it.value
+                heroUnitId = it.id,
+                moveTarget = it.position
             )
             executeMove(move)
             move
         }.toList()
 
         turnEnd()
+
         return movements
     }
 
@@ -482,7 +465,7 @@ class BattleState private constructor(
         obstacles: MutableMap<Position, ChessPiece>,
         team: Team
     ): Sequence<Pair<HeroUnit, Sequence<Position>>> {
-        return unitsAndPosSeq(team).filterNot { it.key.isEmptyHanded }.map { (heroUnit, position) ->
+        return unitsSeq(team).filterNot { it.isEmptyHanded }.map { heroUnit ->
             val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
             val travelPower = heroUnit.travelPower
             val threatReceiver = if (pass) {
@@ -490,7 +473,7 @@ class BattleState private constructor(
             } else {
                 ThreatWithoutPass(travelPower, obstacles)
             }
-            calculateDistance(heroUnit, position, threatReceiver)
+            calculateDistance(heroUnit, threatReceiver)
             heroUnit to threatReceiver.result.flatMap {
                 if (heroUnit.isEmptyHanded) {
                     emptySequence()
@@ -510,17 +493,15 @@ class BattleState private constructor(
         unitIdMap[heroUnitId] ?: throw IllegalStateException()
 
     private fun moveTargets(
-        heroUnit: HeroUnit,
-        position: Position = reverseMap[heroUnit] ?: throw IllegalArgumentException()
+        heroUnit: HeroUnit
     ): Sequence<MoveStep> {
         val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
         val travelPower = heroUnit.travelPower
-        val obstacles = forwardMap
+        val obstacles = locationMap
         val team = heroUnit.team
         val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, team, pass)
         calculateDistance(
             heroUnit,
-            position,
             distanceReceiver
         )
         return distanceReceiver.result
@@ -537,12 +518,11 @@ class BattleState private constructor(
 
     private fun calculateDistance(
         heroUnit: HeroUnit,
-        heroUnitPosition: Position,
         distanceReceiver: DistanceReceiver
     ) {
         val moveType = heroUnit.moveType
         val workingMap = sortedMapOf(
-            0 to sequenceOf(MoveStep(heroUnitPosition, battleMap.getTerrain(heroUnitPosition), false, 0))
+            0 to sequenceOf(MoveStep(heroUnit.position, battleMap.getTerrain(heroUnit.position), false, 0))
         )
 
         while (workingMap.isNotEmpty()) {
@@ -568,7 +548,7 @@ class BattleState private constructor(
         heroUnit: HeroUnit,
         position: Position
     ): Sequence<HeroUnit> {
-        return unitsAndPosSeq(heroUnit.team).filter { it.value.distanceTo(position) == 1 }.map { it.key }
+        return unitsSeq(heroUnit.team).filter { it.position.distanceTo(position) == 1 }
     }
 
     private fun attackTargets(
@@ -580,7 +560,7 @@ class BattleState private constructor(
         }
         val range = heroUnit.weaponType.range
 
-        return unitsAndPosSeq(heroUnit.team.opponent).filter { it.value.distanceTo(position) == range }.map { it.key }
+        return unitsSeq(heroUnit.team.opponent).filter { it.position.distanceTo(position) == range }
     }
 
     private val Position.surroundings: Sequence<Position>

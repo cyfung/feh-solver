@@ -18,8 +18,8 @@ class FehBoard private constructor(
                 phraseLimit,
                 state,
                 null,
-                state.unitsAndPosSeq(Team.ENEMY).count(),
-                state.unitsAndPosSeq(Team.PLAYER).count()
+                state.unitsSeq(Team.ENEMY).count(),
+                state.unitsSeq(Team.PLAYER).count()
             )
 
     override val moves: List<FehMove>
@@ -61,8 +61,8 @@ class FehBoard private constructor(
     }
 
     private fun calculateScore() = (phraseLimit - state.phrase).toDouble() / phraseLimit * 0.2 +
-            (enemyCount - state.unitsAndPosSeq(Team.ENEMY).count()) / enemyCount * 0.6 +
-            state.unitsAndPosSeq(Team.PLAYER).count() / playerCount * 0.2
+            (enemyCount - state.unitsSeq(Team.ENEMY).count()) / enemyCount * 0.6 +
+            state.unitsSeq(Team.PLAYER).count() / playerCount * 0.2
 
 }
 

@@ -1,15 +1,15 @@
 package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Stat
 
-abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
+class HarshCommand() : BuffRelatedAssist() {
     override fun apply(self: HeroUnit, target: HeroUnit) {
-        target.applyBuff(bonus)
+        target.applyBuff(-target.debuff)
+        target.clearPenalty()
     }
 
-    final override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
-        return target.buff.rallyGain(bonus) > 0
+    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+        return target.debuff.isNotZero()
     }
 
     override fun preCombatBestTarget(
@@ -18,14 +18,14 @@ abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
         distanceToClosestEnemy: Map<HeroUnit, Int>
     ): HeroUnit? {
-        return targets.intersect(lazyAllyThreat.value).asSequence().map {
-            it to it.stat.rallyGain(bonus)
+        return targets.intersect(lazyAllyThreat.value).asSequence().filter {
+            it.debuff.isNotZero()
+        }.map {
+            it to (it.stat.rallyGain(-it.debuff) + it.debuff.totalExceptHp)
         }.filter {
             it.second >= 2
         }.minWith(
             targetComparator(distanceToClosestEnemy)
         )?.first
     }
-
 }
-
