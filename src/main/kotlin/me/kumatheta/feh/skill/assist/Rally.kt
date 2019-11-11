@@ -18,7 +18,10 @@ abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
         distanceToClosestEnemy: Map<HeroUnit, Int>
     ): HeroUnit? {
-        return targets.intersect(lazyAllyThreat.value).asSequence().map {
+        val allyThreat = lazyAllyThreat.value
+        return targets.asSequence().filter { it.available }.filter {
+            allyThreat.contains(it)
+        }.map {
             it to it.stat.rallyGain(bonus)
         }.filter {
             it.second >= 2

@@ -5,7 +5,10 @@ sealed class ChessPiece {
 }
 
 class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(), Hero by heroModel {
+    val hasNegativeStatus: Boolean
+        get() = negativeStatus.isNotEmpty()
     var position: Position = Position(0, 0)
+    private val negativeStatus = mutableSetOf<NegativeStatus>()
     val currentStatTotal: Int
         get() {
             return stat.totalExceptHp + buff.totalExceptHp + debuff.totalExceptHp
@@ -24,6 +27,17 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
         private set
     var debuff = Stat.ZERO
         private set
+
+    val withPanic: Boolean
+        get() = negativeStatus.contains(NegativeStatus.PANIC)
+
+    val visibleStat: Stat
+        get() = stat + debuff + if (withPanic) {
+            -buff
+        } else {
+            buff
+        }
+
     var currentHp = stat.hp
         private set
     private var cooldown = cooldownCount
@@ -38,6 +52,7 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
         newUnit.currentHp = currentHp
         newUnit.cooldown = cooldown
         newUnit.position = position
+        newUnit.negativeStatus.addAll(negativeStatus)
         return newUnit
     }
 
@@ -137,6 +152,14 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
             healAmount
         }
     }
+
+    fun clearNegativeStatus() {
+        negativeStatus.clear()
+    }
+}
+
+enum class NegativeStatus {
+    PANIC
 }
 
 class Obstacle(var health: Int) : ChessPiece() {
