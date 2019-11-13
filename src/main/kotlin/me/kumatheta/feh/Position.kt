@@ -8,9 +8,9 @@ data class Position(val x: Int, val y: Int) : Comparable<Position> {
     }
 
     override fun compareTo(other: Position): Int {
-        return - compareValuesBy(
-            this,
+        return compareValuesBy(
             other,
+            this,
             Position::y,
             Position::x
         )

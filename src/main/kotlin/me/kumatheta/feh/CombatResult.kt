@@ -9,13 +9,14 @@ class CombatResult(
     val damageDealt: Int,
     val damageReceived: Int,
     val cooldownChange: Int,
-    val cooldownChangeFoe: Int
+    val cooldownChangeFoe: Int,
+    val action: MoveAndAttack
 ) {
     val damageRatio = -(damageDealt * 3 - damageReceived)
 }
 
 enum class WinLoss {
-    WIN,
+    LOSS,
     DRAW,
-    LOSS
+    WIN
 }

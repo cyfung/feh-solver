@@ -42,19 +42,17 @@ class BattleSolver(private val battleMap: BattleMap, private val phraseLimit: In
         nextMove: PlayerMovement,
         steps: LinkedList<PlayerMovement>
     ) {
-        when (newState.playerMove(nextMove.unitAction)) {
-            BattleState.MovementResult.PLAYER_WIN -> {
-                println(steps)
-                throw RuntimeException("win")
-            }
-            BattleState.MovementResult.PLAYER_UNIT_DIED -> throw RuntimeException("died")
-            BattleState.MovementResult.PHRASE_CHANGE -> {
-                steps.add(nextMove)
-                newState.enemyMoves()
-            }
-            BattleState.MovementResult.NOTHING -> {
-                steps.add(nextMove)
-            }
+        val movementResult = newState.playerMove(nextMove.unitAction)
+        if (movementResult.gameEnd) {
+            println(steps)
+            throw RuntimeException("win: ${newState.winningTeam}")
+        }
+        if (movementResult.teamLostUnit == Team.PLAYER) {
+            throw RuntimeException("died")
+        }
+        steps.add(nextMove)
+        if (movementResult.phraseChange) {
+            newState.enemyMoves()
         }
     }
 

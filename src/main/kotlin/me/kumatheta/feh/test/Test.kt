@@ -2,7 +2,6 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.FehBoard
-import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.skill.weapon.*
 import me.kumatheta.mcts.Mcts
 
@@ -44,17 +43,25 @@ fun main() {
 //    solver.solve()
 
     val state = BattleState(TestMap)
-    val board = FehBoard(3, state)
+    val phraseLimit = 3
+    val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
     repeat(10) {
-        println("starting")
-        mcts.run(1000)
+        mcts.run(10)
         val bestMoves = mcts.getBestMoves()
         println(bestMoves)
-        val test = board.copy()
+        val state = board.stateCopy
         bestMoves.forEach {
-            test.applyMove(it)
+            val unitAction = it.unitAction
+            println(unitAction)
+            val movementResult = state.playerMove(unitAction)
+            if (movementResult.phraseChange) {
+                state.enemyMoves().forEach(::println)
+            }
         }
-        println(test.score)
+        println("${state.enemyDied}, ${state.playerDied}")
+
     }
 }
+
+

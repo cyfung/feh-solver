@@ -5,7 +5,7 @@ enum class Team {
     ENEMY;
 }
 
-val Team.opponent: Team
+val Team.foe: Team
     get() {
         return when (this) {
             Team.PLAYER -> Team.ENEMY

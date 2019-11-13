@@ -1,23 +1,25 @@
 package me.kumatheta.feh
 
+import me.kumatheta.feh.util.compareByDescending
+
 class BattleState private constructor(
     private val battleMap: BattleMap,
     private val locationMap: MutableMap<Position, ChessPiece>,
-    phrase: Int
+    phrase: Int,
+    playerDied: Int,
+    enemyDied: Int,
+    winningTeam: Team?
 ) {
-    enum class MovementResult {
-        PLAYER_WIN,
-        PLAYER_UNIT_DIED,
-        PHRASE_CHANGE,
-        NOTHING
-    }
+    var playerDied: Int = playerDied
+        private set
 
-    private enum class FightResult(val movementResult: MovementResult?) {
-        PLAYER_WIN(MovementResult.PLAYER_WIN),
-        PLAYER_UNIT_DIED(MovementResult.PLAYER_UNIT_DIED),
-        ENEMY_UNIT_DIED(null),
-        NOTHING(null)
-    }
+    var enemyDied: Int = enemyDied
+        private set
+
+    var winningTeam: Team? = winningTeam
+        private set
+
+    class MovementResult(val gameEnd: Boolean, val teamLostUnit: Team?, val phraseChange: Boolean)
 
     private val maxX: Int = battleMap.size.x - 1
     private val maxY: Int = battleMap.size.y - 1
@@ -29,45 +31,57 @@ class BattleState private constructor(
     fun copy(): BattleState {
         val newForwardMap = mutableMapOf<Position, ChessPiece>()
         locationMap.mapValuesTo(newForwardMap) { it.value.copy() }
-        return BattleState(battleMap, newForwardMap, phrase)
+        return BattleState(
+            battleMap = battleMap,
+            locationMap = newForwardMap,
+            phrase = phrase,
+            playerDied = playerDied,
+            enemyDied = enemyDied,
+            winningTeam = winningTeam
+        )
     }
 
-    constructor(battleMap: BattleMap) : this(battleMap, battleMap.toChessPieceMap().toMutableMap(), 0) {
+    constructor(battleMap: BattleMap) : this(
+        battleMap = battleMap,
+        locationMap = battleMap.toChessPieceMap().toMutableMap(),
+        phrase = 0,
+        playerDied = 0,
+        enemyDied = 0,
+        winningTeam = null
+    ) {
         startOfTurn(Team.PLAYER)
     }
 
     fun unitsSeq(team: Team) =
         locationMap.values.asSequence().filterIsInstance<HeroUnit>().filter { it.team == team }
 
-    private fun executeMove(unitAction: UnitAction): FightResult {
+    private fun executeMove(unitAction: UnitAction): Team? {
         val heroUnit = getUnit(unitAction.heroUnitId)
+        check(heroUnit.available)
         move(heroUnit, unitAction.moveTarget)
         return when (unitAction) {
             is MoveOnly -> {
                 standStill(heroUnit)
-                FightResult.NOTHING
+                null
             }
             is MoveAndAttack -> {
                 val target = getUnit(unitAction.attackTargetId)
-                fight(heroUnit, target).first
+                fight(heroUnit, target).first?.team
             }
             is MoveAndAssist -> {
                 val assist = heroUnit.assist ?: throw IllegalStateException()
                 val target = getUnit(unitAction.assistTargetId)
                 assist.apply(heroUnit, target)
-                FightResult.NOTHING
+                heroUnit.endOfTurn()
+                null
             }
         }
     }
 
-    private fun moveAndFight(
-        heroUnitId: Int,
-        movePosition: Position,
-        attackTargetId: Int
-    ): Pair<FightResult, Int> {
-        val heroUnit = getUnit(heroUnitId)
-        move(heroUnit, movePosition)
-        val target = getUnit(attackTargetId)
+    private fun moveAndFight(moveAndAttack: MoveAndAttack): Pair<HeroUnit?, Int> {
+        val heroUnit = getUnit(moveAndAttack.heroUnitId)
+        move(heroUnit, moveAndAttack.moveTarget)
+        val target = getUnit(moveAndAttack.attackTargetId)
         return fight(heroUnit, target)
     }
 
@@ -83,12 +97,13 @@ class BattleState private constructor(
     private fun move(heroUnit: HeroUnit, position: Position) {
         val originalPosition = heroUnit.position
         if (originalPosition != position) {
-            heroUnit.position = position
-            locationMap.remove(originalPosition)
-            val piece = locationMap.put(position, heroUnit)
-            check(piece == null) {
+            val piece = locationMap.putIfAbsent(position, heroUnit)
+            require(piece == null) {
                 piece.toString()
             }
+            heroUnit.position = position
+            val removed = locationMap.remove(originalPosition)
+            check(removed == heroUnit)
         }
     }
 
@@ -107,7 +122,8 @@ class BattleState private constructor(
         return units
     }
 
-    private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<FightResult, Int> {
+    private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
+        check(attacker.team.foe == defender.team)
         val attackerStat = attacker.stat + attacker.buff + attacker.debuff + skillMethodSumStat(
             attacker,
             defender,
@@ -132,16 +148,16 @@ class BattleState private constructor(
             defenderStat
         )
 
-        val deadTeam = attackOrder.asSequence().mapNotNull { attackerTurn ->
+        val deadUnit = attackOrder.asSequence().mapNotNull { attackerTurn ->
             if (attackerTurn) {
                 if (singleAttack(attacker, defender, attackerStat, defenderStat)) {
-                    defender.team
+                    defender
                 } else {
                     null
                 }
             } else {
                 if (singleAttack(defender, attacker, defenderStat, attackerStat)) {
-                    attacker.team
+                    attacker
                 } else {
                     null
                 }
@@ -153,18 +169,7 @@ class BattleState private constructor(
 
         skillMethodApply(attacker, defender, SkillSet::postCombat)
 
-        val fightResult = when (deadTeam) {
-            Team.PLAYER -> FightResult.PLAYER_UNIT_DIED
-            Team.ENEMY -> {
-                if (unitsSeq(Team.ENEMY).none()) {
-                    FightResult.PLAYER_WIN
-                } else {
-                    FightResult.ENEMY_UNIT_DIED
-                }
-            }
-            null -> FightResult.NOTHING
-        }
-        return Pair(fightResult, potentialDamage)
+        return Pair(deadUnit, potentialDamage)
     }
 
     private fun singleAttack(
@@ -189,6 +194,14 @@ class BattleState private constructor(
             defender.reduceCooldown(1 + defenderCooldownIncrease - defenderCooldownReduce)
         } else {
             locationMap.remove(defender.position)
+            if (defender.team == Team.PLAYER) {
+                playerDied++
+            } else {
+                enemyDied++
+            }
+            if (unitsSeq(defender.team).none()) {
+                winningTeam = defender.team.foe
+            }
         }
         return dead
     }
@@ -298,28 +311,108 @@ class BattleState private constructor(
     }
 
     fun playerMove(unitAction: UnitAction): MovementResult {
-        check(isPlayerPhrase)
-        val movementResult = executeMove(unitAction).movementResult
-        if (movementResult != null) {
-            return movementResult
+        require(isPlayerPhrase)
+        check(winningTeam == null)
+        val deadTeam = executeMove(unitAction)
+        if (winningTeam != null) {
+            return MovementResult(true, deadTeam, false)
         }
-        if (unitsSeq(Team.PLAYER).none { it.available }) {
+        val phraseChange = unitsSeq(Team.PLAYER).none { it.available }
+        if (phraseChange) {
             turnEnd()
-            return MovementResult.PHRASE_CHANGE
         }
-        return MovementResult.NOTHING
+        return MovementResult(false, deadTeam, phraseChange)
     }
 
     private val isPlayerPhrase
         get() = phrase % 2 == 0
 
     fun enemyMoves(): List<UnitAction> {
+        require(!isPlayerPhrase)
+        check(winningTeam == null)
         val myTeam = Team.ENEMY
-        val foeTeam = Team.ENEMY.opponent
+        val foeTeam = Team.ENEMY.foe
 
         val obstacles = locationMap.toMutableMap()
 
-        val distanceFromAlly = unitsSeq(myTeam).filterNot { it.isEmptyHanded }.associate {
+        val movements = generateSequence {
+            if (unitsSeq(myTeam).filter { it.available }.none()) {
+                return@generateSequence null
+            }
+            val distanceFromAlly = distanceFrom(myTeam)
+            val distanceToClosestFoe = distanceToClosestFoe(myTeam, distanceFromAlly)
+            val foeThreat = calculateThreat(obstacles, foeTeam).flatMap { it.second }.groupingBy { it }.eachCount()
+            val lazyAllyThreat = lazyThreat(obstacles, myTeam)
+
+            val positionComparator = positionComparator(foeThreat)
+
+            val possibleMoves = unitsSeq(myTeam).filter { it.available }
+                .associateWith { heroUnit -> moveTargets(heroUnit).sortedWith(positionComparator).toList() }
+            val possibleAttacks = possibleMoves.mapValues { (heroUnit, moves) ->
+                autoBattleAttacks(heroUnit, moves)
+            }
+
+            val preCombatAssist = checkPreCombatAssist(
+                distanceToClosestEnemy = distanceToClosestFoe,
+                possibleAttacks = possibleAttacks,
+                possibleMoves = possibleMoves,
+                lazyAllyThreat = lazyAllyThreat
+            )
+
+            if (preCombatAssist != null) {
+                executeMove(preCombatAssist)
+                return@generateSequence preCombatAssist
+            }
+
+            val attack = possibleAttacks.values.asSequence().mapNotNull {
+                it.firstOrNull()
+            }.minWith(bestAttacker)
+
+            if (attack != null) {
+                executeMove(attack.action)
+                return@generateSequence attack.action
+            }
+
+            // FIXME : fake moves
+            val fakeMove = unitsSeq(myTeam).filter { it.available }.map {
+                MoveOnly(it.id, it.position)
+            }.first()
+            executeMove(fakeMove)
+            fakeMove
+        }.toList()
+
+        turnEnd()
+        return movements
+    }
+
+    private fun lazyThreat(
+        obstacles: MutableMap<Position, ChessPiece>,
+        myTeam: Team
+    ): Lazy<Set<HeroUnit>> {
+        return lazy {
+            calculateThreat(obstacles, myTeam).filter { (_, threatenedSeq) ->
+                val threatened = threatenedSeq.toList()
+                unitsSeq(myTeam.foe).any { threatened.contains(it.position) }
+            }.map {
+                it.first
+            }.toSet()
+        }
+    }
+
+    private fun distanceToClosestFoe(
+        myTeam: Team,
+        distanceFromAlly: Map<HeroUnit, Map<Position, Int>>
+    ): Map<HeroUnit, Int> {
+        return unitsSeq(myTeam).associateWith { heroUnit ->
+            val distanceMap = distanceFromAlly[heroUnit] ?: return@associateWith Int.MAX_VALUE
+            unitsSeq(myTeam.foe).mapNotNull {
+                distanceMap[it.position]
+            }.min() ?: Int.MAX_VALUE
+        }
+    }
+
+    private fun distanceFrom(myTeam: Team): Map<HeroUnit, Map<Position, Int>> {
+        return unitsSeq(myTeam).filterNot { it.isEmptyHanded }.associateWith {
             val resultMap = mutableMapOf<Position, Int>()
             calculateDistance(it, object : DistanceReceiver {
                 override fun isOverMaxDistance(distance: Int): Boolean {
@@ -331,36 +424,17 @@ class BattleState private constructor(
                 }
 
             })
-            it to resultMap.toMap()
+            resultMap.toMap()
         }
+    }
 
-        val distanceToClosestEnemy = unitsSeq(myTeam).associateWith { heroUnit ->
-            val distanceMap = distanceFromAlly[heroUnit] ?: return@associateWith Int.MAX_VALUE
-            unitsSeq(foeTeam).mapNotNull {
-                distanceMap[it.position]
-            }.min() ?: Int.MAX_VALUE
-        }
-
-        val foeThreat = calculateThreat(obstacles, foeTeam).flatMap { it.second }.groupingBy { it }.eachCount()
-
-        val lazyAllyThreat = lazy {
-            calculateThreat(obstacles, myTeam).filter { (_, threatenedSeq) ->
-                val threatened = threatenedSeq.toList()
-                unitsSeq(foeTeam).any { threatened.contains(it.position) }
-            }.map {
-                it.first
-            }.toSet()
-        }
-
-        val comparator = positionComparator(foeThreat)
-
-        val possibleMoves = unitsSeq(myTeam).filter { it.available }
-            .associateWith { heroUnit -> moveTargets(heroUnit).sortedWith(comparator).toList() }
-        val possibleAttacks = possibleMoves.mapValues { (heroUnit, moves) ->
-            autoBattleAttacks(heroUnit, moves)
-        }
-
-        val preCombatAssist = distanceToClosestEnemy.asSequence().filter { it.key.available }
+    private fun checkPreCombatAssist(
+        distanceToClosestEnemy: Map<HeroUnit, Int>,
+        possibleAttacks: Map<HeroUnit, List<CombatResult>>,
+        possibleMoves: Map<HeroUnit, List<MoveStep>>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>
+    ): MoveAndAssist? {
+        return distanceToClosestEnemy.asSequence().filter { it.key.available }
             .sortedWith(compareByDescending<Map.Entry<HeroUnit, Int>> { it.value }.thenBy {
                 it.key.id
             }).map {
@@ -392,25 +466,6 @@ class BattleState private constructor(
                     MoveAndAssist(target.id, moveStep.position, target.id)
                 }
             }.firstOrNull()
-
-        if (preCombatAssist != null) {
-            executeMove(preCombatAssist)
-        }
-
-
-        // FIXME : fake moves
-        val movements = unitsSeq(Team.ENEMY).map {
-            val move = MoveOnly(
-                heroUnitId = it.id,
-                moveTarget = it.position
-            )
-            executeMove(move)
-            move
-        }.toList()
-
-        turnEnd()
-
-        return movements
     }
 
     private fun autoBattleAttacks(
@@ -425,11 +480,12 @@ class BattleState private constructor(
             val testBattle = copy()
             val heroUnitId = heroUnit.id
             val foeId = foe.id
-            val (fightResult, potentialDamage) = testBattle.moveAndFight(heroUnitId, movePosition.position, foeId)
-            val winLoss = when (fightResult) {
-                FightResult.PLAYER_UNIT_DIED -> WinLoss.LOSS
-                FightResult.PLAYER_WIN, FightResult.ENEMY_UNIT_DIED -> WinLoss.WIN
-                FightResult.NOTHING -> WinLoss.DRAW
+            val moveAndAttack = MoveAndAttack(heroUnitId, movePosition.position, foeId)
+            val (deadUnit, potentialDamage) = testBattle.moveAndFight(moveAndAttack)
+            val winLoss = when (deadUnit?.team) {
+                heroUnit.team -> WinLoss.LOSS
+                null -> WinLoss.DRAW
+                else -> WinLoss.WIN
             }
             val testUnit = testBattle.getUnit(heroUnitId)
             val testFoe = testBattle.getUnit(foeId)
@@ -456,7 +512,8 @@ class BattleState private constructor(
                 damageDealt = damageDealt,
                 damageReceived = damageReceived,
                 cooldownChange = cooldownChange,
-                cooldownChangeFoe = cooldownChangeFoe
+                cooldownChangeFoe = cooldownChangeFoe,
+                action = moveAndAttack
             )
         }.sortedWith(bestAttackTarget).toList()
     }
@@ -480,7 +537,7 @@ class BattleState private constructor(
                 } else {
                     val isRanged = heroUnit.weaponType.isRanged
                     if (isRanged) {
-                        it.surroundings.flatMap { it.surroundings }
+                        it.surroundings.flatMap { position -> position.surroundings }
                     } else {
                         it.surroundings
                     }
@@ -560,7 +617,7 @@ class BattleState private constructor(
         }
         val range = heroUnit.weaponType.range
 
-        return unitsSeq(heroUnit.team.opponent).filter { it.position.distanceTo(position) == range }
+        return unitsSeq(heroUnit.team.foe).filter { it.position.distanceTo(position) == range }
     }
 
     private val Position.surroundings: Sequence<Position>
@@ -781,21 +838,21 @@ private class ThreatWithPass(
     }
 }
 
-private val bestAttackTarget = compareBy<CombatResult>(
+private val bestAttackTarget = compareByDescending<CombatResult>(
     {
         it.winLoss
     },
     {
-        -it.debuffSuccess
+        it.debuffSuccess
     },
     {
         it.damageRatio
     },
     {
         if (it.cooldownChange > 0) {
-            0
-        } else {
             1
+        } else {
+            0
         }
     },
     {
@@ -803,18 +860,18 @@ private val bestAttackTarget = compareBy<CombatResult>(
     }
 )
 
-private val bestAttacker = compareBy<CombatResult>(
+private val bestAttacker = compareByDescending<CombatResult>(
     {
         it.winLoss
     },
     {
-        -it.debuffSuccess
+        it.debuffSuccess
     },
     {
         if (it.heroUnit.hasSpecialDebuff) {
-            0
-        } else {
             1
+        } else {
+            0
         }
     },
     {
@@ -825,13 +882,13 @@ private val bestAttacker = compareBy<CombatResult>(
     },
     {
         if (it.cooldownChangeFoe > 0) {
-            0
-        } else {
             1
+        } else {
+            0
         }
     },
     {
-        it.foe.id
+        it.heroUnit.id
     }
 )
 

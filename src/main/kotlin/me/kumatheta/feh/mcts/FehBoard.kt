@@ -8,11 +8,13 @@ import me.kumatheta.mcts.Move
 
 class FehBoard private constructor(
     private val phraseLimit: Int,
-    private val state: BattleState,
+    state: BattleState,
     score: Double?,
-    val enemyCount: Int,
-    val playerCount: Int
+    private val enemyCount: Int,
+    private val playerCount: Int
 ) : Board<FehMove> {
+    private val state = state.copy()
+
     constructor(phraseLimit: Int, state: BattleState) :
             this(
                 phraseLimit,
@@ -36,33 +38,28 @@ class FehBoard private constructor(
         private set
 
     override fun copy(): Board<FehMove> {
-        return FehBoard(phraseLimit, state.copy(), score, enemyCount, playerCount)
+        return FehBoard(phraseLimit, state, score, enemyCount, playerCount)
     }
 
+    val stateCopy
+        get() = state.copy()
 
     override fun applyMove(move: FehMove) {
         check(score == null)
         val nextMove = move.unitAction
-        when (state.playerMove(nextMove)) {
-            BattleState.MovementResult.PLAYER_WIN -> {
+        val movementResult = state.playerMove(nextMove)
+        if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
+            score = calculateScore()
+        } else if (movementResult.phraseChange) {
+            state.enemyMoves()
+            if (state.winningTeam != null || phraseLimit < state.phrase) {
                 score = calculateScore()
             }
-            BattleState.MovementResult.PLAYER_UNIT_DIED -> {
-                score = calculateScore()
-            }
-            BattleState.MovementResult.PHRASE_CHANGE -> {
-                state.enemyMoves()
-                if (phraseLimit < state.phrase) {
-                    score = calculateScore()
-                }
-            }
-            BattleState.MovementResult.NOTHING -> Unit
         }
     }
 
-    private fun calculateScore() = (phraseLimit - state.phrase).toDouble() / phraseLimit * 0.2 +
-            (enemyCount - state.unitsSeq(Team.ENEMY).count()) / enemyCount * 0.6 +
-            state.unitsSeq(Team.PLAYER).count() / playerCount * 0.2
+    private fun calculateScore() = (phraseLimit - state.phrase).toDouble() / phraseLimit * 0.3 +
+            state.enemyDied.toDouble() / enemyCount * 0.7 - state.playerDied.toDouble() / playerCount * 0.2
 
 }
 
