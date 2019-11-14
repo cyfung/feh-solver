@@ -8,11 +8,11 @@ abstract class BuffRelatedAssist : me.kumatheta.feh.NormalAssist() {
     final override fun isValidPreCombat(self: HeroUnit, selfAttacks: List<CombatResult>): Boolean {
         return if (self.hasSpecialDebuff) {
             selfAttacks.all {
-                it.potentialDamage < 5 && it.debuffSuccess == 0 && it.winLoss == WinLoss.LOSS
+                it.potentialDamage < 5 && it.debuffSuccess && it.winLoss == WinLoss.LOSS
             }
         } else {
             selfAttacks.all {
-                it.potentialDamage < 5 && it.debuffSuccess == 0
+                it.potentialDamage < 5 && it.debuffSuccess
             }
         }
     }

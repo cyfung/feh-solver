@@ -4,7 +4,7 @@ class CombatResult(
     val heroUnit: HeroUnit,
     val foe: HeroUnit,
     val winLoss: WinLoss,
-    val debuffSuccess: Int,
+    val debuffSuccess: Boolean,
     val potentialDamage: Int,
     val damageDealt: Int,
     val damageReceived: Int,

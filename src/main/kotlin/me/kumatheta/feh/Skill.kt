@@ -5,14 +5,16 @@ interface Skill {
         get() = null
     val coolDownCountAdj: Int
         get() = 0
-    val debuffer: Int
-        get() = 0
+    val debuffer: Boolean
+        get() = false
     val hasSpecialDebuff: Boolean
         get() = false
 
     val startOfTurn: MapSkillMethod<Unit>?
         get() = null
     val pass: MapSkillMethod<Boolean>?
+        get() = null
+    val teleport: MapSkillMethod<Sequence<Position>>?
         get() = null
 
     val ignoreRange: CombatSkillMethod<Boolean>?
@@ -49,6 +51,7 @@ class SkillSet(skills: List<Skill>) {
 
     val startOfTurn = this.skills.mapNotNull(Skill::startOfTurn)
     val pass = this.skills.mapNotNull(Skill::pass)
+    val teleport = this.skills.mapNotNull(Skill::teleport)
 
     val ignoreRange = this.skills.mapNotNull(Skill::ignoreRange)
     val disablePriorityChange = this.skills.mapNotNull(Skill::disablePriorityChange)

@@ -47,19 +47,19 @@ fun main() {
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
     repeat(10) {
-        mcts.run(10)
+        mcts.run(1000)
         val bestMoves = mcts.getBestMoves()
         println(bestMoves)
-        val state = board.stateCopy
+        val testState = board.stateCopy
         bestMoves.forEach {
             val unitAction = it.unitAction
             println(unitAction)
-            val movementResult = state.playerMove(unitAction)
+            val movementResult = testState.playerMove(unitAction)
             if (movementResult.phraseChange) {
-                state.enemyMoves().forEach(::println)
+                testState.enemyMoves().forEach(::println)
             }
         }
-        println("${state.enemyDied}, ${state.playerDied}")
+        println("${testState.enemyDied}, ${testState.playerDied}")
 
     }
 }

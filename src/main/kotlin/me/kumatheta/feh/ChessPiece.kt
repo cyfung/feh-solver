@@ -1,13 +1,14 @@
 package me.kumatheta.feh
 
 sealed class ChessPiece {
+    abstract val position: Position
     abstract fun copy(): ChessPiece
 }
 
 class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(), Hero by heroModel {
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
-    var position: Position = Position(0, 0)
+    override var position: Position = Position(0, 0)
     private val negativeStatus = mutableSetOf<NegativeStatus>()
     val currentStatTotal: Int
         get() {
@@ -162,9 +163,9 @@ enum class NegativeStatus {
     PANIC
 }
 
-class Obstacle(var health: Int) : ChessPiece() {
+class Obstacle(var health: Int, override val position: Position) : ChessPiece() {
     override fun copy(): ChessPiece {
-        return Obstacle(health)
+        return Obstacle(health, position)
     }
 }
 
