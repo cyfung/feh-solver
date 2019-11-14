@@ -401,50 +401,15 @@ class BattleState private constructor(
 
             // TODO post combat assist
 
-            // TODO movement
-            val move = availableUnits.asSequence().sortedWith(movementOrder(distanceToClosestFoe))
-                .mapNotNull { heroUnit ->
-                    val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
-                    val chaseTarget = getChaseTarget(heroUnit, obstacles)
-                    if (chaseTarget == null || heroUnit.weaponType.isRanged) {
-                        val nextToEnemy = heroUnit.position.surroundings.asSequence().map { locationMap[it] }
-                            .filterIsInstance<HeroUnit>().any { it.team == foeTeam }
-                        if (chaseTarget == null || nextToEnemy) {
-                            val closestAlly =
-                                unitsSeq(myTeam).filterNot { it == heroUnit }.minWith(compareBy<HeroUnit> {
-                                    it.position.distanceTo(heroUnit.position)
-                                }.thenByDescending {
-                                    it.id
-                                }) ?: return@mapNotNull null
-                            val nextToAlly = closestAlly.position.surroundings
-                            val filtered = if (nextToEnemy) {
-                                nextToAlly.filterNot { it == heroUnit.position }
-                            } else {
-                                nextToAlly
-                            }
-                            val move = filtered.mapNotNull {
-                                moves[it]
-                            }.minWith(moveOrder(heroUnit, foeThreat))?.position
-                            return@mapNotNull if (move == heroUnit.position || move == null) {
-                                null
-                            } else {
-                                MoveOnly(heroUnit.id, move)
-                            }
-                        }
-                    }
-
-                    val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
-                    val move = moves.values.asSequence().map {
-                        val distanceTo = distanceToTarget[it.position] ?: throw IllegalStateException()
-                        it to distanceTo
-                    }.minWith(chaseMovementOrder(heroUnit, foeThreat, chaseTarget))?.first?.position
-                        ?: throw IllegalStateException()
-                    if (move == heroUnit.position) {
-                        null
-                    } else {
-                        MoveOnly(heroUnit.id, move)
-                    }
-                }.firstOrNull()
+            // movement
+            val move = getMoveAction(
+                availableUnits,
+                distanceToClosestFoe,
+                possibleMoves,
+                distanceFromAlly,
+                myTeam,
+                foeThreat
+            )
             if (move != null) {
                 executeMove(move)
                 return@generateSequence move
@@ -459,6 +424,60 @@ class BattleState private constructor(
 
         turnEnd()
         return movements
+    }
+
+    private fun getMoveAction(
+        availableUnits: List<HeroUnit>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        possibleMoves: Map<HeroUnit, Map<Position, MoveStep>>,
+        distanceFromAlly: Map<HeroUnit, Map<Position, Int>>,
+        myTeam: Team,
+        foeThreat: Map<Position, Int>
+    ): MoveOnly? {
+        return availableUnits.asSequence().sortedWith(movementOrder(distanceToClosestFoe))
+            .mapNotNull { heroUnit ->
+                val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
+                val chaseTarget = getChaseTarget(heroUnit, distanceFromAlly[heroUnit] ?: throw IllegalStateException())
+                if (chaseTarget == null || heroUnit.weaponType.isRanged) {
+                    val nextToEnemy = heroUnit.position.surroundings.asSequence().map { locationMap[it] }
+                        .filterIsInstance<HeroUnit>().any { it.team == myTeam.foe }
+                    if (chaseTarget == null || nextToEnemy) {
+                        val closestAlly =
+                            unitsSeq(myTeam).filterNot { it == heroUnit }.minWith(compareBy<HeroUnit> {
+                                it.position.distanceTo(heroUnit.position)
+                            }.thenByDescending {
+                                it.id
+                            }) ?: return@mapNotNull null
+                        val nextToAlly = closestAlly.position.surroundings
+                        val filtered = if (nextToEnemy) {
+                            nextToAlly.filterNot { it == heroUnit.position }
+                        } else {
+                            nextToAlly
+                        }
+                        val move = filtered.mapNotNull {
+                            moves[it]
+                        }.minWith(moveOrder(heroUnit, foeThreat))?.position
+                        // TODO Rally (1 point increase) and Pivot
+                        return@mapNotNull if (move == heroUnit.position || move == null) {
+                            null
+                        } else {
+                            MoveOnly(heroUnit.id, move)
+                        }
+                    }
+                }
+
+                val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
+                val move = moves.values.asSequence().map {
+                    val distanceTo = distanceToTarget[it.position] ?: throw IllegalStateException()
+                    it to distanceTo
+                }.minWith(chaseMovementOrder(heroUnit, foeThreat, chaseTarget))?.first?.position
+                    ?: throw IllegalStateException()
+                if (move == heroUnit.position) {
+                    null
+                } else {
+                    MoveOnly(heroUnit.id, move)
+                }
+            }.firstOrNull()
     }
 
     private fun moveOrder(heroUnit: HeroUnit, foeThreat: Map<Position, Int>): Comparator<MoveStep> {
@@ -519,23 +538,23 @@ class BattleState private constructor(
 
     private fun getChaseTarget(
         heroUnit: HeroUnit,
-        obstacles: MutableMap<Position, ChessPiece>
+        distanceTo: Map<Position, Int>
     ): HeroUnit? {
         return if (heroUnit.isEmptyHanded) {
             null
         } else {
-            val threatMoves = getThreatMoves(heroUnit, obstacles, false)
-            val chaseTargets =
-                threatMoves.moveSteps.sortedByDescending { it.distanceTravel }.flatMap { moveStep ->
-                    attackPositions(heroUnit, moveStep.position).map {
-                        it to moveStep
-                    }
-                }.associate {
-                    it
+            val chaseTargets = distanceTo.asSequence().flatMap { (position, distance) ->
+                attackPositions(heroUnit, position).map {
+                    it to distance
                 }
+            }.groupingBy {
+                it.first
+            }.aggregate { _, accumulator: Int?, element, _ ->
+                accumulator ?: element.second
+            }
             unitsSeq(heroUnit.team.foe).mapNotNull { foe ->
-                val moveStep = chaseTargets[foe.position]
-                if (moveStep == null) {
+                val distance = chaseTargets[foe.position]
+                if (distance == null) {
                     null
                 } else {
                     val heroUnitCopy = heroUnit.copy()
@@ -544,7 +563,7 @@ class BattleState private constructor(
                     val chasePriority = testState.preCalculateDamage(
                         heroUnitCopy,
                         foeCopy
-                    ).potentialDamage + moveStep.distanceTravel / heroUnit.travelPower
+                    ).potentialDamage + distance / heroUnit.travelPower
                     foe to chasePriority
                 }
             }.maxWith(compareBy({
@@ -719,13 +738,20 @@ class BattleState private constructor(
 
     private fun calculateThreat(
         heroUnit: HeroUnit,
-        obstacles: MutableMap<Position, ChessPiece>
+        obstacles: Map<Position, ChessPiece>
     ): Sequence<Position> {
         return if (heroUnit.isEmptyHanded) {
             emptySequence()
         } else {
-            val threadMoves = getThreatMoves(heroUnit, obstacles, true)
-            threadMoves.movablePositions.flatMap {
+            val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
+            val travelPower = heroUnit.travelPower
+            val threatReceiver = if (pass) {
+                ThreatWithPass(travelPower, obstacles, heroUnit.team)
+            } else {
+                ThreatWithoutPass(travelPower, obstacles)
+            }
+            calculateDistance(heroUnit, threatReceiver)
+            threatReceiver.movablePositions.flatMap {
                 attackPositions(heroUnit, it)
             }.distinct()
         }
@@ -741,22 +767,6 @@ class BattleState private constructor(
         } else {
             it.surroundings
         }
-    }
-
-    private fun getThreatMoves(
-        heroUnit: HeroUnit,
-        obstacles: MutableMap<Position, ChessPiece>,
-        singleTurn: Boolean
-    ): ThreatMoves {
-        val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
-        val travelPower = if (singleTurn) heroUnit.travelPower else Int.MAX_VALUE
-        val threatReceiver = if (pass) {
-            ThreatWithPass(travelPower, obstacles, heroUnit.team)
-        } else {
-            ThreatWithoutPass(travelPower, obstacles)
-        }
-        calculateDistance(heroUnit, threatReceiver)
-        return threatReceiver
     }
 
     private fun getUnit(heroUnitId: Int) =
@@ -1022,15 +1032,12 @@ class DistanceReceiverRealMovement(
 
 private interface ThreatMoves {
     val movablePositions: Sequence<Position>
-    val moveSteps: Sequence<MoveStep>
 }
 
 private abstract class ThreatReceiver(private val movementRange: Int) : DistanceReceiver, ThreatMoves {
     protected val resultMap = mutableMapOf<Position, Pair<Boolean, MoveStep>>()
     final override val movablePositions
         get() = resultMap.asSequence().filter { it.value.first }.map { it.key }
-    final override val moveSteps
-        get() = resultMap.asSequence().filter { it.value.first }.map { it.value.second }
 
     override fun isOverMaxDistance(distance: Int): Boolean {
         return distance > movementRange
@@ -1039,7 +1046,7 @@ private abstract class ThreatReceiver(private val movementRange: Int) : Distance
 
 private class ThreatWithoutPass(
     movementRange: Int,
-    private val obstacles: MutableMap<Position, ChessPiece>
+    private val obstacles: Map<Position, ChessPiece>
 ) : ThreatReceiver(movementRange) {
     override fun receive(moveStep: MoveStep): Boolean {
         if (resultMap[moveStep.position] != null) {
@@ -1053,7 +1060,7 @@ private class ThreatWithoutPass(
 
 private class ThreatWithPass(
     private val movementRange: Int,
-    private val obstacles: MutableMap<Position, ChessPiece>,
+    private val obstacles: Map<Position, ChessPiece>,
     private val selfTeam: Team
 ) : ThreatReceiver(movementRange) {
 
