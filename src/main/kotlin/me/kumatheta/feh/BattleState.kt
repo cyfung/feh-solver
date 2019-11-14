@@ -407,7 +407,6 @@ class BattleState private constructor(
                 distanceToClosestFoe,
                 possibleMoves,
                 distanceFromAlly,
-                myTeam,
                 foeThreat
             )
             if (move != null) {
@@ -431,53 +430,71 @@ class BattleState private constructor(
         distanceToClosestFoe: Map<HeroUnit, Int>,
         possibleMoves: Map<HeroUnit, Map<Position, MoveStep>>,
         distanceFromAlly: Map<HeroUnit, Map<Position, Int>>,
-        myTeam: Team,
         foeThreat: Map<Position, Int>
     ): MoveOnly? {
         return availableUnits.asSequence().sortedWith(movementOrder(distanceToClosestFoe))
             .mapNotNull { heroUnit ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
-                val chaseTarget = getChaseTarget(heroUnit, distanceFromAlly[heroUnit] ?: throw IllegalStateException())
-                if (chaseTarget == null || heroUnit.weaponType.isRanged) {
-                    val nextToEnemy = heroUnit.position.surroundings.asSequence().map { locationMap[it] }
-                        .filterIsInstance<HeroUnit>().any { it.team == myTeam.foe }
-                    if (chaseTarget == null || nextToEnemy) {
-                        val closestAlly =
-                            unitsSeq(myTeam).filterNot { it == heroUnit }.minWith(compareBy<HeroUnit> {
-                                it.position.distanceTo(heroUnit.position)
-                            }.thenByDescending {
-                                it.id
-                            }) ?: return@mapNotNull null
-                        val nextToAlly = closestAlly.position.surroundings
-                        val filtered = if (nextToEnemy) {
-                            nextToAlly.filterNot { it == heroUnit.position }
-                        } else {
-                            nextToAlly
-                        }
-                        val move = filtered.mapNotNull {
-                            moves[it]
-                        }.minWith(moveOrder(heroUnit, foeThreat))?.position
-                        // TODO Rally (1 point increase) and Pivot
-                        return@mapNotNull if (move == heroUnit.position || move == null) {
-                            null
-                        } else {
-                            MoveOnly(heroUnit.id, move)
-                        }
-                    }
-                }
-
-                val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
-                val move = moves.values.asSequence().map {
-                    val distanceTo = distanceToTarget[it.position] ?: throw IllegalStateException()
-                    it to distanceTo
-                }.minWith(chaseMovementOrder(heroUnit, foeThreat, chaseTarget))?.first?.position
-                    ?: throw IllegalStateException()
-                if (move == heroUnit.position) {
-                    null
-                } else {
-                    MoveOnly(heroUnit.id, move)
-                }
+                val distanceMap = distanceFromAlly[heroUnit] ?: throw IllegalStateException()
+                val targetMove = getTargetMove(heroUnit, distanceToClosestFoe, distanceMap, moves, foeThreat)
+                targetMove
             }.firstOrNull()
+    }
+
+    private fun getShuffleMove(
+        heroUnit: HeroUnit,
+        moves: Map<Position, MoveStep>,
+        foeThreat: Map<Position, Int>,
+        runAway: Boolean
+    ): Position? {
+        val closestAlly =
+            unitsSeq(heroUnit.team).filterNot { it == heroUnit }.minWith(compareBy<HeroUnit> {
+                it.position.distanceTo(heroUnit.position)
+            }.thenByDescending {
+                it.id
+            }) ?: return null
+        val nextToAlly = closestAlly.position.surroundings
+        val filtered = if (runAway) {
+            nextToAlly.filterNot { it == heroUnit.position }
+        } else {
+            nextToAlly
+        }
+        val move = filtered.mapNotNull {
+            moves[it]
+        }.minWith(moveOrder(heroUnit, foeThreat))?.position
+        return if (move == heroUnit.position || move == null) {
+            null
+        } else {
+            move
+        }
+
+    }
+
+    private fun getTargetMove(
+        heroUnit: HeroUnit,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        distanceMap: Map<Position, Int>,
+        moves: Map<Position, MoveStep>,
+        foeThreat: Map<Position, Int>
+    ): MoveOnly? {
+        val chaseTarget = getChaseTarget(heroUnit, distanceMap)
+        val move = if (chaseTarget != null) {
+            val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
+            moves.values.asSequence().filterNot { it.position == heroUnit.position }.map {
+                val distanceTo = distanceToTarget[it.position] ?: throw IllegalStateException()
+                it to distanceTo
+            }.minWith(chaseMovementOrder(heroUnit, foeThreat, chaseTarget))?.first?.position
+        } else {
+            val runAway = unitsSeq(heroUnit.team).mapNotNull { it.position.distanceTo(heroUnit.position) }.any { it <= 2 }
+            getShuffleMove(heroUnit, moves, foeThreat, runAway)
+        }
+
+        if (move != null) {
+            // TODO Rally (1 point increase) and Pivot
+            return MoveOnly(heroUnit.id, move)
+        }
+
+        return null
     }
 
     private fun moveOrder(heroUnit: HeroUnit, foeThreat: Map<Position, Int>): Comparator<MoveStep> {
