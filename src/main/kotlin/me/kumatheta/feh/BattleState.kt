@@ -296,7 +296,6 @@ class BattleState private constructor(
         return attackOrder
     }
 
-
     private fun calculateDamage(
         attacker: HeroUnit,
         defender: HeroUnit,
@@ -441,36 +440,22 @@ class BattleState private constructor(
             }.firstOrNull()
     }
 
-    private fun getShuffleMove(
+    private fun getClosestAlly(
         heroUnit: HeroUnit,
-        moves: Map<Position, MoveStep>,
-        foeThreat: Map<Position, Int>,
-        runAway: Boolean,
         distanceMap: Map<Position, Int>
-    ): Position? {
-        val a = compareValues(null, 1)
-        val closestAlly = unitsSeq(heroUnit.team).filterNot { it == heroUnit }.minWith(compareBy<HeroUnit> {
-            // null always min
+    ): HeroUnit? {
+        val distanceTo = unitsSeq(heroUnit.team).filterNot { it == heroUnit }.associateWith {
             distanceMap[it.position]
-        }.thenByDescending {
-            it.id
-        }) ?: return null
-        if (distanceMap[closestAlly.position] == null) {
+        }
+        if (distanceTo.values.any { it == null }) {
             return null
         }
-        val distanceTo = distanceFrom(heroUnit, closestAlly.position)
-        val filtered = if (runAway) {
-            moves.values.filterNot { it.position == heroUnit.position }
-        } else {
-            moves.values
-        }
-        val move = filtered.minWith(moveOrder(heroUnit, foeThreat, distanceTo))?.position
-        return if (move == heroUnit.position || move == null) {
-            null
-        } else {
-            move
-        }
 
+        return distanceTo.asSequence().minWith(compareBy<Map.Entry<HeroUnit, Int?>> {
+            it.value
+        }.thenByDescending {
+            it.key.id
+        })?.key
     }
 
     private fun getTargetMove(
@@ -479,53 +464,29 @@ class BattleState private constructor(
         moves: Map<Position, MoveStep>,
         foeThreat: Map<Position, Int>
     ): MoveOnly? {
-        val chaseTarget = getChaseTarget(heroUnit, distanceMap)
-        val move = if (chaseTarget != null) {
-            val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
-            moves.values.asSequence().filterNot { it.position == heroUnit.position }
-                .minWith(chaseMovementOrder(heroUnit, foeThreat, chaseTarget, distanceToTarget))?.position
+        val chaseTarget = getChaseTarget(heroUnit, distanceMap) ?: getClosestAlly(heroUnit, distanceMap) ?: return null
+
+        val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
+        val okToStay = if (chaseTarget.team == heroUnit.team) {
+            unitsSeq(heroUnit.team.foe).mapNotNull { it.position.distanceTo(heroUnit.position) }.all { it > 2 }
         } else {
-            val runAway =
-                unitsSeq(heroUnit.team).mapNotNull { it.position.distanceTo(heroUnit.position) }.any { it <= 2 }
-            getShuffleMove(heroUnit, moves, foeThreat, runAway, distanceMap)
+            false
         }
 
-        if (move != null) {
+        val basicMove = moves.values.asSequence().let { seq ->
+            if (okToStay) {
+                seq
+            } else {
+                seq.filterNot { it.position == heroUnit.position }
+            }
+        }.minWith(chaseMovementOrder(heroUnit, foeThreat, chaseTarget, distanceToTarget))?.position
+
+        if (basicMove != null) {
             // TODO Rally (1 point increase) and Pivot
-            return MoveOnly(heroUnit.id, move)
+            return MoveOnly(heroUnit.id, basicMove)
         }
 
         return null
-    }
-
-    private fun moveOrder(
-        heroUnit: HeroUnit,
-        foeThreat: Map<Position, Int>,
-        distanceTo: Map<Position, Int>
-    ): Comparator<MoveStep> {
-        return compareBy({
-            distanceTo[it.position]
-        }, {
-            if (it.terrain == Terrain.DEFENSE_TILE) {
-                0
-            } else {
-                1
-            }
-        }, {
-            foeThreat[it.position]
-        }, {
-            if (it.teleportRequired) {
-                0
-            } else {
-                1
-            }
-        }, {
-            it.terrain.priority(heroUnit.moveType)
-        }, {
-            it.distanceTravel
-        }, {
-            it.position
-        })
     }
 
     private fun chaseMovementOrder(
