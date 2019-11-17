@@ -1,15 +1,25 @@
 package me.kumatheta.feh.skill.assist
 
+import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NormalAssist
+import me.kumatheta.feh.Position
 
 abstract class Refresh : me.kumatheta.feh.NormalAssist() {
-    override fun apply(self: HeroUnit, target: HeroUnit) {
+    override fun apply(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState
+    ) {
         target.refresh()
     }
 
-    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+    override fun isValidAction(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState,
+        fromPosition: Position
+    ): Boolean {
         return !target.available
     }
 

@@ -1,8 +1,17 @@
 package me.kumatheta.feh
 
 sealed class Assist : Skill {
-    abstract fun apply(self: HeroUnit, target: HeroUnit)
-    abstract fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean
+    abstract fun apply(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState
+    )
+    abstract fun isValidAction(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState,
+        fromPosition: Position
+    ): Boolean
 }
 abstract class MovementAssist : Assist()
 

@@ -1,12 +1,17 @@
 package me.kumatheta.feh.skill.assist
 
+import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NormalAssist
+import me.kumatheta.feh.Position
 import kotlin.math.min
 
 object Sacrifice : me.kumatheta.feh.NormalAssist() {
-    override fun apply(self: HeroUnit, target: HeroUnit) {
+    override fun apply(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState
+    ) {
         val heal = min(target.stat.hp - target.currentHp, self.currentHp - 1)
         if (heal > 0) {
             target.heal(heal)
@@ -16,7 +21,12 @@ object Sacrifice : me.kumatheta.feh.NormalAssist() {
         target.clearPenalty()
     }
 
-    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+    override fun isValidAction(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState,
+        fromPosition: Position
+    ): Boolean {
         return target.debuff.isNotZero() || (target.currentHp < target.stat.hp && self.currentHp > 1)
     }
 

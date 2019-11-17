@@ -22,8 +22,8 @@ class BattleState private constructor(
 
     class MovementResult(val gameEnd: Boolean, val teamLostUnit: Team?, val phraseChange: Boolean)
 
-    private val maxX: Int = battleMap.size.x - 1
-    private val maxY: Int = battleMap.size.y - 1
+    val maxX: Int = battleMap.size.x - 1
+    val maxY: Int = battleMap.size.y - 1
 
     var phrase = phrase
         private set
@@ -88,12 +88,13 @@ class BattleState private constructor(
                 if (--obstacle.health == 0) {
                     locationMap.remove(unitAction.obstacle)
                 }
+                heroUnit.endOfTurn()
                 null
             }
             is MoveAndAssist -> {
                 val assist = heroUnit.assist ?: throw IllegalStateException()
                 val target = getUnit(unitAction.assistTargetId)
-                assist.apply(heroUnit, target)
+                assist.apply(heroUnit, target, this)
                 heroUnit.endOfTurn()
                 null
             }
@@ -116,7 +117,7 @@ class BattleState private constructor(
         startOfTurn(nextTeam)
     }
 
-    private fun move(heroUnit: HeroUnit, position: Position) {
+    internal fun move(heroUnit: HeroUnit, position: Position) {
         val originalPosition = heroUnit.position
         if (originalPosition != position) {
             val piece = locationMap.putIfAbsent(position, heroUnit)
@@ -463,13 +464,12 @@ class BattleState private constructor(
         heroUnit: HeroUnit,
         distanceMap: Map<Position, Int>
     ): HeroUnit? {
-        val distanceTo = unitsSeq(heroUnit.team).filterNot { it == heroUnit }.associateWith {
+        val distanceTo = teammates(heroUnit).associateWith {
             distanceMap[it.position]
         }
         if (distanceTo.values.any { it == null }) {
             return null
         }
-
         return distanceTo.asSequence().minWith(compareBy<Map.Entry<HeroUnit, Int?>> {
             it.value
         }.thenByDescending {
@@ -528,15 +528,14 @@ class BattleState private constructor(
         }
 
         if (heroUnit.assist == Pivot) {
-            moves.values.asSequence().flatMap { moveStep ->
-                assistTargets(heroUnit, moveStep.position).map {
-                    it to moveStep
-                }
+            heroUnit.assistTargets(moves).mapNotNull {
+                Pivot.endPosition(it.second.position, it.first.position)
             }
+            // TODO complete
         }
 
-        if (basicMove != null && basicMove != heroUnit.position) {
-            // TODO Rally (1 point increase) and Pivot
+        if (basicMove != heroUnit.position) {
+            // TODO Rally (1 point increase)
             return MoveOnly(heroUnit.id, basicMove)
         }
 
@@ -705,11 +704,7 @@ class BattleState private constructor(
                 assist.isValidPreCombat(heroUnit, selfAttacks)
             }.mapNotNull { (heroUnit, assist, _) ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
-                val assistTargets = moves.values.asSequence().flatMap { moveStep ->
-                    assistTargets(heroUnit, moveStep.position).map {
-                        it to moveStep
-                    }
-                }.distinctBy { it.first }.associate { it }
+                val assistTargets = heroUnit.assistTargets(moves).distinctBy { it.first }.associate { it }
                 val target =
                     assist.preCombatBestTarget(heroUnit, assistTargets.keys, lazyAllyThreat, distanceToClosestEnemy)
                 if (target == null) {
@@ -719,6 +714,17 @@ class BattleState private constructor(
                     MoveAndAssist(target.id, moveStep.position, target.id)
                 }
             }.firstOrNull()
+    }
+
+    private fun HeroUnit.assistTargets(
+        moves: Map<Position, MoveStep>
+    ): Sequence<Pair<HeroUnit, MoveStep>> {
+        val teammates = teammates(this).toList()
+        return moves.values.asSequence().flatMap { moveStep ->
+            teammates.asSequence().filterValidAssistTarget(this, moveStep.position).map {
+                it to moveStep
+            }
+        }
     }
 
     private fun autoBattleAttacks(
@@ -902,13 +908,13 @@ class BattleState private constructor(
         }
     }
 
-    private fun assistTargets(
+    private fun Sequence<HeroUnit>.filterValidAssistTarget(
         heroUnit: HeroUnit,
         position: Position
     ): Sequence<HeroUnit> {
         val assist = heroUnit.assist ?: return emptySequence()
-        return unitsSeq(heroUnit.team).filter { it.position.distanceTo(position) == 1 }.filter { target ->
-            assist.isValidAction(heroUnit, target)
+        return filter { it.position.distanceTo(position) == 1 }.filter { target ->
+            assist.isValidAction(heroUnit, target, this@BattleState, position)
         }
     }
 
@@ -981,6 +987,7 @@ class BattleState private constructor(
 
     fun getAllPlayerMovements(): Sequence<UnitAction> {
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
+            val teammates = teammates(heroUnit).toList()
             moveTargets(heroUnit).map { it.position }.flatMap { move ->
                 attackTargetPositions(heroUnit, move).mapNotNull { attackTargetPosition ->
                     when (val chessPiece = locationMap[attackTargetPosition]) {
@@ -1003,7 +1010,7 @@ class BattleState private constructor(
                 } + MoveOnly(
                     heroUnitId = heroUnit.id,
                     moveTarget = move
-                ) + assistTargets(heroUnit, move).map { assistTarget ->
+                ) + teammates.asSequence().filterValidAssistTarget(heroUnit, move).map { assistTarget ->
                     MoveAndAssist(
                         heroUnitId = heroUnit.id,
                         moveTarget = move,
@@ -1013,6 +1020,8 @@ class BattleState private constructor(
             }
         }
     }
+
+    private fun teammates(heroUnit: HeroUnit) = unitsSeq(heroUnit.team).filterNot { it == heroUnit }
 
     private fun attackPositionComparator(heroUnit: HeroUnit, enemyThreat: Map<Position, Int>) = compareBy<MoveStep>(
         {

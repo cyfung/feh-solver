@@ -1,17 +1,27 @@
 package me.kumatheta.feh.skill.assist
 
+import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NormalAssist
+import me.kumatheta.feh.Position
 
 private const val HEAL_AMOUNT = 10
 
 object ArdentSacrifice : me.kumatheta.feh.NormalAssist() {
-    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+    override fun isValidAction(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState,
+        fromPosition: Position
+    ): Boolean {
         return self.currentHp > HEAL_AMOUNT && target.currentHp < target.stat.hp
     }
 
-    override fun apply(self: HeroUnit, target: HeroUnit) {
+    override fun apply(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState
+    ) {
         self.takeNonLethalDamage(HEAL_AMOUNT)
         target.heal(HEAL_AMOUNT)
     }

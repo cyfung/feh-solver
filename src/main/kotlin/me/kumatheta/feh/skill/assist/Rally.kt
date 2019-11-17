@@ -1,14 +1,25 @@
 package me.kumatheta.feh.skill.assist
 
+import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.Position
 import me.kumatheta.feh.Stat
 
 abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
-    override fun apply(self: HeroUnit, target: HeroUnit) {
+    override fun apply(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState
+    ) {
         target.applyBuff(bonus)
     }
 
-    final override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+    final override fun isValidAction(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState,
+        fromPosition: Position
+    ): Boolean {
         return target.buff.rallyGain(bonus) > 0
     }
 

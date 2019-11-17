@@ -1,18 +1,27 @@
 package me.kumatheta.feh.skill.assist
 
+import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NormalAssist
-import me.kumatheta.feh.Stat
+import me.kumatheta.feh.Position
 
 private const val THRESHOLD = 10
 
 abstract class RestoreAssist(private val baseHeal: Int) : me.kumatheta.feh.NormalAssist() {
-    override fun apply(self: HeroUnit, target: HeroUnit) {
+    override fun apply(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState
+    ) {
         target.heal(healAmount(baseHeal, self, target))
         target.clearPenalty()
     }
 
-    override fun isValidAction(self: HeroUnit, target: HeroUnit): Boolean {
+    override fun isValidAction(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState,
+        fromPosition: Position
+    ): Boolean {
         return target.currentHp < target.stat.hp || target.debuff.isNotZero()
     }
 
