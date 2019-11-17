@@ -13,7 +13,7 @@ object AxeFighter : HeroModel(MoveType.INFANTRY, IronAxe, null, null, Stat(23, 1
 object LanceFighter : HeroModel(MoveType.INFANTRY, IronLance, null, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
 object SwordFighter : HeroModel(MoveType.INFANTRY, IronSword, null, null, Stat(23, 17, 12, 8, 6), emptyList(), true)
 
-object TestMap : me.kumatheta.feh.BattleMap {
+object TestMap : BattleMap {
     override fun getTerrain(position: Position): Terrain {
         return Terrain.REGULAR
     }
@@ -25,12 +25,16 @@ object TestMap : me.kumatheta.feh.BattleMap {
         Position(1,4) to HeroUnit(3, Anna, Team.PLAYER),
         Position(3, 2) to HeroUnit(4, AxeFighter, Team.ENEMY),
         Position(3, 3) to HeroUnit(5, LanceFighter, Team.ENEMY),
-        Position(3,4) to HeroUnit(6, SwordFighter, Team.ENEMY)
+        Position(3,4) to HeroUnit(6, SwordFighter, Team.ENEMY),
+        Position(2,2) to Obstacle(1, Position(2,2)),
+        Position(2,3) to Obstacle(1, Position(2,3)),
+        Position(2,4) to Obstacle(1, Position(2,4))
     )
 
     init {
-        map.forEach {(position, heroUnit) ->
-            heroUnit.position = position
+        map.forEach {(position, chessPiece) ->
+            if (chessPiece !is HeroUnit) return@forEach
+            chessPiece.position = position
         }
     }
     override fun toChessPieceMap(): Map<Position, ChessPiece> {

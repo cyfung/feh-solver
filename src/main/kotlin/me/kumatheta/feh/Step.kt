@@ -28,6 +28,16 @@ class MoveAndAttack (
     }
 }
 
+class MoveAndBreak (
+    heroUnitId: Int,
+    moveTarget: Position,
+    val obstacle: Position
+) : UnitAction(heroUnitId, moveTarget) {
+    override fun toString(): String {
+        return "MoveAndBreak(obstacle=$obstacle) ${super.toString()}"
+    }
+}
+
 class MoveAndAssist(
     heroUnitId: Int,
     moveTarget: Position,
