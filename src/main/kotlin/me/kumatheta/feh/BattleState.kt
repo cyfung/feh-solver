@@ -379,7 +379,7 @@ class BattleState private constructor(
 
             val attackTargetPositions = possibleMoves.mapValues { (heroUnit, moves) ->
                 moves.values.asSequence().flatMap { moveStep ->
-                    attackPositions(heroUnit, moveStep.position).mapNotNull {
+                    attackTargetPositions(heroUnit, moveStep.position).mapNotNull {
                         it to moveStep
                     }
                 }.distinctBy { it.second }.associate { it }
@@ -515,7 +515,7 @@ class BattleState private constructor(
         val obstacle = if (validObstacles.isEmpty()) {
             null
         } else {
-            attackTargetPositions.asSequence().mapNotNull {(position, moveStep) ->
+            attackTargetPositions.asSequence().mapNotNull { (position, moveStep) ->
                 val distance = validObstacles[position] ?: return@mapNotNull null
                 Triple(distance, position, moveStep)
             }.minBy {
@@ -584,7 +584,7 @@ class BattleState private constructor(
             null
         } else {
             val chaseTargets = distanceTo.asSequence().flatMap { (position, distance) ->
-                attackPositions(heroUnit, position).map {
+                attackTargetPositions(heroUnit, position).map {
                     it to distance
                 }
             }.groupingBy {
@@ -795,12 +795,12 @@ class BattleState private constructor(
             }
             calculateDistance(heroUnit, threatReceiver)
             threatReceiver.movablePositions.flatMap {
-                attackPositions(heroUnit, it)
+                attackTargetPositions(heroUnit, it)
             }.distinct()
         }
     }
 
-    private fun attackPositions(
+    private fun attackTargetPositions(
         heroUnit: HeroUnit,
         standingPosition: Position
     ): Sequence<Position> {
@@ -857,7 +857,7 @@ class BattleState private constructor(
                     0 to sequenceOf(MoveStep(startingPosition, terrain, false, 0))
                 } else {
                     val distanceTravel = if (heroUnit.weaponType.isRanged) 2 else 1
-                    distanceTravel to attackPositions(heroUnit, startingPosition).mapNotNull {
+                    distanceTravel to attackTargetPositions(heroUnit, startingPosition).mapNotNull {
                         val attackTerrain = battleMap.getTerrain(heroUnit.position)
                         if (terrain.moveCost(heroUnit.moveType) == null) {
                             null
@@ -910,18 +910,6 @@ class BattleState private constructor(
         return unitsSeq(heroUnit.team).filter { it.position.distanceTo(position) == 1 }.filter { target ->
             assist.isValidAction(heroUnit, target)
         }
-    }
-
-    private fun attackTargets(
-        heroUnit: HeroUnit,
-        position: Position
-    ): Sequence<HeroUnit> {
-        if (heroUnit.isEmptyHanded) {
-            return emptySequence()
-        }
-        val range = heroUnit.weaponType.range
-
-        return unitsSeq(heroUnit.team.foe).filter { it.position.distanceTo(position) == range }
     }
 
     private val Position.surroundings: Sequence<Position>
@@ -994,12 +982,24 @@ class BattleState private constructor(
     fun getAllPlayerMovements(): Sequence<UnitAction> {
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
             moveTargets(heroUnit).map { it.position }.flatMap { move ->
-                attackTargets(heroUnit, move).map { attackTarget ->
-                    MoveAndAttack(
-                        heroUnitId = heroUnit.id,
-                        moveTarget = move,
-                        attackTargetId = attackTarget.id
-                    )
+                attackTargetPositions(heroUnit, move).mapNotNull { attackTargetPosition ->
+                    when (val chessPiece = locationMap[attackTargetPosition]) {
+                        null -> null
+                        is HeroUnit -> if (chessPiece.team == Team.ENEMY) {
+                            MoveAndAttack(
+                                heroUnitId = heroUnit.id,
+                                moveTarget = move,
+                                attackTargetId = chessPiece.id
+                            )
+                        } else {
+                            null
+                        }
+                        is Obstacle -> MoveAndBreak(
+                            heroUnitId = heroUnit.id,
+                            moveTarget = move,
+                            obstacle = attackTargetPosition
+                        )
+                    }
                 } + MoveOnly(
                     heroUnitId = heroUnit.id,
                     moveTarget = move
