@@ -22,7 +22,7 @@ object Pivot : MovementAssist() {
         fromPosition: Position
     ): Boolean {
         val endPosition = checkEndPosition(fromPosition, target.position) ?: return false
-        return !(endPosition.x < 0 || endPosition.y < 0 || endPosition.x >= battleState.maxX || endPosition.y >= battleState.maxY)
+        return !(endPosition.x < 0 || endPosition.y < 0 || endPosition.x > battleState.maxPosition.x || endPosition.y >= battleState.maxPosition.y)
     }
 
     fun endPosition(startPosition: Position, assistTargetPosition: Position): Position {
