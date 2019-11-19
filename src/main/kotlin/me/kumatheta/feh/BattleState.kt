@@ -391,9 +391,18 @@ class BattleState private constructor(
 
             val assistSortedAllies = distanceToClosestFoe.asSequence().filter {
                 it.key.available
-            }.toSortedSet(compareByDescending<Map.Entry<HeroUnit, Int>> { it.value }.thenBy {
+            }.toSortedSet(compareBy<Map.Entry<HeroUnit, Int>>({
+                if(it.key.isEmptyHanded) {
+                    0
+                } else {
+                    1
+                }
+            }, {
+                // distance to closest enemy, highest first
+                - it.value
+            }, {
                 it.key.id
-            }).map {
+            })).map {
                 it.key
             }
 
