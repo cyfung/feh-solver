@@ -391,15 +391,15 @@ class BattleState private constructor(
 
             val assistSortedAllies = distanceToClosestFoe.asSequence().filter {
                 it.key.available
-            }.toSortedSet(compareBy<Map.Entry<HeroUnit, Int>>({
-                if(it.key.isEmptyHanded) {
+            }.toSortedSet(compareBy({
+                if (it.key.isEmptyHanded) {
                     0
                 } else {
                     1
                 }
             }, {
                 // distance to closest enemy, highest first
-                - it.value
+                -it.value
             }, {
                 it.key.id
             })).map {
@@ -433,8 +433,8 @@ class BattleState private constructor(
             // TODO aggressive movement assist
 
 
-            // TODO post combat assist
-            assistSortedAllies.asSequence().mapNotNull { heroUnit ->
+            // post combat assist
+            val postCombatAssist = assistSortedAllies.asSequence().mapNotNull { heroUnit ->
                 val assist = heroUnit.assist as? NormalAssist ?: return@mapNotNull null
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
                 val assistTargets = heroUnit.assistTargets(moves).distinctBy { it.first }.associate { it }
@@ -449,8 +449,14 @@ class BattleState private constructor(
                 if (target == null) {
                     null
                 } else {
-                    Triple(heroUnit, target, assistTargets[target])
+                    val moveStep = assistTargets[target] ?: throw IllegalStateException()
+                    MoveAndAssist(heroUnit.id, moveStep.position, target.id)
                 }
+            }.firstOrNull()
+
+            if (postCombatAssist != null) {
+                executeMove(postCombatAssist)
+                return@generateSequence postCombatAssist
             }
 
             // movement
@@ -660,7 +666,7 @@ class BattleState private constructor(
                 null
             } else {
                 val moveStep = assistTargets[target] ?: throw IllegalStateException()
-                MoveAndAssist(target.id, moveStep.position, target.id)
+                MoveAndAssist(heroUnit.id, moveStep.position, target.id)
             }
         }.firstOrNull()
     }
