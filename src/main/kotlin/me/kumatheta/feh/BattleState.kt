@@ -430,9 +430,6 @@ class BattleState private constructor(
                 return@generateSequence attack.action
             }
 
-            // TODO aggressive movement assist
-
-
             // post combat assist
             val postCombatAssist = assistSortedAllies.asSequence().mapNotNull { heroUnit ->
                 val assist = heroUnit.assist as? NormalAssist ?: return@mapNotNull null
@@ -458,6 +455,11 @@ class BattleState private constructor(
                 executeMove(postCombatAssist)
                 return@generateSequence postCombatAssist
             }
+
+            // TODO aggressive movement assist
+
+            // TODO movement assist
+
 
             // movement
             val move = getMoveAction(
