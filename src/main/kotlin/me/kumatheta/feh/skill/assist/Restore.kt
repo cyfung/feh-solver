@@ -28,7 +28,7 @@ abstract class RestoreAssist(private val baseHeal: Int) : me.kumatheta.feh.Norma
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         val (noDebuff, hasDebuff) = targets.partition { it.debuff.isZero() }

@@ -5,7 +5,7 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.MovementAssist
 import me.kumatheta.feh.Position
 
-object Pivot : MovementAssist() {
+object Pivot : MovementAssist(false) {
     override fun apply(
         self: HeroUnit,
         target: HeroUnit,
@@ -25,7 +25,7 @@ object Pivot : MovementAssist() {
         return !(endPosition.x < 0 || endPosition.y < 0 || endPosition.x > battleState.maxPosition.x || endPosition.y >= battleState.maxPosition.y)
     }
 
-    fun endPosition(startPosition: Position, assistTargetPosition: Position): Position {
+    override fun endPosition(startPosition: Position, assistTargetPosition: Position): Position {
         return checkEndPosition(startPosition, assistTargetPosition) ?: throw IllegalArgumentException()
     }
 

@@ -26,7 +26,7 @@ abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
     final override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value

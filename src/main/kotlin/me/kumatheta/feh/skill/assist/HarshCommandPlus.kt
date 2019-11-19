@@ -27,7 +27,7 @@ object HarshCommandPlus : BuffRelatedAssist() {
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value
@@ -39,7 +39,7 @@ object HarshCommandPlus : BuffRelatedAssist() {
     override fun postCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         foeThreat: Map<Position, Int>,
         distanceToClosestFoe: Map<HeroUnit, Int>,
         battleState: BattleState

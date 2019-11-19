@@ -41,7 +41,7 @@ object ReciprocalAid : me.kumatheta.feh.NormalAssist() {
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         return bestTarget(self, targets)
@@ -50,7 +50,7 @@ object ReciprocalAid : me.kumatheta.feh.NormalAssist() {
     override fun postCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         foeThreat: Map<Position, Int>,
         distanceToClosestFoe: Map<HeroUnit, Int>,
         battleState: BattleState

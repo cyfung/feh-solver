@@ -32,12 +32,12 @@ abstract class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
     final override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value
         return targets.asSequence().map {
-            it to allyThreat.count { ally -> ally.position.distanceTo(it.position) <= 2 }
+            it to allyThreat.keys.count { ally -> ally.position.distanceTo(it.position) <= 2 }
         }.filter {
             it.second > 0
         }.minWith(
@@ -48,12 +48,12 @@ abstract class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
     override fun postCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         foeThreat: Map<Position, Int>,
         distanceToClosestFoe: Map<HeroUnit, Int>,
         battleState: BattleState
     ): HeroUnit? {
-        val allyThreat = lazyAllyThreat.value.filter {
+        val allyThreat = lazyAllyThreat.value.keys.filter {
             it.stat.rallyGain(bonus) >= 2
         }
         val threatOrThreatened = (allyThreat.asSequence() + battleState.unitsSeq(self.team).filterNot {
