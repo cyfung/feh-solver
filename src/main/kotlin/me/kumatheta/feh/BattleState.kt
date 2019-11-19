@@ -71,6 +71,13 @@ class BattleState private constructor(
         startOfTurn(Team.PLAYER)
     }
 
+    fun isValidPosition(heroUnit: HeroUnit, position: Position): Boolean {
+        if (position.x < 0 || position.y < 0 || position.x > maxPosition.x || position.y >= maxPosition.y) {
+            return false
+        }
+        return battleMap.getTerrain(position).moveCost(heroUnit.moveType) != null
+    }
+
     fun unitsSeq(team: Team) =
         locationMap.values.asSequence().filterIsInstance<HeroUnit>().filter { it.team == team }
 
@@ -838,6 +845,8 @@ class BattleState private constructor(
             }.distinct()
         }
     }
+
+    fun getChessPiece(position: Position) = locationMap[position]
 
     private fun getUnit(heroUnitId: Int) =
         unitIdMap[heroUnitId] ?: throw IllegalStateException()

@@ -1,7 +1,5 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.assist.Pivot
-
 sealed class Assist : Skill {
     abstract fun apply(
         self: HeroUnit,
@@ -15,6 +13,7 @@ sealed class Assist : Skill {
         fromPosition: Position
     ): Boolean
 }
+
 abstract class MovementAssist(val canBeAggressive: Boolean) : Assist() {
     abstract fun endPosition(startPosition: Position, assistTargetPosition: Position): Position
 }

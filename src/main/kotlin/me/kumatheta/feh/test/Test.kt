@@ -2,6 +2,8 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.FehBoard
+import me.kumatheta.feh.skill.assist.DrawBack
+import me.kumatheta.feh.skill.assist.Pivot
 import me.kumatheta.feh.skill.weapon.*
 import me.kumatheta.mcts.Mcts
 
@@ -9,8 +11,8 @@ object Alfonse : HeroModel(MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31
 object Sharena : HeroModel(MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
 object Anna : HeroModel(MoveType.INFANTRY, Noatun, null, null, Stat(24, 28, 16, 9, 11), emptyList(), true)
 
-object AxeFighter : HeroModel(MoveType.INFANTRY, IronAxe, null, null, Stat(23, 17, 12, 8, 6), emptyList(), true)
-object LanceFighter : HeroModel(MoveType.INFANTRY, IronLance, null, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
+object AxeFighter : HeroModel(MoveType.INFANTRY, IronAxe, DrawBack, null, Stat(23, 17, 12, 8, 6), emptyList(), true)
+object LanceFighter : HeroModel(MoveType.INFANTRY, IronLance, Pivot, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
 object SwordFighter : HeroModel(MoveType.INFANTRY, IronSword, null, null, Stat(23, 17, 12, 8, 6), emptyList(), true)
 
 object TestMap : BattleMap {
