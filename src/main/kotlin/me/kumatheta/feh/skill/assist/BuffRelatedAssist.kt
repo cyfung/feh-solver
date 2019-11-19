@@ -2,9 +2,10 @@ package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.NormalAssist
 import me.kumatheta.feh.WinLoss
 
-abstract class BuffRelatedAssist : me.kumatheta.feh.NormalAssist() {
+abstract class BuffRelatedAssist : NormalAssist() {
     final override fun isValidPreCombat(self: HeroUnit, selfAttacks: List<CombatResult>): Boolean {
         return if (self.hasSpecialDebuff) {
             selfAttacks.all {

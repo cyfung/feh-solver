@@ -28,12 +28,30 @@ object HarshCommandPlus : BuffRelatedAssist() {
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value
         return targets.asSequence().filter { it.available }.filter {
             allyThreat.contains(it)
-        }.map {
+        }.bestTarget(distanceToClosestFoe)
+    }
+
+    override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        val allyThreat = lazyAllyThreat.value
+        return targets.asSequence().filter {
+            allyThreat.contains(it) || (foeThreat[it.position] ?: 0) > 0
+        }.bestTarget(distanceToClosestFoe)
+    }
+
+    private fun Sequence<HeroUnit>.bestTarget(distanceToClosestFoe: Map<HeroUnit, Int>): HeroUnit? {
+        return map {
             if (it.withPanic) {
                 it.stat.rallyGain(-it.debuff) + it.debuff.totalExceptHp + it.buff.totalExceptHp
             } else {
@@ -43,7 +61,7 @@ object HarshCommandPlus : BuffRelatedAssist() {
         }.filter {
             it.second >= 2 || it.first.hasNegativeStatus
         }.minWith(
-            targetComparator(distanceToClosestEnemy)
+            targetComparator(distanceToClosestFoe)
         )?.first
     }
 }

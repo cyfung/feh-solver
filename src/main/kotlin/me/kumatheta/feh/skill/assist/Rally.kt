@@ -6,7 +6,7 @@ import me.kumatheta.feh.Position
 import me.kumatheta.feh.Stat
 
 abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
-    override fun apply(
+    final override fun apply(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState
@@ -23,11 +23,11 @@ abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         return target.buff.rallyGain(bonus) > 0
     }
 
-    override fun preCombatBestTarget(
+    final override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value
         return targets.asSequence().filter { it.available }.filter {
@@ -37,9 +37,10 @@ abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         }.filter {
             it.second >= 2
         }.minWith(
-            targetComparator(distanceToClosestEnemy)
+            targetComparator(distanceToClosestFoe)
         )?.first
     }
+
 
 }
 

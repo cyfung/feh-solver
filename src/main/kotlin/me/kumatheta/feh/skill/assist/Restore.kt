@@ -29,7 +29,7 @@ abstract class RestoreAssist(private val baseHeal: Int) : me.kumatheta.feh.Norma
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         val (noDebuff, hasDebuff) = targets.partition { it.debuff.isZero() }
         return preCombatNoDebuffBestTarget(self, noDebuff) ?: preCombatHasDebuffBestTarget(hasDebuff)

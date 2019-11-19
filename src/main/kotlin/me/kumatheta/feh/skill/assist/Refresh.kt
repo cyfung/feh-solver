@@ -36,7 +36,7 @@ abstract class Refresh : me.kumatheta.feh.NormalAssist() {
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         return targets.filterNot {
             it.available
@@ -51,6 +51,17 @@ abstract class Refresh : me.kumatheta.feh.NormalAssist() {
                 it
             }
         )
+    }
+
+    override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        throw UnsupportedOperationException()
     }
 }
 

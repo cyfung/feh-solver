@@ -30,18 +30,33 @@ object ArdentSacrifice : me.kumatheta.feh.NormalAssist() {
         self: HeroUnit,
         selfAttacks: List<CombatResult>
     ): Boolean {
-        return self.isEmptyHanded && self.currentHp > HEAL_AMOUNT
+        return self.isEmptyHanded
+    }
+
+    private fun bestTarget(targets: Set<HeroUnit>): HeroUnit? {
+        return targets.asSequence().filter { target ->
+            target.stat.hp - target.currentHp >= HEAL_AMOUNT
+        }.minWith(BASE_ASSIST_COMPARATOR)
     }
 
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
-        return targets.asSequence().filter { target ->
-            target.stat.hp - target.currentHp >= HEAL_AMOUNT
-        }.minWith(BASE_ASSIST_COMPARATOR)
+        return bestTarget(targets)
+    }
+
+    override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        return bestTarget(targets)
     }
 
 }

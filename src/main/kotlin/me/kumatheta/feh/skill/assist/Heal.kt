@@ -5,13 +5,6 @@ import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.skill.special.Imbue
-import me.kumatheta.feh.util.compareByDescending
-
-val BASE_ASSIST_COMPARATOR = compareByDescending<HeroUnit>({
-    it.currentStatTotal
-}, {
-    it.id
-})
 
 val HEAL_COMPARATOR = compareByDescending<Pair<HeroUnit, Int>> {
     it.second
@@ -59,12 +52,25 @@ abstract class Heal(private val threshold: Int) : me.kumatheta.feh.NormalAssist(
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         return targets.asSequence().map { target ->
             target to healAmount(self, target)
         }.filter {
             it.second >= threshold
+        }.bestHealTarget()
+    }
+
+    override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        return targets.asSequence().map { target ->
+            target to healAmount(self, target)
         }.bestHealTarget()
     }
 

@@ -42,7 +42,25 @@ object ReciprocalAid : me.kumatheta.feh.NormalAssist() {
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
+    ): HeroUnit? {
+        return bestTarget(self, targets)
+    }
+
+    override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        return bestTarget(self, targets)
+    }
+
+    private fun bestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>
     ): HeroUnit? {
         return targets.asSequence().filter { target ->
             target.stat.hp > target.currentHp &&

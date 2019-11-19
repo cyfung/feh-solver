@@ -384,13 +384,22 @@ class BattleState private constructor(
                     }
                 }.distinctBy { it.second }.associate { it }
             }
+
             val possibleAttacks = attackTargetPositions.mapValues { (heroUnit, targetPositions) ->
                 autoBattleAttacks(heroUnit, targetPositions)
             }
 
+            val assistSortedAllies = distanceToClosestFoe.asSequence().filter {
+                it.key.available
+            }.toSortedSet(compareByDescending<Map.Entry<HeroUnit, Int>> { it.value }.thenBy {
+                it.key.id
+            }).map {
+                it.key
+            }
+
             // pre combat assist
-            val preCombatAssist = checkPreCombatAssist(
-                distanceToClosestEnemy = distanceToClosestFoe,
+            val preCombatAssist = assistSortedAllies.asSequence().checkPreCombatAssist(
+                distanceToClosestFoe = distanceToClosestFoe,
                 possibleAttacks = possibleAttacks,
                 possibleMoves = possibleMoves,
                 lazyAllyThreat = lazyAllyThreat
@@ -414,7 +423,26 @@ class BattleState private constructor(
 
             // TODO aggressive movement assist
 
+
             // TODO post combat assist
+            assistSortedAllies.asSequence().mapNotNull { heroUnit ->
+                val assist = heroUnit.assist as? NormalAssist ?: return@mapNotNull null
+                val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
+                val assistTargets = heroUnit.assistTargets(moves).distinctBy { it.first }.associate { it }
+                val target = assist.postCombatBestTarget(
+                    self = heroUnit,
+                    targets = assistTargets.keys,
+                    lazyAllyThreat = lazyAllyThreat,
+                    foeThreat = foeThreat,
+                    distanceToClosestFoe = distanceToClosestFoe,
+                    battleState = this
+                )
+                if (target == null) {
+                    null
+                } else {
+                    Triple(heroUnit, target, assistTargets[target])
+                }
+            }
 
             // movement
             val move = getMoveAction(
@@ -454,8 +482,7 @@ class BattleState private constructor(
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
                 val distanceMap = distanceFromAlly[heroUnit] ?: throw IllegalStateException()
                 val targetPositions = attackTargetPositions[heroUnit] ?: throw IllegalStateException()
-                val targetMove = getTargetMove(heroUnit, distanceMap, moves, targetPositions, foeThreat)
-                targetMove
+                getMoveAction(heroUnit, distanceMap, moves, targetPositions, foeThreat)
             }.firstOrNull()
     }
 
@@ -476,7 +503,7 @@ class BattleState private constructor(
         })?.key
     }
 
-    private fun getTargetMove(
+    private fun getMoveAction(
         heroUnit: HeroUnit,
         distanceMap: Map<Position, Int>,
         moves: Map<Position, MoveStep>,
@@ -603,40 +630,30 @@ class BattleState private constructor(
         return resultMap.toMap()
     }
 
-    private fun checkPreCombatAssist(
-        distanceToClosestEnemy: Map<HeroUnit, Int>,
+    private fun Sequence<HeroUnit>.checkPreCombatAssist(
+        distanceToClosestFoe: Map<HeroUnit, Int>,
         possibleAttacks: Map<HeroUnit, List<CombatResult>>,
         possibleMoves: Map<HeroUnit, Map<Position, MoveStep>>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>
     ): MoveAndAssist? {
-        return distanceToClosestEnemy.asSequence().filter { it.key.available }
-            .sortedWith(compareByDescending<Map.Entry<HeroUnit, Int>> { it.value }.thenBy {
-                it.key.id
-            }).map {
-                it.key
-            }.mapNotNull {
-                val assist = it.assist as? NormalAssist ?: return@mapNotNull null
-                val attacks = possibleAttacks[it].orEmpty()
-                val win = attacks.firstOrNull()?.winLoss == WinLoss.WIN
-                if (win) {
-                    null
-                } else {
-                    Triple(it, assist, attacks)
-                }
-            }.filter { (heroUnit, assist, selfAttacks) ->
-                assist.isValidPreCombat(heroUnit, selfAttacks)
-            }.mapNotNull { (heroUnit, assist, _) ->
-                val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
-                val assistTargets = heroUnit.assistTargets(moves).distinctBy { it.first }.associate { it }
-                val target =
-                    assist.preCombatBestTarget(heroUnit, assistTargets.keys, lazyAllyThreat, distanceToClosestEnemy)
-                if (target == null) {
-                    null
-                } else {
-                    val moveStep = assistTargets[target] ?: throw IllegalStateException()
-                    MoveAndAssist(target.id, moveStep.position, target.id)
-                }
-            }.firstOrNull()
+        return mapNotNull { heroUnit ->
+            val assist = heroUnit.assist as? NormalAssist ?: return@mapNotNull null
+            val attacks = possibleAttacks[heroUnit].orEmpty()
+            val win = attacks.firstOrNull()?.winLoss == WinLoss.WIN
+            if (win || !assist.isValidPreCombat(heroUnit, attacks)) {
+                return@mapNotNull null
+            }
+            val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
+            val assistTargets = heroUnit.assistTargets(moves).distinctBy { it.first }.associate { it }
+            val target =
+                assist.preCombatBestTarget(heroUnit, assistTargets.keys, lazyAllyThreat, distanceToClosestFoe)
+            if (target == null) {
+                null
+            } else {
+                val moveStep = assistTargets[target] ?: throw IllegalStateException()
+                MoveAndAssist(target.id, moveStep.position, target.id)
+            }
+        }.firstOrNull()
     }
 
     private fun HeroUnit.assistTargets(

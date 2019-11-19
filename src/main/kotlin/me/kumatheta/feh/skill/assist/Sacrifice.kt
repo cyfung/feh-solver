@@ -12,7 +12,7 @@ object Sacrifice : me.kumatheta.feh.NormalAssist() {
         target: HeroUnit,
         battleState: BattleState
     ) {
-        val heal = min(target.stat.hp - target.currentHp, self.currentHp - 1)
+        val heal = healAmount(target, self)
         if (heal > 0) {
             target.heal(heal)
             self.takeNonLethalDamage(heal)
@@ -27,7 +27,7 @@ object Sacrifice : me.kumatheta.feh.NormalAssist() {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return target.debuff.isNotZero() || (target.currentHp < target.stat.hp && self.currentHp > 1)
+        return target.debuff.isNotZero() || healAmount(target, self) > 0
     }
 
     override fun isValidPreCombat(
@@ -43,12 +43,28 @@ object Sacrifice : me.kumatheta.feh.NormalAssist() {
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Set<HeroUnit>>,
-        distanceToClosestEnemy: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
         return targets.asSequence().map { target ->
-            target to min(target.stat.hp - target.currentHp, self.currentHp - 1)
+            target to healAmount(target, self)
         }.filter {
             it.second > 0
         }.bestHealTarget()
     }
+
+    override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Set<HeroUnit>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        return targets.asSequence().map { target ->
+            target to healAmount(target, self)
+        }.bestHealTarget()
+    }
+
+    private fun healAmount(target: HeroUnit, self: HeroUnit) =
+        min(target.stat.hp - target.currentHp, self.currentHp - 1)
 }
