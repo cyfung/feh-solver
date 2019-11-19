@@ -7,7 +7,7 @@ interface Hero {
     val moveType: MoveType
     val isEmptyHanded: Boolean
     val weaponType: WeaponType
-    val assist: me.kumatheta.feh.Assist?
+    val assist: Assist?
     val special: Special?
     val skillSet: SkillSet
     val stat: Stat
@@ -26,8 +26,8 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
 
 open class HeroModel(
     override val moveType: MoveType,
-    weapon: Weapon,
-    final override val assist: me.kumatheta.feh.Assist?,
+    val weapon: Weapon,
+    final override val assist: Assist?,
     final override val special: Special?,
     stat: Stat,
     passives: List<Passive>,

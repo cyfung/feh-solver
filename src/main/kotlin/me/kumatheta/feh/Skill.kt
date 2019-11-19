@@ -67,6 +67,9 @@ class SkillSet(skills: List<Skill>) {
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill {
+    open fun isEffective(foe: HeroUnit): Boolean {
+        return false
+    }
 }
 
 abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) {

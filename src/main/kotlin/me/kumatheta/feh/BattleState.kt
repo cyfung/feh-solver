@@ -325,9 +325,9 @@ class BattleState private constructor(
     ): Int {
         val targetRes = attacker.weaponType.targetRes
         val defenderDefRes = if (targetRes) {
-            defenderStat.def
-        } else {
             defenderStat.res
+        } else {
+            defenderStat.def
         }
         val effAtk = if (isEffective(attacker, defender)) {
             attackerStat.atk * 3 / 2
@@ -348,7 +348,7 @@ class BattleState private constructor(
         if (attacker.weaponType == Bow && defender.moveType == MoveType.FLYING) {
             return true
         }
-        return false
+        return attacker.isEffective(defender)
     }
 
     fun playerMove(unitAction: UnitAction): MovementResult {
@@ -484,7 +484,7 @@ class BattleState private constructor(
                 val assistTargets =
                     heroUnit.assistTargets(moves).groupBy({ it.first }, { it.second }).mapValues { (target, moveStep) ->
                         moveStep.minWith(compareBy<MoveStep> {
-                            foeThreat[assist.endPosition(it.position, target.position)] ?: 0
+                            foeThreat[assist.selfEndPosition(it.position, target.position)] ?: 0
                         }.then(compareBy(
                             {
                                 if (it.teleportRequired) 0 else 1
@@ -653,7 +653,7 @@ class BattleState private constructor(
 
         if (heroUnit.assist == Pivot) {
             val pivot = heroUnit.assistTargets(moves).mapNotNull {
-                val endPosition = Pivot.endPosition(it.second.position, it.first.position)
+                val endPosition = Pivot.selfEndPosition(it.second.position, it.first.position)
                 val distanceTo = endPosition.distanceTo(chaseTarget.position)
                 if (distanceTo < basicDistance) {
                     Triple(distanceTo, it.first, it.second)
@@ -857,8 +857,7 @@ class BattleState private constructor(
         val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
         val travelPower = heroUnit.travelPower
         val obstacles = locationMap
-        val team = heroUnit.team
-        val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, team, pass)
+        val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass)
         calculateDistance(heroUnit, distanceReceiver)
         heroUnit.skillSet.teleport.asSequence().flatMap {
             it.apply(this, heroUnit)
@@ -1077,7 +1076,7 @@ class BattleState private constructor(
 class DistanceReceiverRealMovement(
     private val travelPower: Int,
     private val obstacles: MutableMap<Position, ChessPiece>,
-    private val selfTeam: Team,
+    private val self: HeroUnit,
     private val pass: Boolean
 ) : DistanceReceiver {
     private val resultMap = mutableMapOf<Position, MoveStep>()
@@ -1096,22 +1095,23 @@ class DistanceReceiverRealMovement(
             return false
         }
         return when (val obstacle = obstacles[position]) {
+            self, null -> {
+                resultMap[position] = moveStep
+                true
+            }
+
             is Obstacle -> {
                 resultMap[position] = moveStep.copy(distanceTravel = -1)
                 false
             }
             is HeroUnit -> {
-                if (obstacle.team == selfTeam) {
+                if (obstacle.team == self.team) {
                     resultMap[position] = moveStep.copy(distanceTravel = -1)
                     true
                 } else {
                     resultMap[position] = moveStep.copy(distanceTravel = -1)
                     pass
                 }
-            }
-            null -> {
-                resultMap[position] = moveStep
-                true
             }
         }
     }

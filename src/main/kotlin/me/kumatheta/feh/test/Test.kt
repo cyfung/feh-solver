@@ -4,6 +4,7 @@ import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.skill.assist.DrawBack
 import me.kumatheta.feh.skill.assist.Pivot
+import me.kumatheta.feh.skill.assist.Smite
 import me.kumatheta.feh.skill.weapon.*
 import me.kumatheta.mcts.Mcts
 
@@ -11,26 +12,36 @@ object Alfonse : HeroModel(MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31
 object Sharena : HeroModel(MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
 object Anna : HeroModel(MoveType.INFANTRY, Noatun, null, null, Stat(24, 28, 16, 9, 11), emptyList(), true)
 
-object AxeFighter : HeroModel(MoveType.INFANTRY, IronAxe, DrawBack, null, Stat(23, 17, 12, 8, 6), emptyList(), true)
+object AxeFighter : HeroModel(MoveType.INFANTRY, SlayingHammerPlus, null, null, Stat(25, 26, 12, 13, 9), emptyList(), true)
 object LanceFighter : HeroModel(MoveType.INFANTRY, IronLance, Pivot, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
-object SwordFighter : HeroModel(MoveType.INFANTRY, IronSword, null, null, Stat(23, 17, 12, 8, 6), emptyList(), true)
+object SwordFighter : HeroModel(MoveType.INFANTRY, IronSword, null, null, Stat(25, 25, 12, 13, 9), emptyList(), true)
+
+object Fir : HeroModel(MoveType.INFANTRY, Folkvangr, null, null, Stat(27, 36, 19, 9, 12), emptyList(), true)
+object Bartre: HeroModel(MoveType.INFANTRY, IronAxe, Smite, null, Stat(27, 31, 13, 16, 8), emptyList(), true)
+object Effie: HeroModel(MoveType.ARMORED, IronLance, Smite, null, Stat(28, 33, 9, 16, 8), emptyList(), true)
 
 object TestMap : BattleMap {
+    private val flierTerrain = listOf(0 to 0, 0 to 1, 0 to 2, 0 to 3, 0 to 4, 0 to 5,
+        1 to 2, 1 to 5, 2 to 2, 3 to 0, 3 to 1, 3 to 2, 3 to 3, 3 to 4, 3 to 5,
+        4 to 0, 4 to 1, 4 to 2, 4 to 5, 5 to 5).asSequence().map {
+        Position(it.second, it.first)
+    }.toSet()
+
     override fun getTerrain(position: Position): Terrain {
-        return Terrain.REGULAR
+        return if(flierTerrain.contains(position)) {
+            Terrain.FLIER_ONLY
+        } else {
+            Terrain.REGULAR
+        }
     }
 
-    override val size: Position = Position(8,8)
+    override val size: Position = Position(6,6)
     val map = mapOf(
-        Position(1, 2) to HeroUnit(1, Alfonse, Team.PLAYER),
-        Position(1, 3) to HeroUnit(2, Sharena, Team.PLAYER),
-        Position(1,4) to HeroUnit(3, Anna, Team.PLAYER),
-        Position(3, 2) to HeroUnit(4, AxeFighter, Team.ENEMY),
-        Position(3, 3) to HeroUnit(5, LanceFighter, Team.ENEMY),
-        Position(3,4) to HeroUnit(6, SwordFighter, Team.ENEMY),
-        Position(2,2) to Obstacle(1, Position(2,2)),
-        Position(2,3) to Obstacle(1, Position(2,3)),
-        Position(2,4) to Obstacle(1, Position(2,4))
+        Position(0, 2) to HeroUnit(1, Bartre, Team.PLAYER),
+        Position(1, 2) to HeroUnit(2, Fir, Team.PLAYER),
+        Position(4,1) to HeroUnit(3, Effie, Team.PLAYER),
+        Position(0, 5) to HeroUnit(4, SwordFighter, Team.ENEMY),
+        Position(5, 2) to HeroUnit(5, AxeFighter, Team.ENEMY)
     )
 
     init {

@@ -11,7 +11,7 @@ object Pivot : MovementAssist(false) {
         target: HeroUnit,
         battleState: BattleState
     ) {
-        val endPosition = endPosition(self.position, target.position)
+        val endPosition = selfEndPosition(self.position, target.position)
         battleState.move(self, endPosition)
     }
 
@@ -27,7 +27,7 @@ object Pivot : MovementAssist(false) {
         return chessPiece == null || chessPiece == self
     }
 
-    override fun endPosition(startPosition: Position, assistTargetPosition: Position): Position {
+    override fun selfEndPosition(startPosition: Position, assistTargetPosition: Position): Position {
         return checkEndPosition(startPosition, assistTargetPosition) ?: throw IllegalArgumentException()
     }
 

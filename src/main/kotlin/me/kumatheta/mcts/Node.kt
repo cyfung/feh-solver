@@ -86,7 +86,11 @@ private fun <T : Move> Board<T>.playOut(random: Random): Pair<List<T>, Double> {
         if (score != null) {
             return@generateSequence null
         }
-        val move = test.moves.random(random = random)
+        val nextMoves = test.moves
+        if (nextMoves.isEmpty()) {
+            test.moves
+        }
+        val move = nextMoves.random(random = random)
         test.applyMove(move)
         move
     }.toList()

@@ -45,6 +45,10 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
     val isDead
         get() = currentHp == 0
 
+    fun isEffective(foe: HeroUnit): Boolean {
+        return heroModel.weapon.isEffective(foe)
+    }
+
     override fun copy(): HeroUnit {
         val newUnit = HeroUnit(id, heroModel, team)
         newUnit.available = available

@@ -12,7 +12,7 @@ object DrawBack : MovementAssist(true) {
         battleState: BattleState
     ) {
         val startPosition = self.position
-        val endPosition = endPosition(startPosition, target.position)
+        val endPosition = selfEndPosition(startPosition, target.position)
         battleState.move(self, endPosition)
         battleState.move(target, startPosition)
     }
@@ -29,7 +29,7 @@ object DrawBack : MovementAssist(true) {
         return chessPiece == null || chessPiece == self
     }
 
-    override fun endPosition(startPosition: Position, assistTargetPosition: Position): Position {
+    override fun selfEndPosition(startPosition: Position, assistTargetPosition: Position): Position {
         return checkEndPosition(startPosition, assistTargetPosition) ?: throw IllegalArgumentException()
     }
 
