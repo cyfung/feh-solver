@@ -384,7 +384,7 @@ class BattleState private constructor(
         val myTeam = Team.ENEMY
         val foeTeam = Team.ENEMY.foe
 
-        val obstacles = locationMap.toMutableMap()
+        var obstacles = locationMap.toMap()
 
         val movements = generateSequence {
             if (winningTeam != null || unitsSeq(myTeam).none { it.available }) {
@@ -455,7 +455,11 @@ class BattleState private constructor(
             }.minWith(attackerOrder)
 
             if (attack != null) {
-                executeMove(attack.action)
+                val foeOriginalPosition = attack.foe.position
+                val deadTeam = executeMove(attack.action)
+                if (deadTeam == foeTeam || foeOriginalPosition != attack.foe.position) {
+                    obstacles = locationMap.toMap()
+                }
                 return@generateSequence attack.action
             }
 
@@ -785,7 +789,7 @@ class BattleState private constructor(
     }
 
     private fun lazyThreat(
-        obstacles: MutableMap<Position, ChessPiece>,
+        obstacles: Map<Position, ChessPiece>,
         myTeam: Team
     ): Lazy<Map<HeroUnit, Set<HeroUnit>>> {
         return lazy {
@@ -922,7 +926,7 @@ class BattleState private constructor(
 
     private fun calculateThreat(
         team: Team,
-        obstacles: MutableMap<Position, ChessPiece>
+        obstacles: Map<Position, ChessPiece>
     ): Sequence<Pair<HeroUnit, Sequence<Position>>> {
         return unitsSeq(team).filterNot { it.isEmptyHanded }.map { heroUnit ->
             heroUnit to calculateThreat(heroUnit, obstacles)
