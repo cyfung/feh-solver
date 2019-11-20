@@ -862,6 +862,7 @@ class BattleState private constructor(
     private fun HeroUnit.assistTargets(
         moves: Map<Position, MoveStep>
     ): Sequence<Pair<HeroUnit, MoveStep>> {
+        if (assist == null) return emptySequence()
         val teammates = teammates(this).toList()
         return moves.values.asSequence().flatMap { moveStep ->
             teammates.asSequence().filterValidAssistTarget(this, moveStep.position).map {
