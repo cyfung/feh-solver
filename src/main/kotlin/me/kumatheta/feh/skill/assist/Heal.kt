@@ -4,6 +4,7 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HealingSpecial
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.NormalAssist
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.skill.special.Imbue
 
@@ -24,18 +25,29 @@ fun healAmount(baseHeal: Int, self: HeroUnit, target: HeroUnit): Int {
     return Integer.min(maxHealAmount, target.stat.hp - target.currentHp)
 }
 
-abstract class Heal(private val threshold: Int) : me.kumatheta.feh.NormalAssist() {
+fun applyHeal(
+    self: HeroUnit,
+    target: HeroUnit,
+    battleState: BattleState,
+    healAmount: Int
+) {
+    target.heal(healAmount)
+    val healingSpecial = self.special as? HealingSpecial
+    if (healingSpecial != null && self.cooldown == 0) {
+        healingSpecial.trigger(self, target, battleState)
+        self.resetCooldown()
+    } else {
+        self.reduceCooldown(1)
+    }
+}
+
+abstract class Heal(private val threshold: Int) : NormalAssist() {
     final override fun apply(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState
     ) {
-        target.heal(healAmount(self, target))
-        val healingSpecial = self.special as? HealingSpecial ?: return
-        if (self.cooldown == 0) {
-            healingSpecial.trigger(self, target, battleState)
-            self.resetCooldown()
-        }
+        applyHeal(self, target, battleState, healAmount(self, target))
     }
 
     override fun isValidAction(

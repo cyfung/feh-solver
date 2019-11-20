@@ -12,7 +12,7 @@ abstract class RestoreAssist(private val baseHeal: Int) : me.kumatheta.feh.Norma
         target: HeroUnit,
         battleState: BattleState
     ) {
-        target.heal(healAmount(baseHeal, self, target))
+        applyHeal(self, target, battleState, healAmount(baseHeal, self, target))
         target.clearPenalty()
     }
 
