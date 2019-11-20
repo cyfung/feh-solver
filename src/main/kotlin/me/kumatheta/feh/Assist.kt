@@ -1,5 +1,7 @@
 package me.kumatheta.feh
 
+import java.lang.IllegalStateException
+
 sealed class Assist : Skill {
     abstract fun apply(
         self: HeroUnit,
@@ -14,8 +16,39 @@ sealed class Assist : Skill {
     ): Boolean
 }
 
-abstract class MovementAssist(val canBeAggressive: Boolean, val canBeProtective: Boolean) : Assist() {
-    abstract fun selfEndPosition(startPosition: Position, assistTargetPosition: Position): Position
+abstract class MovementAssist(val canBeAggressive: Boolean) : Assist() {
+    abstract fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position
+
+    fun isValidPosition(battleState: BattleState, self: HeroUnit, position: Position): Boolean {
+        if (!battleState.isValidPosition(self, position)) return false
+        val chessPiece = battleState.getChessPiece(position)
+        return chessPiece == null || chessPiece == self
+    }
+
+    fun positionTransform(a: Position, b: Position, change: Int): Position {
+        return when {
+            a.x == b.x -> when (a.y - b.y) {
+                -1 -> Position(a.x, a.y + change)
+                1 -> Position(a.x, a.y - change)
+                else -> throw IllegalStateException()
+            }
+            a.y == b.y -> when (a.x - b.x) {
+                -1 -> Position(a.x + change, a.y)
+                1 -> Position(a.x - change, a.y)
+                else -> throw IllegalStateException()
+            }
+            else -> throw IllegalStateException()
+        }
+    }
+}
+
+abstract class ProtectiveMovementAssist(canBeAggressive: Boolean) : MovementAssist(canBeAggressive) {
+    abstract fun targetEndPosition(
+        battleState: BattleState,
+        self: HeroUnit,
+        selfPosition: Position,
+        targetPosition: Position
+    ): Position
 }
 
 abstract class NormalAssist : Assist() {

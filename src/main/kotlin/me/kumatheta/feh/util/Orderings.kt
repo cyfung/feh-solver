@@ -138,3 +138,14 @@ fun moveTargetOrder(
     })
 }
 
+val bodyBlockTargetOrder = compareByDescending<HeroUnit>({
+    it.visibleStat.totalExceptHp
+}, {
+    if (it.weaponType.isRanged) {
+        0
+    } else {
+        1
+    }
+}, {
+    it.id
+})

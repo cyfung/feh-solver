@@ -21,30 +21,11 @@ object Pivot : MovementAssist(false) {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        val endPosition = checkEndPosition(fromPosition, target.position) ?: throw IllegalArgumentException()
-        if (!battleState.isValidPosition(self, endPosition)) return false
-        val chessPiece = battleState.getChessPiece(endPosition)
-        return chessPiece == null || chessPiece == self
+        val endPosition = selfEndPosition(fromPosition, target.position)
+        return isValidPosition(battleState, self, endPosition)
     }
 
-    override fun selfEndPosition(startPosition: Position, assistTargetPosition: Position): Position {
-        return checkEndPosition(startPosition, assistTargetPosition) ?: throw IllegalArgumentException()
-    }
-
-    private fun checkEndPosition(startPosition: Position, assistTargetPosition: Position): Position? {
-        return when {
-            startPosition.x == assistTargetPosition.x -> when (startPosition.y - assistTargetPosition.y) {
-                -1 -> Position(startPosition.x, startPosition.y + 2)
-                1 -> Position(startPosition.x, startPosition.y - 2)
-                else -> null
-            }
-            startPosition.y == assistTargetPosition.y -> when (startPosition.x - assistTargetPosition.x) {
-                -1 -> Position(startPosition.x + 2, startPosition.y)
-                1 -> Position(startPosition.x - 2, startPosition.y)
-                else -> null
-            }
-            else -> null
-        }
-
+    override fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position {
+        return positionTransform(selfPosition, targetPosition, 2)
     }
 }

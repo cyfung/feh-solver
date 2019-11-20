@@ -5,9 +5,20 @@ import me.kumatheta.feh.util.attackPositionOrder
 import me.kumatheta.feh.util.attackTargetOrder
 import me.kumatheta.feh.util.attackTargetPositions
 import me.kumatheta.feh.util.attackerOrder
+import me.kumatheta.feh.util.bodyBlockTargetOrder
 import me.kumatheta.feh.util.moveTargetOrder
 import me.kumatheta.feh.util.surroundings
 import me.kumatheta.feh.util.unitMoveOrder
+
+private val protectiveAssistPositionOrder = compareBy<Triple<HeroUnit, MoveStep, Int>>({
+    it.third
+}, {
+    if (it.second.teleportRequired) 0 else 1
+}, {
+    it.second.distanceTravel
+}, {
+    it.second.position
+})
 
 class BattleState private constructor(
     private val battleMap: BattleMap,
@@ -476,76 +487,35 @@ class BattleState private constructor(
             // aggressive movement assist
             val allyThreat = lazyAllyThreat.value
 
-            val aggressiveAssist = assistSortedAllies.asSequence().mapNotNull { heroUnit ->
-                val assist = heroUnit.assist as? MovementAssist ?: return@mapNotNull null
-                if (!assist.canBeAggressive) return@mapNotNull null
-                val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
-                val assistTargets =
-                    heroUnit.assistTargets(moves).groupBy({ it.first }, { it.second }).mapValues { (target, moveStep) ->
-                        moveStep.minWith(compareBy<MoveStep> {
-                            foeThreat[assist.selfEndPosition(it.position, target.position)] ?: 0
-                        }.then(compareBy(
-                            {
-                                if (it.teleportRequired) 0 else 1
-                            },
-                            {
-                                it.distanceTravel
-                            },
-                            {
-                                it.position
-                            }
-                        ))) ?: throw IllegalStateException()
-                    }
-
-                if (assistTargets.isEmpty()) return@mapNotNull null
-
-                val (_, target, moveStep) = getAggressiveAssist(allyThreat, heroUnit, assistTargets, false)
-                    ?: getAggressiveAssist(allyThreat, heroUnit, assistTargets, true) ?: return@mapNotNull null
-
-                MoveAndAssist(heroUnit.id, moveStep.position, target.id)
-            }.firstOrNull()
+            val aggressiveAssist = getAggressiveAssist(assistSortedAllies, possibleMoves, foeThreat, allyThreat)
 
             if (aggressiveAssist != null) {
                 executeMove(aggressiveAssist)
                 return@generateSequence aggressiveAssist
             }
 
-            // TODO movement assist
-            val obstaclesOnly = locationMap.filterValues { it is Obstacle }
-            val foeMeleeMoves = unitsSeq(foeTeam).filterNot { it.isEmptyHanded }.filterNot { it.weaponType.isRanged }
-                .associateWith { enemy ->
-                    moveTargets(enemy, obstaclesOnly).toList()
+            // movement assist
+
+            // for calculating body blocking
+            val lazyFoeMeleeMoves = lazy {
+                val obstaclesOnly = locationMap.filterValues { it is Obstacle }
+                unitsSeq(foeTeam).filterNot {
+                    it.isEmptyHanded
+                }.filterNot {
+                    it.weaponType.isRanged
+                }.flatMap { enemy ->
+                    moveTargets(enemy, obstaclesOnly)
+                }.map {
+                    it.position
                 }
+            }
 
-            val movementAssist = assistSortedAllies.asSequence().mapNotNull { heroUnit ->
-                val assist = heroUnit.assist as? MovementAssist ?: return@mapNotNull null
-                if (!assist.canBeProtective) return@mapNotNull null
-                val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
-                val assistTargets =
-                    heroUnit.assistTargets(moves).groupBy({ it.first }, { it.second }).mapValues { (target, moveStep) ->
-                        moveStep.minWith(compareBy<MoveStep> {
-                            foeThreat[assist.selfEndPosition(it.position, target.position)] ?: 0
-                        }.then(compareBy(
-                            {
-                                if (it.teleportRequired) 0 else 1
-                            },
-                            {
-                                it.distanceTravel
-                            },
-                            {
-                                it.position
-                            }
-                        ))) ?: throw IllegalStateException()
-                    }
-
-                if (assistTargets.isEmpty()) return@mapNotNull null
-
-                val (_, target, moveStep) = getAggressiveAssist(allyThreat, heroUnit, assistTargets, false)
-                    ?: getAggressiveAssist(allyThreat, heroUnit, assistTargets, true) ?: return@mapNotNull null
-
-                MoveAndAssist(heroUnit.id, moveStep.position, target.id)
-            }.firstOrNull()
-
+            val movementAssist =
+                getProtectiveMovementAssist(assistSortedAllies, possibleMoves, lazyFoeMeleeMoves, foeThreat)
+            if (movementAssist != null) {
+                executeMove(movementAssist)
+                return@generateSequence movementAssist
+            }
 
             // movement
             val move = getMoveAction(
@@ -570,6 +540,106 @@ class BattleState private constructor(
 
         turnEnd()
         return movements
+    }
+
+    private fun getProtectiveMovementAssist(
+        assistSortedAllies: List<HeroUnit>,
+        possibleMoves: Map<HeroUnit, Map<Position, MoveStep>>,
+        lazyFoeMeleeMoves: Lazy<Sequence<Position>>,
+        foeThreat: Map<Position, Int>
+    ): UnitAction? {
+        // for body blocking
+        // important: only valid to calculate like this because
+        // 1. the max movement is 3 tiles
+        // 2. we only care about melee enemy
+        // 3. block blocker is with melee weapon
+        // 4. block blocker is required to be adjacent to the assist target
+        // 5. block blocker cannot attack enemy
+        // otherwise there are cases where body blocker can block a space and effectively blocking 2 spaces which the enemies can attack.
+        return assistSortedAllies.asSequence().mapNotNull { heroUnit ->
+            val assist = heroUnit.assist as? ProtectiveMovementAssist ?: return@mapNotNull null
+            val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
+            val assistTargets = heroUnit.assistTargets(moves)
+            if (!heroUnit.isEmptyHanded && !heroUnit.weaponType.isRanged) {
+                val foeMeleeMoves = lazyFoeMeleeMoves.value
+                val bodyBlock = assistTargets.asSequence().filter { (_, moveStep) ->
+                    foeMeleeMoves.contains(moveStep.position)
+                }.filterNot { (heroUnit, moveStep) ->
+                    heroUnit.position.surroundings(maxPosition).filterNot { it == moveStep.position }.any {
+                        foeMeleeMoves.contains(it)
+                    }
+                }.minWith(compareBy(bodyBlockTargetOrder) { it.first })
+                if (bodyBlock != null) {
+                    return@mapNotNull MoveOnly(heroUnit.id, bodyBlock.second.position)
+                }
+            }
+            val assistTarget = assistTargets.asSequence().mapNotNull validTarget@{ (target, moveStep) ->
+                val originalThreat = foeThreat[target.position] ?: 0
+                if (originalThreat == 0) return@validTarget null
+                val targetEndPosition = assist.targetEndPosition(this, heroUnit, moveStep.position, target.position)
+                val newThreat = foeThreat[targetEndPosition] ?: 0
+                if (newThreat >= originalThreat) return@validTarget null
+                val selfNewThreat = foeThreat[assist.selfEndPosition(moveStep.position, target.position)] ?: 0
+                Triple(target, moveStep, newThreat + selfNewThreat)
+            }.groupBy { it.first }.mapValues { (_, choices) ->
+                choices.minWith(
+                    protectiveAssistPositionOrder
+                )?.second ?: throw IllegalStateException()
+            }.minWith(compareBy({
+                if (it.value.teleportRequired) {
+                    0
+                } else {
+                    1
+                }
+            }, {
+                it.value.distanceTravel
+            }, {
+                it.key.visibleStat.totalExceptHp
+            }, {
+                it.key.position
+            }))
+            if (assistTarget == null) {
+                null
+            } else {
+                MoveAndAssist(heroUnit.id, assistTarget.value.position, assistTarget.key.id)
+            }
+        }.firstOrNull()
+    }
+
+    private fun getAggressiveAssist(
+        assistSortedAllies: List<HeroUnit>,
+        possibleMoves: Map<HeroUnit, Map<Position, MoveStep>>,
+        foeThreat: Map<Position, Int>,
+        allyThreat: Map<HeroUnit, Set<HeroUnit>>
+    ): MoveAndAssist? {
+        return assistSortedAllies.asSequence().mapNotNull { heroUnit ->
+            val assist = heroUnit.assist as? MovementAssist ?: return@mapNotNull null
+            if (!assist.canBeAggressive) return@mapNotNull null
+            val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
+            val assistTargets =
+                heroUnit.assistTargets(moves).groupBy({ it.first }, { it.second }).mapValues { (target, moveSteps) ->
+                    moveSteps.minWith(compareBy<MoveStep> {
+                        foeThreat[assist.selfEndPosition(it.position, target.position)] ?: 0
+                    }.then(compareBy(
+                        {
+                            if (it.teleportRequired) 0 else 1
+                        },
+                        {
+                            it.distanceTravel
+                        },
+                        {
+                            it.position
+                        }
+                    ))) ?: throw IllegalStateException()
+                }
+
+            if (assistTargets.isEmpty()) return@mapNotNull null
+
+            val (_, target, moveStep) = getAggressiveAssist(allyThreat, heroUnit, assistTargets, false)
+                ?: getAggressiveAssist(allyThreat, heroUnit, assistTargets, true) ?: return@mapNotNull null
+
+            MoveAndAssist(heroUnit.id, moveStep.position, target.id)
+        }.firstOrNull()
     }
 
     private fun getAggressiveAssist(
