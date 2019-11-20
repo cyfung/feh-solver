@@ -11,7 +11,6 @@ interface Hero {
     val special: Special?
     val skillSet: SkillSet
     val stat: Stat
-    val cooldownCount: Int?
     val hasSpecialDebuff: Boolean
 }
 
@@ -47,7 +46,7 @@ open class HeroModel(
         }
     }
 
-    final override val cooldownCount: Int? = if (special?.coolDownCount != null) {
+    val cooldownCount: Int? = if (special?.coolDownCount != null) {
         special.coolDownCount + skillSet.skills.sumBy(Skill::coolDownCountAdj)
     } else {
         null

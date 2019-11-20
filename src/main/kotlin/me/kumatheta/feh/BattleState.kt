@@ -902,8 +902,8 @@ class BattleState private constructor(
             }
             val damageDealt = foe.currentHp - testFoe.currentHp
             val damageReceived = heroUnit.currentHp - testUnit.currentHp
-            val cooldownChange = (testUnit.cooldownCount ?: 0) - (heroUnit.cooldownCount ?: 0)
-            val cooldownChangeFoe = (testFoe.cooldownCount ?: 0) - (foe.cooldownCount ?: 0)
+            val cooldownChange = (testUnit.cooldown ?: 0) - (heroUnit.cooldown ?: 0)
+            val cooldownChangeFoe = (testFoe.cooldown ?: 0) - (foe.cooldown ?: 0)
             CombatResult(
                 heroUnit = heroUnit,
                 foe = foe,

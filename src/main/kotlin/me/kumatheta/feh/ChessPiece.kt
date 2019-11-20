@@ -41,7 +41,8 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
 
     var currentHp = stat.hp
         private set
-    private var cooldown = cooldownCount
+    var cooldown = heroModel.cooldownCount
+        private set
     val isDead
         get() = currentHp == 0
 
@@ -160,6 +161,10 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
 
     fun clearNegativeStatus() {
         negativeStatus.clear()
+    }
+
+    fun resetCooldown() {
+        cooldown = heroModel.cooldownCount
     }
 }
 

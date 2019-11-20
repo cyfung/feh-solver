@@ -1,7 +1,13 @@
 package me.kumatheta.feh.skill.special
 
-import me.kumatheta.feh.Special
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HealingSpecial
+import me.kumatheta.feh.HeroUnit
 
-object Imbue: Special(1) {
-    val healBonus = 10
+object Imbue : HealingSpecial(1) {
+    override fun trigger(self: HeroUnit, target: HeroUnit, battleState: BattleState) {
+        // the heal bonus is applied by the heal skill already
+    }
+
+    const val healBonus = 10
 }

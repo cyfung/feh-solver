@@ -5,6 +5,7 @@ import me.kumatheta.feh.BasicWeapon
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Lance
 import me.kumatheta.feh.MoveType
+import me.kumatheta.feh.Staff
 import me.kumatheta.feh.Sword
 
 object IronLance: BasicWeapon(Lance, 6)
@@ -20,3 +21,5 @@ object SlayingHammerPlus : BasicWeapon(Axe, 14) {
         return foe.moveType == MoveType.ARMORED
     }
 }
+
+object Assault: BasicWeapon(Staff, 10)

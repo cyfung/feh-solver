@@ -78,6 +78,10 @@ abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponTy
 
 abstract class Special(val coolDownCount: Int) : Skill
 
+abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
+    abstract fun trigger(self: HeroUnit, target: HeroUnit, battleState: BattleState)
+}
+
 interface Passive : Skill
 
 interface CombatSkillMethod<T> {

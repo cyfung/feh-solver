@@ -2,6 +2,7 @@ package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
+import me.kumatheta.feh.HealingSpecial
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.skill.special.Imbue
@@ -15,7 +16,7 @@ fun Sequence<Pair<HeroUnit, Int>>.bestHealTarget(): HeroUnit? {
 }
 
 fun healAmount(baseHeal: Int, self: HeroUnit, target: HeroUnit): Int {
-    val maxHealAmount = if(self.special == Imbue && self.cooldownCount == 0) {
+    val maxHealAmount = if (self.special == Imbue && self.cooldown == 0) {
         baseHeal + Imbue.healBonus
     } else {
         baseHeal
@@ -24,12 +25,17 @@ fun healAmount(baseHeal: Int, self: HeroUnit, target: HeroUnit): Int {
 }
 
 abstract class Heal(private val threshold: Int) : me.kumatheta.feh.NormalAssist() {
-    override fun apply(
+    final override fun apply(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState
     ) {
         target.heal(healAmount(self, target))
+        val healingSpecial = self.special as? HealingSpecial ?: return
+        if (self.cooldown == 0) {
+            healingSpecial.trigger(self, target, battleState)
+            self.resetCooldown()
+        }
     }
 
     override fun isValidAction(
