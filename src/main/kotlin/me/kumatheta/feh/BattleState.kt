@@ -439,7 +439,6 @@ class BattleState private constructor(
             }
 
             // attack
-
             val attack = possibleAttacks.values.asSequence().mapNotNull {
                 it.firstOrNull()
             }.minWith(attackerOrder)
@@ -474,7 +473,7 @@ class BattleState private constructor(
                 return@generateSequence postCombatAssist
             }
 
-            // TODO aggressive movement assist
+            // aggressive movement assist
             val allyThreat = lazyAllyThreat.value
 
             val aggressiveAssist = assistSortedAllies.asSequence().mapNotNull { heroUnit ->
@@ -512,6 +511,40 @@ class BattleState private constructor(
             }
 
             // TODO movement assist
+            val obstaclesOnly = locationMap.filterValues { it is Obstacle }
+            val foeMeleeMoves = unitsSeq(foeTeam).filterNot { it.isEmptyHanded }.filterNot { it.weaponType.isRanged }
+                .associateWith { enemy ->
+                    moveTargets(enemy, obstaclesOnly).toList()
+                }
+
+            val movementAssist = assistSortedAllies.asSequence().mapNotNull { heroUnit ->
+                val assist = heroUnit.assist as? MovementAssist ?: return@mapNotNull null
+                if (!assist.canBeProtective) return@mapNotNull null
+                val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
+                val assistTargets =
+                    heroUnit.assistTargets(moves).groupBy({ it.first }, { it.second }).mapValues { (target, moveStep) ->
+                        moveStep.minWith(compareBy<MoveStep> {
+                            foeThreat[assist.selfEndPosition(it.position, target.position)] ?: 0
+                        }.then(compareBy(
+                            {
+                                if (it.teleportRequired) 0 else 1
+                            },
+                            {
+                                it.distanceTravel
+                            },
+                            {
+                                it.position
+                            }
+                        ))) ?: throw IllegalStateException()
+                    }
+
+                if (assistTargets.isEmpty()) return@mapNotNull null
+
+                val (_, target, moveStep) = getAggressiveAssist(allyThreat, heroUnit, assistTargets, false)
+                    ?: getAggressiveAssist(allyThreat, heroUnit, assistTargets, true) ?: return@mapNotNull null
+
+                MoveAndAssist(heroUnit.id, moveStep.position, target.id)
+            }.firstOrNull()
 
 
             // movement
@@ -852,11 +885,11 @@ class BattleState private constructor(
         unitIdMap[heroUnitId] ?: throw IllegalStateException()
 
     private fun moveTargets(
-        heroUnit: HeroUnit
+        heroUnit: HeroUnit,
+        obstacles: Map<Position, ChessPiece> = locationMap
     ): Sequence<MoveStep> {
         val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
         val travelPower = heroUnit.travelPower
-        val obstacles = locationMap
         val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass)
         calculateDistance(heroUnit, distanceReceiver)
         heroUnit.skillSet.teleport.asSequence().flatMap {
@@ -1075,7 +1108,7 @@ class BattleState private constructor(
 
 class DistanceReceiverRealMovement(
     private val travelPower: Int,
-    private val obstacles: MutableMap<Position, ChessPiece>,
+    private val obstacles: Map<Position, ChessPiece>,
     private val self: HeroUnit,
     private val pass: Boolean
 ) : DistanceReceiver {

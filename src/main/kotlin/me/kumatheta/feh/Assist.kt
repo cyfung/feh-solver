@@ -14,7 +14,7 @@ sealed class Assist : Skill {
     ): Boolean
 }
 
-abstract class MovementAssist(val canBeAggressive: Boolean) : Assist() {
+abstract class MovementAssist(val canBeAggressive: Boolean, val canBeProtective: Boolean) : Assist() {
     abstract fun selfEndPosition(startPosition: Position, assistTargetPosition: Position): Position
 }
 
