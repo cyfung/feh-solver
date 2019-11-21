@@ -7,6 +7,7 @@ import me.kumatheta.feh.skill.assist.Pivot
 import me.kumatheta.feh.skill.assist.Smite
 import me.kumatheta.feh.skill.weapon.*
 import me.kumatheta.mcts.Mcts
+import java.nio.file.Path
 
 object Alfonse : HeroModel(MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31, 10, 13, 9), emptyList(), true)
 object Sharena : HeroModel(MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
@@ -37,11 +38,11 @@ object TestMap : BattleMap {
 
     override val size: Position = Position(6,6)
     val map = mapOf(
-        Position(0, 2) to HeroUnit(1, Bartre, Team.PLAYER),
-        Position(1, 2) to HeroUnit(2, Fir, Team.PLAYER),
-        Position(4,1) to HeroUnit(3, Effie, Team.PLAYER),
-        Position(0, 5) to HeroUnit(4, SwordFighter, Team.ENEMY),
-        Position(5, 2) to HeroUnit(5, AxeFighter, Team.ENEMY)
+        Position(0, 2) to HeroUnit(1, Bartre, Team.PLAYER, Position(0, 2)),
+        Position(1, 2) to HeroUnit(2, Fir, Team.PLAYER, Position(1, 2)),
+        Position(4,1) to HeroUnit(3, Effie, Team.PLAYER, Position(4,1)),
+        Position(0, 5) to HeroUnit(4, SwordFighter, Team.ENEMY, Position(0, 5)),
+        Position(5, 2) to HeroUnit(5, AxeFighter, Team.ENEMY, Position(5, 2))
     )
 
     init {
@@ -58,6 +59,9 @@ object TestMap : BattleMap {
 fun main() {
 //    val solver = BattleSolver(TestMap, 10)
 //    solver.solve()
+
+    val positionMap = readMap(Path.of("test/feh - map.csv"))
+    FileBattleMap(positionMap, mapOf(), mapOf(1 to Effie, 2 to Bartre, 3 to Fir))
 
     val state = BattleState(TestMap)
     val phraseLimit = 3

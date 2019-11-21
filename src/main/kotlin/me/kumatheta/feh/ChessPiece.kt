@@ -5,10 +5,9 @@ sealed class ChessPiece {
     abstract fun copy(): ChessPiece
 }
 
-class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : ChessPiece(), Hero by heroModel {
+class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, override var position: Position) : ChessPiece(), Hero by heroModel {
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
-    override var position: Position = Position(0, 0)
     private val negativeStatus = mutableSetOf<NegativeStatus>()
     val currentStatTotal: Int
         get() {
@@ -51,13 +50,12 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team) : 
     }
 
     override fun copy(): HeroUnit {
-        val newUnit = HeroUnit(id, heroModel, team)
+        val newUnit = HeroUnit(id, heroModel, team, position)
         newUnit.available = available
         newUnit.buff = buff
         newUnit.debuff = debuff
         newUnit.currentHp = currentHp
         newUnit.cooldown = cooldown
-        newUnit.position = position
         newUnit.negativeStatus.addAll(negativeStatus)
         return newUnit
     }
