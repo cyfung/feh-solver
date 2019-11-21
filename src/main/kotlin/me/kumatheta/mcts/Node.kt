@@ -26,6 +26,7 @@ class Node<T : Move> private constructor(
     var score: Double = movesAndScore?.second ?: 0.0
         private set
     var bestScore = score
+        private set
     var tries: Int = if (movesAndScore == null) 0 else 1
         private set
 
@@ -43,9 +44,14 @@ class Node<T : Move> private constructor(
     }
 
     fun getBestChild(): Node<T>? {
-        return children.maxBy {
+        val child = children.maxBy {
             it.bestScore
         }
+        // return current play out instead of child's if it is better
+        if (child == null || child.bestScore < bestScore) {
+            return null
+        }
+        return child
     }
 
     fun selectAndPlayOut(): Node<T>? {

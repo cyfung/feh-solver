@@ -13,6 +13,10 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
         }
     }
 
+    fun getBestScore(): Double {
+        return rootNode.bestScore
+    }
+
     fun getBestMoves(): List<T> {
         val bestRoute = generateSequence(rootNode.getBestChild()) {
             it.getBestChild()

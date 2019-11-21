@@ -72,7 +72,12 @@ fun main() {
     repeat(10) {
         mcts.run(1000)
         val bestMoves = mcts.getBestMoves()
-        println(bestMoves)
+        val testBoard = board.copy()
+        bestMoves.forEach {
+            testBoard.applyMove(it)
+        }
+        println("best score: ${mcts.getBestScore()}")
+        println(testBoard.score)
         val testState = board.stateCopy
         bestMoves.forEach {
             val unitAction = it.unitAction
