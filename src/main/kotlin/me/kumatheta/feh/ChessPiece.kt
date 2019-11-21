@@ -179,6 +179,10 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, ov
         }
         endOfCombatEffects = EndOfCombatEffect()
     }
+
+    fun hpThreshold(percentage: Int): Int {
+        return compareValues(currentHp * 100, stat.hp * percentage)
+    }
 }
 
 enum class NegativeStatus {
