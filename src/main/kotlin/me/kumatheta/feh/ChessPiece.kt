@@ -5,11 +5,13 @@ sealed class ChessPiece {
     abstract fun copy(): ChessPiece
 }
 
-class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, override var position: Position) : ChessPiece(), Hero by heroModel {
+class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, override var position: Position) :
+    ChessPiece(), Hero by heroModel {
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
 
-    val endOfCombatEffects = EndOfCombatEffect()
+    var endOfCombatEffects = EndOfCombatEffect()
+        private set
 
     private val negativeStatus = mutableSetOf<NegativeStatus>()
     val currentStatTotal: Int
@@ -166,6 +168,16 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, ov
 
     fun resetCooldown() {
         cooldown = heroModel.cooldownCount
+    }
+
+    fun endOfCombat() {
+        val hp = endOfCombatEffects.hp
+        if (hp > 0) {
+            heal(hp)
+        } else if (hp < 0) {
+            takeNonLethalDamage(hp)
+        }
+        endOfCombatEffects = EndOfCombatEffect()
     }
 }
 

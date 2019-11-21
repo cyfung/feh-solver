@@ -202,14 +202,18 @@ class BattleState private constructor(
         check(attacker.team.foe == defender.team)
         val potentialDamage = preCalculateDamage(attacker, defender)
 
+        var attackerAttacked = false
+        var defenderAttacked = false
         val deadUnit = potentialDamage.attackOrder.asSequence().mapNotNull { attackerTurn ->
             if (attackerTurn) {
+                attackerAttacked = true
                 if (singleAttack(attacker, defender, potentialDamage.attackerStat, potentialDamage.defenderStat)) {
                     defender
                 } else {
                     null
                 }
             } else {
+                defenderAttacked = true
                 if (singleAttack(defender, attacker, potentialDamage.defenderStat, potentialDamage.attackerStat)) {
                     attacker
                 } else {
@@ -220,7 +224,12 @@ class BattleState private constructor(
 
         attacker.endOfTurn()
 
-        skillMethodApply(attacker, defender, SkillSet::postCombat)
+        attacker.skillSet.postCombat.forEach { it.apply(this, attacker, defender, true, attackerAttacked) }
+        defender.skillSet.postCombat.forEach { it.apply(this, defender, attacker, false, defenderAttacked) }
+
+        locationMap.values.asSequence().filterIsInstance<HeroUnit>().forEach {
+            it.endOfCombat()
+        }
 
         return Pair(deadUnit, potentialDamage.potentialDamage)
     }

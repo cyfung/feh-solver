@@ -37,13 +37,11 @@ interface Skill {
         get() = null
     val cooldownDebuff: CombatSkillMethod<Int>?
         get() = null
-    val postCombat: CombatSkillMethod<Unit>?
+    val postCombat: CombatEndSkillMethod?
         get() = null
     val supportInCombatBuff: CombatSkillMethod<Skill>?
         get() = null
     val supportInCombatDebuff: CombatSkillMethod<Skill>?
-        get() = null
-    val endOfCombat: CombatEndSkillMethod?
         get() = null
 }
 
@@ -66,7 +64,6 @@ class SkillSet(skills: List<Skill>) {
     val cooldownBuff = this.skills.mapNotNull(Skill::cooldownBuff)
     val cooldownDebuff = this.skills.mapNotNull(Skill::cooldownDebuff)
     val postCombat = this.skills.mapNotNull(Skill::postCombat)
-    val endOfCombat = this.skills.mapNotNull(Skill::endOfCombat)
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill {
