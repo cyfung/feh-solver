@@ -8,6 +8,9 @@ sealed class ChessPiece {
 class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, override var position: Position) : ChessPiece(), Hero by heroModel {
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
+
+    val endOfCombatEffects = EndOfCombatEffect()
+
     private val negativeStatus = mutableSetOf<NegativeStatus>()
     val currentStatTotal: Int
         get() {

@@ -43,6 +43,8 @@ interface Skill {
         get() = null
     val supportInCombatDebuff: CombatSkillMethod<Skill>?
         get() = null
+    val endOfCombat: CombatEndSkillMethod?
+        get() = null
 }
 
 
@@ -64,6 +66,7 @@ class SkillSet(skills: List<Skill>) {
     val cooldownBuff = this.skills.mapNotNull(Skill::cooldownBuff)
     val cooldownDebuff = this.skills.mapNotNull(Skill::cooldownDebuff)
     val postCombat = this.skills.mapNotNull(Skill::postCombat)
+    val endOfCombat = this.skills.mapNotNull(Skill::endOfCombat)
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill {
@@ -85,7 +88,11 @@ abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 interface Passive : Skill
 
 interface CombatSkillMethod<T> {
-    fun apply(battleState: BattleState, self: HeroUnit, opponent: HeroUnit, attack: Boolean): T
+    fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): T
+}
+
+interface CombatEndSkillMethod {
+    fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean, attacked: Boolean)
 }
 
 interface MapSkillMethod<T> {
@@ -93,7 +100,7 @@ interface MapSkillMethod<T> {
 }
 
 abstract class ConstantCombatSkillMethod<T>(private val value: T) : CombatSkillMethod<T> {
-    final override fun apply(battleState: BattleState, self: HeroUnit, opponent: HeroUnit, attack: Boolean): T {
+    final override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): T {
         return value
     }
 }

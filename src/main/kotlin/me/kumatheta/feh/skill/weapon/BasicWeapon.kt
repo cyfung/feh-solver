@@ -1,14 +1,9 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.Axe
-import me.kumatheta.feh.BasicWeapon
-import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Lance
-import me.kumatheta.feh.MoveType
-import me.kumatheta.feh.Staff
-import me.kumatheta.feh.Sword
+import me.kumatheta.feh.*
 
 object IronLance: BasicWeapon(Lance, 6)
+object SteelLance: BasicWeapon(Lance, 8)
 object SilverLance : BasicWeapon(Lance, 11)
 
 object IronSword: BasicWeapon(Sword, 6)
@@ -21,5 +16,7 @@ object SlayingHammerPlus : BasicWeapon(Axe, 14) {
         return foe.moveType == MoveType.ARMORED
     }
 }
+
+object SteelBow: BasicWeapon(Bow, 6)
 
 object Assault: BasicWeapon(Staff, 10)

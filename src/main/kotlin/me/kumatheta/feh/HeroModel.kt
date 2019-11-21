@@ -24,6 +24,7 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
 
 
 open class HeroModel(
+    val name: String,
     override val moveType: MoveType,
     val weapon: Weapon,
     final override val assist: Assist?,

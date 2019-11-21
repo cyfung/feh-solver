@@ -2,24 +2,23 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.FehBoard
-import me.kumatheta.feh.skill.assist.DrawBack
 import me.kumatheta.feh.skill.assist.Pivot
 import me.kumatheta.feh.skill.assist.Smite
 import me.kumatheta.feh.skill.weapon.*
 import me.kumatheta.mcts.Mcts
 import java.nio.file.Path
 
-object Alfonse : HeroModel(MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31, 10, 13, 9), emptyList(), true)
-object Sharena : HeroModel(MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
-object Anna : HeroModel(MoveType.INFANTRY, Noatun, null, null, Stat(24, 28, 16, 9, 11), emptyList(), true)
+object Alfonse : HeroModel("Alfonse", MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31, 10, 13, 9), emptyList(), true)
+object Sharena : HeroModel("Sharena", MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
+object Anna : HeroModel("Anna", MoveType.INFANTRY, Noatun, null, null, Stat(24, 28, 16, 9, 11), emptyList(), true)
 
-object AxeFighter : HeroModel(MoveType.INFANTRY, SlayingHammerPlus, null, null, Stat(25, 26, 12, 13, 9), emptyList(), true)
-object LanceFighter : HeroModel(MoveType.INFANTRY, IronLance, Pivot, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
-object SwordFighter : HeroModel(MoveType.INFANTRY, IronSword, null, null, Stat(25, 25, 12, 13, 9), emptyList(), true)
+object AxeFighter : HeroModel("AxeFighter", MoveType.INFANTRY, SlayingHammerPlus, null, null, Stat(25, 26, 12, 13, 9), emptyList(), true)
+object LanceFighter : HeroModel("LanceFighter", MoveType.INFANTRY, IronLance, Pivot, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
+object SwordFighter : HeroModel("SwordFighter",MoveType.INFANTRY, IronSword, null, null, Stat(25, 25, 12, 13, 9), emptyList(), true)
 
-object Fir : HeroModel(MoveType.INFANTRY, Folkvangr, null, null, Stat(27, 36, 19, 9, 12), emptyList(), true)
-object Bartre: HeroModel(MoveType.INFANTRY, IronAxe, Smite, null, Stat(27, 31, 13, 16, 8), emptyList(), true)
-object Effie: HeroModel(MoveType.ARMORED, IronLance, Smite, null, Stat(28, 33, 9, 16, 8), emptyList(), true)
+object Fir : HeroModel("Fir", MoveType.INFANTRY, Folkvangr, null, null, Stat(27, 36, 19, 9, 12), emptyList(), true)
+object Bartre: HeroModel("Bartre", MoveType.INFANTRY, IronAxe, Smite, null, Stat(27, 31, 13, 16, 8), emptyList(), true)
+object Effie: HeroModel("Effie", MoveType.ARMORED, IronLance, Smite, null, Stat(28, 33, 9, 16, 8), emptyList(), true)
 
 object TestMap : BattleMap {
     private val flierTerrain = listOf(0 to 0, 0 to 1, 0 to 2, 0 to 3, 0 to 4, 0 to 5,
@@ -61,9 +60,10 @@ fun main() {
 //    solver.solve()
 
     val positionMap = readMap(Path.of("test/feh - map.csv"))
-    FileBattleMap(positionMap, mapOf(), mapOf(1 to Effie, 2 to Bartre, 3 to Fir))
+    val (playerMap, spawnMap) = readUnits(Path.of("test/feh - spawn.csv"))
+    BasicBattleMap(positionMap, spawnMap, mapOf(1 to Effie, 2 to Bartre, 3 to Fir))
 
-    val state = BattleState(TestMap)
+    val state = BattleState(BasicBattleMap(positionMap, spawnMap, mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
     val phraseLimit = 3
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
