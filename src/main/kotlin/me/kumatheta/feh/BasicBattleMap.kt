@@ -36,32 +36,45 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
     lines.asSequence().drop(1).map {
         it.split(',')
     }.takeWhile { it.isNotEmpty() && it[0].isNotBlank() }.forEach { values ->
-        val id = values[0].toInt()
-        val spawnTimeString = values[1]
+        val valueIterator = values.iterator()
+        val id = valueIterator.next().toInt()
+        val spawnTimeString = valueIterator.next()
         val spawnTime = if (spawnTimeString.isBlank()) {
             null
         } else {
             SpawnTime.valueOf(spawnTimeString)
         }
-        val name = values[2]
-        val moveType = MoveType.valueOf(values[3])
-        val weaponName = values[4]
+        val name = valueIterator.next()
+        val groupString = valueIterator.next()
+        val group = if (spawnTime == null) {
+            groupString.toInt()
+        } else {
+            0
+        }
+        val engagedString = valueIterator.next()
+        val startEngaged = if (spawnTime == null) {
+            engagedString.toBoolean()
+        } else {
+            true
+        }
+        val moveType = MoveType.valueOf(valueIterator.next())
+        val weaponName = valueIterator.next()
         val weapon = if (weaponName.startsWith('-')) {
             val weaponType = getWeaponType(weaponName.substring(1))
             EmptyWeapon(weaponType)
         } else {
             getWeapon(weaponName)
         }
-        val assist = getAssist(values[5])
-        val special = getSpecial(values[6])
+        val assist = getAssist(valueIterator.next())
+        val special = getSpecial(valueIterator.next())
         val stat = Stat(
-            values[7].toInt(),
-            values[8].toInt(),
-            values[9].toInt(),
-            values[10].toInt(),
-            values[11].toInt()
+            valueIterator.next().toInt(),
+            valueIterator.next().toInt(),
+            valueIterator.next().toInt(),
+            valueIterator.next().toInt(),
+            valueIterator.next().toInt()
         )
-        val passives = values.subList(12, values.size).asSequence().filterNot {
+        val passives = valueIterator.asSequence().filterNot {
             it.isBlank()
         }.map {
             getPassive(it)
@@ -69,6 +82,8 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
 
         val heroModel = HeroModel(
             name = name,
+            group = group,
+            startEngaged = startEngaged,
             moveType = moveType,
             weapon = weapon,
             assist = assist,

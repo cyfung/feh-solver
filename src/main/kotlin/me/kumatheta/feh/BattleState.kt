@@ -1,14 +1,7 @@
 package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.assist.Pivot
-import me.kumatheta.feh.util.attackPositionOrder
-import me.kumatheta.feh.util.attackTargetOrder
-import me.kumatheta.feh.util.attackTargetPositions
-import me.kumatheta.feh.util.attackerOrder
-import me.kumatheta.feh.util.bodyBlockTargetOrder
-import me.kumatheta.feh.util.moveTargetOrder
-import me.kumatheta.feh.util.surroundings
-import me.kumatheta.feh.util.unitMoveOrder
+import me.kumatheta.feh.util.*
 
 private val protectiveAssistPositionOrder = compareBy<Triple<HeroUnit, MoveStep, Int>>({
     it.third
@@ -231,7 +224,23 @@ class BattleState private constructor(
             it.endOfCombat()
         }
 
+        if (!attacker.engaged) {
+            setGroupEngaged(attacker)
+        }
+
+        if (!defender.engaged) {
+            setGroupEngaged(defender)
+        }
+
         return Pair(deadUnit, potentialDamage.potentialDamage)
+    }
+
+    private fun setGroupEngaged(heroUnit: HeroUnit) {
+        unitsSeq(heroUnit.team).filter {
+            it.group == heroUnit.group
+        }.forEach {
+            it.engaged = true
+        }
     }
 
     private fun singleAttack(
@@ -691,7 +700,7 @@ class BattleState private constructor(
         distanceFromAlly: Map<HeroUnit, Map<Position, Int>>,
         foeThreat: Map<Position, Int>
     ): UnitAction? {
-        return availableUnits.asSequence().sortedWith(unitMoveOrder(distanceToClosestFoe))
+        return availableUnits.asSequence().filter { it.engaged }.sortedWith(unitMoveOrder(distanceToClosestFoe))
             .mapNotNull { heroUnit ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
                 val distanceMap = distanceFromAlly[heroUnit] ?: throw IllegalStateException()
@@ -1059,7 +1068,7 @@ class BattleState private constructor(
         position: Position
     ): Sequence<HeroUnit> {
         val assist = heroUnit.assist ?: return emptySequence()
-        val assistDistance = if(assist.isRange) {
+        val assistDistance = if (assist.isRange) {
             2
         } else {
             1

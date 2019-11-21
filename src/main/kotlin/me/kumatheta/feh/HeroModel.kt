@@ -11,6 +11,7 @@ interface Hero {
     val special: Special?
     val skillSet: SkillSet
     val stat: Stat
+    val group: Int
     val hasSpecialDebuff: Boolean
 }
 
@@ -25,6 +26,8 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
 
 open class HeroModel(
     val name: String,
+    override val group: Int,
+    val startEngaged: Boolean,
     override val moveType: MoveType,
     val weapon: Weapon,
     final override val assist: Assist?,

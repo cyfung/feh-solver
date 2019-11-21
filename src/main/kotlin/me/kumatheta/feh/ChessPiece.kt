@@ -5,8 +5,14 @@ sealed class ChessPiece {
     abstract fun copy(): ChessPiece
 }
 
-class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, override var position: Position) :
-    ChessPiece(), Hero by heroModel {
+class HeroUnit(
+    val id: Int,
+    private val heroModel: HeroModel,
+    val team: Team,
+    override var position: Position
+) : ChessPiece(), Hero by heroModel {
+    var engaged = heroModel.startEngaged
+
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
 
@@ -62,6 +68,7 @@ class HeroUnit(val id: Int, private val heroModel: HeroModel, val team: Team, ov
         newUnit.currentHp = currentHp
         newUnit.cooldown = cooldown
         newUnit.negativeStatus.addAll(negativeStatus)
+        newUnit.engaged = engaged
         return newUnit
     }
 

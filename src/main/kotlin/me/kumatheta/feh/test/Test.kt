@@ -8,17 +8,17 @@ import me.kumatheta.feh.skill.weapon.*
 import me.kumatheta.mcts.Mcts
 import java.nio.file.Path
 
-object Alfonse : HeroModel("Alfonse", MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31, 10, 13, 9), emptyList(), true)
-object Sharena : HeroModel("Sharena", MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
-object Anna : HeroModel("Anna", MoveType.INFANTRY, Noatun, null, null, Stat(24, 28, 16, 9, 11), emptyList(), true)
+object Alfonse : HeroModel("Alfonse", 0, true, MoveType.INFANTRY, Folkvangr, null, null, Stat(24, 31, 10, 13, 9), emptyList(), true)
+object Sharena : HeroModel("Sharena", 0, true, MoveType.INFANTRY, Fensalir, null, null, Stat(24, 29, 13, 12, 9), emptyList(), true)
+object Anna : HeroModel("Anna", 0, true, MoveType.INFANTRY, Noatun, null, null, Stat(24, 28, 16, 9, 11), emptyList(), true)
 
-object AxeFighter : HeroModel("AxeFighter", MoveType.INFANTRY, SlayingHammerPlus, null, null, Stat(25, 26, 12, 13, 9), emptyList(), true)
-object LanceFighter : HeroModel("LanceFighter", MoveType.INFANTRY, IronLance, Pivot, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
-object SwordFighter : HeroModel("SwordFighter",MoveType.INFANTRY, IronSword, null, null, Stat(25, 25, 12, 13, 9), emptyList(), true)
+object AxeFighter : HeroModel("AxeFighter", 0, true, MoveType.INFANTRY, SlayingHammerPlus, null, null, Stat(25, 26, 12, 13, 9), emptyList(), true)
+object LanceFighter : HeroModel("LanceFighter", 0, true,  MoveType.INFANTRY, IronLance, Pivot, null, Stat(23, 13, 12, 8, 6), emptyList(), true)
+object SwordFighter : HeroModel("SwordFighter", 0, true, MoveType.INFANTRY, IronSword, null, null, Stat(25, 25, 12, 13, 9), emptyList(), true)
 
-object Fir : HeroModel("Fir", MoveType.INFANTRY, Folkvangr, null, null, Stat(27, 36, 19, 9, 12), emptyList(), true)
-object Bartre: HeroModel("Bartre", MoveType.INFANTRY, IronAxe, Smite, null, Stat(27, 31, 13, 16, 8), emptyList(), true)
-object Effie: HeroModel("Effie", MoveType.ARMORED, IronLance, Smite, null, Stat(28, 33, 9, 16, 8), emptyList(), true)
+object Fir : HeroModel("Fir", 0, true, MoveType.INFANTRY, Folkvangr, null, null, Stat(27, 36, 19, 9, 12), emptyList(), true)
+object Bartre: HeroModel("Bartre", 0, true, MoveType.INFANTRY, IronAxe, Smite, null, Stat(27, 31, 13, 16, 8), emptyList(), true)
+object Effie: HeroModel("Effie", 0, true, MoveType.ARMORED, IronLance, Smite, null, Stat(28, 33, 9, 16, 8), emptyList(), true)
 
 object TestMap : BattleMap {
     private val flierTerrain = listOf(0 to 0, 0 to 1, 0 to 2, 0 to 3, 0 to 4, 0 to 5,
