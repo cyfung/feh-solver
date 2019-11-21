@@ -60,10 +60,12 @@ fun main() {
 //    solver.solve()
 
     val positionMap = readMap(Path.of("test/feh - map.csv"))
-    val (playerMap, spawnMap) = readUnits(Path.of("test/feh - spawn.csv"))
-    BasicBattleMap(positionMap, spawnMap, mapOf(1 to Effie, 2 to Bartre, 3 to Fir))
+    val (_, spawnMap) = readUnits(Path.of("test/feh - spawn.csv"))
+    val playerMap = spawnMap.asSequence().map {
+        (it.key - 4) to it.value.heroModel
+    }.toMap()
 
-    val state = BattleState(BasicBattleMap(positionMap, spawnMap, mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
+    val state = BattleState(BasicBattleMap(positionMap, spawnMap, playerMap))//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
     val phraseLimit = 3
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)

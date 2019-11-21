@@ -112,7 +112,10 @@ fun moveTargetOrder(
     distanceToTarget: Map<Position, Int>
 ): Comparator<MoveStep> {
     return compareBy({
-        distanceToTarget[it.position] ?: throw IllegalStateException()
+        val i = distanceToTarget[it.position]
+        if (i != null) i else {
+            throw IllegalStateException()
+        }
     }, {
         if (it.terrain == Terrain.DEFENSE_TILE) {
             0

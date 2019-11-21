@@ -1011,7 +1011,7 @@ class BattleState private constructor(
                     val distanceTravel = if (heroUnit.weaponType.isRanged) 2 else 1
                     distanceTravel to attackTargetPositions(heroUnit, startingPosition, maxPosition).mapNotNull {
                         val attackTerrain = battleMap.getTerrain(heroUnit.position)
-                        if (terrain.moveCost(heroUnit.moveType) == null) {
+                        if (attackTerrain.moveCost(heroUnit.moveType) == null) {
                             null
                         } else {
                             MoveStep(it, attackTerrain, false, distanceTravel)
