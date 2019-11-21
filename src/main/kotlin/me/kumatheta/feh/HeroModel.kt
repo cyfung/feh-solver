@@ -52,5 +52,4 @@ open class HeroModel(
     } else {
         null
     }
-
 }

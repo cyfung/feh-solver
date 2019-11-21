@@ -1,13 +1,10 @@
 package me.kumatheta.feh.skill.assist
 
-import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.CombatResult
-import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Position
+import me.kumatheta.feh.*
 
 private const val HEAL_AMOUNT = 10
 
-object ArdentSacrifice : me.kumatheta.feh.NormalAssist() {
+object ArdentSacrifice : NormalAssist() {
     override fun isValidAction(
         self: HeroUnit,
         target: HeroUnit,

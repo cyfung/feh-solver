@@ -1050,7 +1050,12 @@ class BattleState private constructor(
         position: Position
     ): Sequence<HeroUnit> {
         val assist = heroUnit.assist ?: return emptySequence()
-        return filter { it.position.distanceTo(position) == 1 }.filter { target ->
+        val assistDistance = if(assist.isRange) {
+            2
+        } else {
+            1
+        }
+        return filter { it.position.distanceTo(position) == assistDistance }.filter { target ->
             assist.isValidAction(heroUnit, target, this@BattleState, position)
         }
     }

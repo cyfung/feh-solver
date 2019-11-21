@@ -41,7 +41,7 @@ fun applyHeal(
     }
 }
 
-abstract class Heal(private val threshold: Int) : NormalAssist() {
+abstract class Heal(private val threshold: Int, isRange: Boolean = false) : NormalAssist(isRange) {
     final override fun apply(
         self: HeroUnit,
         target: HeroUnit,

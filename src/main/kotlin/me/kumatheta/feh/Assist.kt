@@ -2,7 +2,7 @@ package me.kumatheta.feh
 
 import java.lang.IllegalStateException
 
-sealed class Assist : Skill {
+sealed class Assist(val isRange: Boolean) : Skill {
     abstract fun apply(
         self: HeroUnit,
         target: HeroUnit,
@@ -16,7 +16,7 @@ sealed class Assist : Skill {
     ): Boolean
 }
 
-abstract class MovementAssist(val canBeAggressive: Boolean) : Assist() {
+abstract class MovementAssist(val canBeAggressive: Boolean) : Assist(false) {
     abstract fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position
 
     fun isValidPosition(battleState: BattleState, self: HeroUnit, position: Position): Boolean {
@@ -51,7 +51,7 @@ abstract class ProtectiveMovementAssist(canBeAggressive: Boolean) : MovementAssi
     ): Position
 }
 
-abstract class NormalAssist : Assist() {
+abstract class NormalAssist(isRange: Boolean = false) : Assist(isRange) {
     abstract fun isValidPreCombat(
         self: HeroUnit,
         selfAttacks: List<CombatResult>
