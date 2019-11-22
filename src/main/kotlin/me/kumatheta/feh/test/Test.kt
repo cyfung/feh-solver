@@ -7,6 +7,8 @@ import me.kumatheta.feh.skill.assist.Smite
 import me.kumatheta.feh.skill.weapon.*
 import me.kumatheta.mcts.Mcts
 import java.nio.file.Path
+import java.nio.file.Paths
+import kotlin.time.ExperimentalTime
 
 object Alfonse : HeroModel(
     "Alfonse",
@@ -123,12 +125,13 @@ object TestMap : BattleMap {
     }
 }
 
+@ExperimentalTime
 fun main() {
 //    val solver = BattleSolver(TestMap, 10)
 //    solver.solve()
 
-    val positionMap = readMap(Path.of("test/feh - map.csv"))
-    val (_, spawnMap) = readUnits(Path.of("test/feh - spawn.csv"))
+    val positionMap = readMap(Paths.get("test/feh - map.csv"))
+    val (_, spawnMap) = readUnits(Paths.get("test/feh - spawn.csv"))
     val playerMap = spawnMap.asSequence().map {
         (it.key - 4) to it.value.heroModel
     }.toMap()

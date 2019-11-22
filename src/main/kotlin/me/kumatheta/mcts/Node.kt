@@ -1,6 +1,8 @@
 package me.kumatheta.mcts
 
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -24,26 +26,37 @@ class Node<T : Move> private constructor(
     )
 
     val playOutMove = movesAndScore?.first
-    var score: Double = movesAndScore?.second ?: 0.0
-        private set
-    var bestScore = score
-        private set
-    var tries: Int = if (movesAndScore == null) 0 else 1
-        private set
+    private val scoreRef: AtomicReference<Score>
+
+    init {
+        scoreRef = AtomicReference(
+            if (movesAndScore == null) {
+                Score(0.0, Double.MIN_VALUE, 0)
+            } else {
+                val score: Double = movesAndScore.second
+                Score(score, score, 1)
+            }
+        )
+    }
 
     private val moveQueue: ConcurrentLinkedQueue<T> = ConcurrentLinkedQueue(board.moves.shuffled(random))
+    private val outstandingChildCount = AtomicInteger(moveQueue.size)
 
     private val children = ConcurrentLinkedQueue<Node<T>>()
 
     private val isTerminalNode = moveQueue.isEmpty()
+    @Volatile
     private var isPruned = false
 
     private fun updateScore(newScore: Double) {
-        bestScore = max(bestScore, newScore)
-        score += newScore
-        tries++
+        scoreRef.getAndUpdate {
+            Score(it.totalScore + newScore, max(it.bestScore, newScore), it.tries + 1)
+        }
         parent?.updateScore(newScore)
     }
+
+    val bestScore
+        get() = scoreRef.get().bestScore
 
     fun getBestChild(): Node<T>? {
         val child = children.maxBy {
@@ -64,20 +77,36 @@ class Node<T : Move> private constructor(
         }
         val move = moveQueue.poll()
         return if (move == null) {
+            val tries = scoreRef.get().tries
+            // select
             val child = children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.isPruned }.maxBy {
-                it.score / it.tries + explorationConstant * sqrt(ln(tries.toDouble()) / it.tries.toDouble())
+                val score = it.scoreRef.get()
+                score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
             }
             if (child == null) {
-                isPruned = true
+                // play out this node
+                updateScore(bestScore)
+
+                if (outstandingChildCount.get() == 0) {
+                    isPruned = true
+                    val bestChild = getBestChild()
+                    children.clear()
+                    if (bestChild != null) {
+                        children.add(bestChild)
+                    }
+                }
             }
             child
         } else {
+            // expand
             val copy = board.copy()
             copy.applyMove(move)
+            // play out
             val movesAndScore = copy.playOut(random)
             val child = Node(copy, explorationConstant, random, this, move, movesAndScore)
             updateScore(movesAndScore.second)
             children.add(child)
+            outstandingChildCount.decrementAndGet()
             null
         }
     }
@@ -105,3 +134,4 @@ private fun <T : Move> Board<T>.playOut(random: Random): Pair<List<T>, Double> {
     return Pair(moves, score ?: throw IllegalStateException())
 }
 
+class Score(val totalScore: Double, val bestScore: Double, val tries: Int)
