@@ -135,26 +135,16 @@ fun main() {
 
     val state =
         BattleState(BasicBattleMap(positionMap, spawnMap, playerMap))//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
-    val phraseLimit = 3
+    val phraseLimit = 7
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
     repeat(10) {
         mcts.run(1000)
         val bestMoves = mcts.getBestMoves()
-        val testBoard = board.copy()
-        bestMoves.forEach {
-            testBoard.applyMove(it)
-        }
         println("best score: ${mcts.getBestScore()}")
-        println(testBoard.score)
-        val testState = board.stateCopy
+        val testState = board.tryMoves(bestMoves)
         bestMoves.forEach {
-            val unitAction = it.unitAction
-            println(unitAction)
-            val movementResult = testState.playerMove(unitAction)
-            if (movementResult.phraseChange) {
-                testState.enemyMoves().forEach(::println)
-            }
+            println(it)
         }
         println("${testState.enemyDied}, ${testState.playerDied}")
 

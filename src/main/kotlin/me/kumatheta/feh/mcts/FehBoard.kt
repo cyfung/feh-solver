@@ -41,9 +41,6 @@ class FehBoard private constructor(
         return FehBoard(phraseLimit, state, score, enemyCount, playerCount)
     }
 
-    val stateCopy
-        get() = state.copy()
-
     override fun applyMove(move: FehMove) {
         check(score == null)
         val nextMove = move.unitAction
@@ -61,6 +58,26 @@ class FehBoard private constructor(
     private fun calculateScore() = (phraseLimit - state.phrase).toDouble() / phraseLimit * 0.3 +
             state.enemyDied.toDouble() / enemyCount * 0.7 - state.playerDied.toDouble() / playerCount * 0.2
 
+    val stateCopy
+        get() = state.copy()
+
+    fun tryMoves(bestMoves: List<FehMove>, printMoves: Boolean = false): BattleState {
+        val testState = stateCopy
+        bestMoves.forEach {
+            val unitAction = it.unitAction
+            if (printMoves) {
+                println(unitAction)
+            }
+            val movementResult = testState.playerMove(unitAction)
+            if (movementResult.phraseChange) {
+                val enemyMoves = testState.enemyMoves()
+                if (printMoves) {
+                    enemyMoves.forEach(::println)
+                }
+            }
+        }
+        return testState
+    }
 }
 
 data class FehMove(val unitAction: UnitAction) : Move
