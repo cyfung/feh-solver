@@ -9,6 +9,7 @@ import me.kumatheta.mcts.Mcts
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 object Alfonse : HeroModel(
     "Alfonse",
@@ -142,7 +143,8 @@ fun main() {
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
     repeat(10) {
-        mcts.run(1000)
+        val duration = measureTime { mcts.run(1000) }
+        println("duration $duration")
         val bestMoves = mcts.getBestMoves()
         println("best score: ${mcts.getBestScore()}")
         val testState = board.tryMoves(bestMoves)

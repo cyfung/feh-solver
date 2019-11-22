@@ -2,6 +2,7 @@ package me.kumatheta.mcts
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -10,8 +11,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.sqrt
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = 2 * sqrt(2.0)) {
     private val rootNode = Node(board.copy(), explorationConstant, Random)
@@ -24,15 +23,17 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = 2 * sqrt(2.0
     fun run(times: Int) {
         val countDown = AtomicInteger(times)
         runBlocking {
-            (1..100).map {
-                GlobalScope.launch(dispatcher) {
-                    while (countDown.getAndAdd(-10) > 0) {
-                        repeat(10) {
-                            selectAndPlayOut()
+            supervisorScope {
+                (1..100).map {
+                    launch(dispatcher) {
+                        while (countDown.getAndAdd(-10) > 0) {
+                            repeat(10) {
+                                selectAndPlayOut()
+                            }
                         }
                     }
                 }
-            }.joinAll()
+            }
         }
     }
 
