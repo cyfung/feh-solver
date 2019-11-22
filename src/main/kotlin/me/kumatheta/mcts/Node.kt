@@ -1,5 +1,6 @@
 package me.kumatheta.mcts
 
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -30,10 +31,11 @@ class Node<T : Move> private constructor(
     var tries: Int = if (movesAndScore == null) 0 else 1
         private set
 
-    private val moveIterator = board.moves.shuffled(random).iterator()
-    private val children = mutableListOf<Node<T>>()
+    private val moveQueue: ConcurrentLinkedQueue<T> = ConcurrentLinkedQueue(board.moves.shuffled(random))
 
-    private val isTerminalNode = !moveIterator.hasNext()
+    private val children = ConcurrentLinkedQueue<Node<T>>()
+
+    private val isTerminalNode = moveQueue.isEmpty()
     private var isPruned = false
 
     private fun updateScore(newScore: Double) {
@@ -60,16 +62,8 @@ class Node<T : Move> private constructor(
             check(parent == null)
             return null
         }
-        return if (moveIterator.hasNext()) {
-            val move = moveIterator.next()
-            val copy = board.copy()
-            copy.applyMove(move)
-            val movesAndScore = copy.playOut(random)
-            val child = Node(copy, explorationConstant, random, this, move, movesAndScore)
-            updateScore(movesAndScore.second)
-            children.add(child)
-            null
-        } else {
+        val move = moveQueue.poll()
+        return if (move == null) {
             val child = children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.isPruned }.maxBy {
                 it.score / it.tries + explorationConstant * sqrt(ln(tries.toDouble()) / it.tries.toDouble())
             }
@@ -77,6 +71,14 @@ class Node<T : Move> private constructor(
                 isPruned = true
             }
             child
+        } else {
+            val copy = board.copy()
+            copy.applyMove(move)
+            val movesAndScore = copy.playOut(random)
+            val child = Node(copy, explorationConstant, random, this, move, movesAndScore)
+            updateScore(movesAndScore.second)
+            children.add(child)
+            null
         }
     }
 }
