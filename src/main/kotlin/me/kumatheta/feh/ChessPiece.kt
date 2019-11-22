@@ -11,7 +11,10 @@ class HeroUnit(
     val team: Team,
     override var position: Position
 ) : ChessPiece(), Hero by heroModel {
-    var engaged = heroModel.startEngaged
+    private var engageCountDown = heroModel.engageDelay
+    var engaged = heroModel.group == null && heroModel.engageDelay == null
+        private set
+    private var engageCoolDownStarted = heroModel.group == null
 
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
@@ -69,6 +72,8 @@ class HeroUnit(
         newUnit.cooldown = cooldown
         newUnit.negativeStatus.addAll(negativeStatus)
         newUnit.engaged = engaged
+        newUnit.engageCountDown = engageCountDown
+        newUnit.engageCoolDownStarted = engageCoolDownStarted
         return newUnit
     }
 
@@ -148,6 +153,15 @@ class HeroUnit(
     fun startOfTurn() {
         clearBonus()
         available = true
+        if (!engaged && engageCoolDownStarted) {
+            val engageCountDown = engageCountDown
+            require(engageCountDown != null)
+            val newCountDown = engageCountDown - 1
+            this.engageCountDown == newCountDown
+            if (newCountDown == 0) {
+                engaged = true
+            }
+        }
     }
 
     private fun clearBonus() {
@@ -189,6 +203,14 @@ class HeroUnit(
 
     fun hpThreshold(percentage: Int): Int {
         return compareValues(currentHp * 100, stat.hp * percentage)
+    }
+
+    fun setEngaged(isSelf: Boolean) {
+        when {
+            engaged -> return
+            isSelf || engageCountDown == null -> engaged = true
+            else -> engageCoolDownStarted = true
+        }
     }
 }
 

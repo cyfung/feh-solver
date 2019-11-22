@@ -236,10 +236,11 @@ class BattleState private constructor(
     }
 
     private fun setGroupEngaged(heroUnit: HeroUnit) {
+        val group = heroUnit.group ?: return
         unitsSeq(heroUnit.team).filter {
-            it.group == heroUnit.group
+            it.group == group
         }.forEach {
-            it.engaged = true
+            it.setEngaged(it == heroUnit)
         }
     }
 

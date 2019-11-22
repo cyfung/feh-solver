@@ -1,5 +1,5 @@
-id,spawn time,name,group,start engaged,move type,weapon,assist,special,hp,atk,spd,def,res,passives
-5,START,Hinoka,1,FALSE,FLYING,SteelLance,,,29,28,19,15,15,
-6,START,Azama,1,FALSE,INFANTRY,Pain,Reconcile,,30,15,16,19,15,
-7,START,Subaki,1,FALSE,FLYING,SteelLance,,,28,23,21,21,13,QuickRiposte2
-8,START,Setsuna,1,FALSE,INFANTRY,SteelBow,ReciprocalAid,,27,22,22,13,14,
+id,spawn time,name,group,engage delay,move type,weapon,assist,special,hp,atk,spd,def,res,passives
+5,START,Hinoka,1,,FLYING,SteelLance,,,29,28,19,15,15,
+6,START,Azama,1,,INFANTRY,Pain,Reconcile,,30,15,16,19,15,
+7,START,Subaki,1,,FLYING,SteelLance,,,28,23,21,21,13,QuickRiposte2
+8,START,Setsuna,1,,INFANTRY,SteelBow,ReciprocalAid,,27,22,22,13,14,
