@@ -1,7 +1,14 @@
 package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.assist.Pivot
-import me.kumatheta.feh.util.*
+import me.kumatheta.feh.util.attackPositionOrder
+import me.kumatheta.feh.util.attackTargetOrder
+import me.kumatheta.feh.util.attackTargetPositions
+import me.kumatheta.feh.util.attackerOrder
+import me.kumatheta.feh.util.bodyBlockTargetOrder
+import me.kumatheta.feh.util.moveTargetOrder
+import me.kumatheta.feh.util.surroundings
+import me.kumatheta.feh.util.unitMoveOrder
 
 private val protectiveAssistPositionOrder = compareBy<Triple<HeroUnit, MoveStep, Int>>({
     it.third
@@ -286,12 +293,12 @@ class BattleState private constructor(
         val rangeMatch = when {
             attacker.isEmptyHanded -> false
             attacker.weaponType.isRanged == defender.weaponType.isRanged -> true
-            else -> skillMethodAny(attacker, defender, SkillSet::ignoreRange)
+            else -> skillMethodAnyBoth(attacker, defender, SkillSet::counterIgnoreRange)
         }
 
         val canCounter = rangeMatch
 
-        val disablePriorityChange = skillMethodAny(attacker, defender, SkillSet::disablePriorityChange)
+        val disablePriorityChange = skillMethodAnyBoth(attacker, defender, SkillSet::disablePriorityChange)
 
         val desperation: Boolean
         val vantage: Boolean
@@ -299,8 +306,8 @@ class BattleState private constructor(
             desperation = false
             vantage = false
         } else {
-            desperation = skillMethodAny(attacker, defender, SkillSet::desperation)
-            vantage = skillMethodAny(attacker, defender, SkillSet::vantage)
+            desperation = skillMethodAnyAttacker(attacker, defender, SkillSet::desperation)
+            vantage = skillMethodAnyDefender(attacker, defender, SkillSet::vantage)
         }
 
         val attackerFollowup = when (val guarantee =
@@ -315,33 +322,55 @@ class BattleState private constructor(
         }
 
         val attackOrder = mutableListOf<Boolean>()
-
-        if (vantage) {
-            if (canCounter) {
+        val attackerBrave = skillMethodAnyAttacker(attacker, defender, SkillSet::brave)
+        val defenderBrave = skillMethodAnyDefender(attacker, defender, SkillSet::brave)
+        val addAttacker = {
+            attackOrder.add(true)
+            if (attackerBrave) {
+                attackOrder.add(true)
+            }
+        }
+        val addDefender = {
+            attackOrder.add(false)
+            if(defenderBrave) {
                 attackOrder.add(false)
             }
-            attackOrder.add(true)
-        } else {
-            attackOrder.add(true)
         }
+
+        // actual add attack orders
+        if (vantage) {
+            if (canCounter) {
+                addDefender()
+            }
+        }
+        addAttacker()
 
         if (attackerFollowup && desperation) {
-            attackOrder.add(true)
+            addAttacker()
         }
 
+        // normal counter
         if (!vantage) {
             if (canCounter) {
-                attackOrder.add(false)
+                addDefender()
+            }
+        }
+
+        // vantage followup counter
+        if (defenderFollowup && vantage) {
+            if (canCounter) {
+                addDefender()
             }
         }
 
         if (attackerFollowup && !desperation) {
-            attackOrder.add(true)
+            addAttacker()
         }
 
-        if (defenderFollowup) {
+        // normal followup counter
+        if (defenderFollowup && !vantage) {
             if (canCounter) {
-                attackOrder.add(false)
+                addDefender()
             }
         }
         return attackOrder
@@ -1079,13 +1108,25 @@ class BattleState private constructor(
         }
     }
 
-    private inline fun skillMethodAny(
+    private inline fun skillMethodAnyBoth(
         attacker: HeroUnit,
         defender: HeroUnit,
         f: (SkillSet) -> List<CombatSkillMethod<Boolean>>
     ) =
-        f(attacker.skillSet).any { it.apply(this, attacker, defender, true) } ||
-                f(defender.skillSet).any { it.apply(this, defender, attacker, false) }
+        skillMethodAnyAttacker(attacker, defender, f) ||
+                skillMethodAnyDefender(attacker, defender, f)
+
+    private inline fun skillMethodAnyAttacker(
+        attacker: HeroUnit,
+        defender: HeroUnit,
+        f: (SkillSet) -> List<CombatSkillMethod<Boolean>>
+    ) = f(attacker.skillSet).any { it.apply(this, attacker, defender, true) }
+
+    private inline fun skillMethodAnyDefender(
+        attacker: HeroUnit,
+        defender: HeroUnit,
+        f: (SkillSet) -> List<CombatSkillMethod<Boolean>>
+    ) = f(defender.skillSet).any { it.apply(this, defender, attacker, false) }
 
     private inline fun skillMethodApply(
         attacker: HeroUnit,

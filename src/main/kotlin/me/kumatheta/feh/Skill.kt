@@ -17,7 +17,9 @@ interface Skill {
     val teleport: MapSkillMethod<Sequence<Position>>?
         get() = null
 
-    val ignoreRange: CombatSkillMethod<Boolean>?
+    val counterIgnoreRange: CombatSkillMethod<Boolean>?
+        get() = null
+    val brave: CombatSkillMethod<Boolean>?
         get() = null
     val disablePriorityChange: CombatSkillMethod<Boolean>?
         get() = null
@@ -53,7 +55,8 @@ class SkillSet(skills: List<Skill>) {
     val pass = this.skills.mapNotNull(Skill::pass)
     val teleport = this.skills.mapNotNull(Skill::teleport)
 
-    val ignoreRange = this.skills.mapNotNull(Skill::ignoreRange)
+    val counterIgnoreRange = this.skills.mapNotNull(Skill::counterIgnoreRange)
+    val brave = this.skills.mapNotNull(Skill::brave)
     val disablePriorityChange = this.skills.mapNotNull(Skill::disablePriorityChange)
     val desperation = this.skills.mapNotNull(Skill::desperation)
     val vantage = this.skills.mapNotNull(Skill::vantage)
