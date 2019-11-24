@@ -15,9 +15,9 @@ object WardingBreath : Passive {
                 battleState: BattleState,
                 self: HeroUnit,
                 foe: HeroUnit,
-                attack: Boolean
+                initAttack: Boolean
             ): Stat {
-                return if (attack) {
+                return if (initAttack) {
                     Stat.ZERO
                 } else {
                     Stat(res = 4)
@@ -30,9 +30,9 @@ object WardingBreath : Passive {
                 battleState: BattleState,
                 self: InCombatStatus,
                 foe: InCombatStatus,
-                attack: Boolean
+                initAttack: Boolean
             ): Int {
-                return if (attack) {
+                return if (initAttack) {
                     0
                 } else {
                     1

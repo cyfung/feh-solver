@@ -9,6 +9,7 @@ import me.kumatheta.feh.util.bodyBlockTargetOrder
 import me.kumatheta.feh.util.moveTargetOrder
 import me.kumatheta.feh.util.surroundings
 import me.kumatheta.feh.util.unitMoveOrder
+import kotlin.math.max
 
 private val protectiveAssistPositionOrder = compareBy<Triple<HeroUnit, MoveStep, Int>>({
     it.third
@@ -203,9 +204,10 @@ class BattleState private constructor(
 
         val attackOrder = createAttackOrder(attackerInCombat, attackerInCombat, spdDiff)
 
-        val potentialDamage = attackOrder.asSequence().filter { it }.count() * calculateDamage(
+        val potentialDamage = attackOrder.asSequence().filter { it }.count() * calculateBaseDamage(
             attackerInCombat,
-            defenderInCombat
+            defenderInCombat,
+            damagingSpecial = null
         )
         return PotentialDamage(attackerInCombat, defenderInCombat, attackOrder, potentialDamage)
     }
@@ -283,7 +285,11 @@ class BattleState private constructor(
         damageDealer: InCombatStatus,
         damageReceiver: InCombatStatus
     ): Boolean {
-        val dead = damageReceiver.heroUnit.takeDamage(calculateDamage(damageDealer, damageReceiver))
+        val damagingSpecial = damageDealer.heroUnit.special as? DamagingSpecial
+        val damageDealerUseSpecial = damagingSpecial != null && damageDealer.heroUnit.cooldown == 0
+        val baseDamage = calculateBaseDamage(damageDealer, damageReceiver, damagingSpecial)
+
+        val dead = damageReceiver.heroUnit.takeDamage(baseDamage)
         val attackerCooldownIncrease =
             damageDealer.skills.cooldownBuff.asSequence().map {
                 it.apply(
@@ -440,9 +446,10 @@ class BattleState private constructor(
         return attackOrder
     }
 
-    private fun calculateDamage(
+    private fun calculateBaseDamage(
         damageDealer: InCombatStatus,
-        damageReceiver: InCombatStatus
+        damageReceiver: InCombatStatus,
+        damagingSpecial: DamagingSpecial?
     ): Int {
         val targetRes = damageDealer.heroUnit.weaponType.targetRes
         val defenderDefRes = if (targetRes) {
@@ -462,7 +469,9 @@ class BattleState private constructor(
             effAtk
         }
 
-        return atk - defenderDefRes
+        val bonusDamage = damagingSpecial?.getDamage(this, damageDealer, damageReceiver) ?: 0
+
+        return max(atk + bonusDamage - defenderDefRes, 0)
     }
 
     private fun isEffective(attacker: HeroUnit, defender: HeroUnit): Boolean {

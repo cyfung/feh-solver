@@ -19,7 +19,7 @@ object QuickRiposte1 : Passive {
 }
 
 class QRMethod(private val percentage: Int) : InCombatSkill<Int> {
-    override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, attack: Boolean): Int {
+    override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, initAttack: Boolean): Int {
         return if (self.heroUnit.hpThreshold(percentage) >= 0) {
             1
         } else {

@@ -104,12 +104,16 @@ abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
     abstract fun trigger(self: HeroUnit, target: HeroUnit, battleState: BattleState)
 }
 
+abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
+    abstract fun getDamage(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus): Int
+}
+
 interface Passive : Skill
 
 class InCombatStatus(val heroUnit: HeroUnit, val inCombatStat: Stat, val skills: InCombatSkillSet)
 
 interface CombatSkill<T, U> {
-    fun apply(battleState: BattleState, self: U, foe: U, attack: Boolean): T
+    fun apply(battleState: BattleState, self: U, foe: U, initAttack: Boolean): T
 }
 
 interface CombatStartSkill<T> : CombatSkill<T, HeroUnit>
@@ -126,13 +130,13 @@ interface MapSkillMethod<T> {
 
 
 class ConstantCombatStartSkill<T>(private val value: T) : CombatStartSkill<T> {
-    override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): T {
+    override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, initAttack: Boolean): T {
         return value
     }
 }
 
 class ConstantInCombatSkill<T>(private val value: T) : InCombatSkill<T> {
-    override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, attack: Boolean): T {
+    override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, initAttack: Boolean): T {
         return value
     }
 }

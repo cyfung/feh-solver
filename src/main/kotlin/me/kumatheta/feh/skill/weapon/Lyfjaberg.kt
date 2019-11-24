@@ -14,7 +14,7 @@ import me.kumatheta.feh.Stat
 object Lyfjaberg : BasicWeapon(Dagger, 14) {
     override val extraStat: Stat = Stat(res = 3)
     override val inCombatStat: CombatStartSkill<Stat>? = object : CombatStartSkill<Stat> {
-        override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): Stat {
+        override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, initAttack: Boolean): Stat {
             return if (self.hpThreshold(50) >= 0) {
                 self.combatSkillData[this@Lyfjaberg] = true
                 Stat(atk = 4, spd = 4)
@@ -25,8 +25,8 @@ object Lyfjaberg : BasicWeapon(Dagger, 14) {
     }
 
     override val foeEffect: CombatStartSkill<Skill?>? = object : CombatStartSkill<Skill?> {
-        override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): Skill? {
-            return if (self.hpThreshold(50) >= 0) {
+        override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, initAttack: Boolean): Skill? {
+            return if (initAttack && self.hpThreshold(50) >= 0) {
                 return object : Skill {
                     override val followUp: InCombatSkill<Int>? = ConstantInCombatSkill(-1)
                 }
