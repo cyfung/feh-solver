@@ -29,9 +29,11 @@ interface Skill {
         get() = null
     val followUp: InCombatSkill<Int>?
         get() = null
-    val cooldownBuff: InCombatSkill<Int>?
+
+
+    val cooldownBuff: InCombatSkill<CooldownChange<Int>>?
         get() = null
-    val cooldownDebuff: InCombatSkill<Int>?
+    val cooldownDebuff: InCombatSkill<CooldownChange<Int>>?
         get() = null
     val combatEnd: CombatEndSkill?
         get() = null
@@ -47,6 +49,7 @@ interface Skill {
         get() = null
 }
 
+class CooldownChange<T>(val unitAttack: T, val foeAttack: T)
 
 class SkillSet(skills: Sequence<Skill>) {
     constructor(skills: List<Skill>) : this(skills.asSequence())
@@ -82,9 +85,9 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
         get() = skills.asSequence().mapNotNull(Skill::vantage)
     val followUp: Sequence<InCombatSkill<Int>>
         get() = skills.asSequence().mapNotNull(Skill::followUp)
-    val cooldownBuff: Sequence<InCombatSkill<Int>>
+    val cooldownBuff: Sequence<InCombatSkill<CooldownChange<Int>>>
         get() = skills.asSequence().mapNotNull(Skill::cooldownBuff)
-    val cooldownDebuff: Sequence<InCombatSkill<Int>>
+    val cooldownDebuff: Sequence<InCombatSkill<CooldownChange<Int>>>
         get() = skills.asSequence().mapNotNull(Skill::cooldownDebuff)
 }
 

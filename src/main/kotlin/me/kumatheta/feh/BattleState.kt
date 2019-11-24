@@ -212,23 +212,59 @@ class BattleState private constructor(
         return PotentialDamage(attackerInCombat, defenderInCombat, attackOrder, potentialDamage)
     }
 
+    private fun Sequence<CooldownChange<Int>>.max(): CooldownChange<Int> {
+        return fold(CooldownChange(0, 0)) { acc, cooldownChange ->
+            CooldownChange(
+                max(acc.unitAttack, cooldownChange.foeAttack),
+                max(acc.foeAttack, cooldownChange.unitAttack)
+            )
+        }
+    }
+
+    private val PotentialDamage.cooldownAmount: CooldownChange<Pair<Int, Int>>
+        get() {
+            val attackerCooldownIncrease =
+                attackerInCombat.skills.cooldownBuff.mapAttackerSkills(attackerInCombat, defenderInCombat).max()
+            val attackerGuard =
+                attackerInCombat.skills.cooldownDebuff.mapAttackerSkills(attackerInCombat, defenderInCombat).max()
+
+            val defenderCooldownIncrease =
+                defenderInCombat.skills.cooldownBuff.mapDefenderSkills(attackerInCombat, defenderInCombat).max()
+            val defenderGuard =
+                defenderInCombat.skills.cooldownDebuff.mapDefenderSkills(attackerInCombat, defenderInCombat).max()
+
+            return CooldownChange(
+                Pair(
+                    1 + attackerCooldownIncrease.unitAttack - defenderGuard.foeAttack,
+                    1 + defenderCooldownIncrease.foeAttack - attackerGuard.unitAttack
+                    ),
+                Pair(
+                    1 + defenderCooldownIncrease.unitAttack - attackerGuard.foeAttack,
+                    1 + attackerCooldownIncrease.foeAttack - defenderGuard.unitAttack
+                )
+            )
+        }
+
     private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
         check(attacker.team.foe == defender.team)
         val potentialDamage = preCalculateDamage(attacker, defender)
 
+        val cooldownAmount = potentialDamage.cooldownAmount
+
         var attackerAttacked = false
         var defenderAttacked = false
+
         val deadUnit = potentialDamage.attackOrder.asSequence().mapNotNull { attackerTurn ->
             if (attackerTurn) {
                 attackerAttacked = true
-                if (singleAttack(potentialDamage.attackerInCombat, potentialDamage.defenderInCombat)) {
+                if (singleAttack(potentialDamage.attackerInCombat, potentialDamage.defenderInCombat, cooldownAmount.unitAttack)) {
                     defender
                 } else {
                     null
                 }
             } else {
                 defenderAttacked = true
-                if (singleAttack(potentialDamage.defenderInCombat, potentialDamage.attackerInCombat)) {
+                if (singleAttack(potentialDamage.defenderInCombat, potentialDamage.attackerInCombat, cooldownAmount.foeAttack)) {
                     attacker
                 } else {
                     null
@@ -283,54 +319,29 @@ class BattleState private constructor(
 
     private fun singleAttack(
         damageDealer: InCombatStatus,
-        damageReceiver: InCombatStatus
+        damageReceiver: InCombatStatus,
+        cooldownAmount: Pair<Int, Int>
     ): Boolean {
-        val damagingSpecial = damageDealer.heroUnit.special as? DamagingSpecial
-        val damageDealerUseSpecial = damagingSpecial != null && damageDealer.heroUnit.cooldown == 0
+        val (damageDealerCooldown, damageReceiverCooldown) = cooldownAmount
+        val damagingSpecial =
+            if (damageDealer.heroUnit.cooldown == 0) {
+                damageDealer.heroUnit.special as? DamagingSpecial
+            } else {
+                null
+            }
         val baseDamage = calculateBaseDamage(damageDealer, damageReceiver, damagingSpecial)
 
         val dead = damageReceiver.heroUnit.takeDamage(baseDamage)
-        val attackerCooldownIncrease =
-            damageDealer.skills.cooldownBuff.asSequence().map {
-                it.apply(
-                    this,
-                    damageDealer,
-                    damageReceiver,
-                    true
-                )
-            }.max() ?: 0
-        val attackerCooldownReduce =
-            damageReceiver.skills.cooldownDebuff.asSequence().map {
-                it.apply(
-                    this,
-                    damageReceiver,
-                    damageDealer,
-                    false
-                )
-            }.max() ?: 0
 
-        damageDealer.heroUnit.reduceCooldown(1 + attackerCooldownIncrease - attackerCooldownReduce)
+        // attacker reduce cooldown when special is not used
+        if (damagingSpecial == null) {
+            damageDealer.heroUnit.reduceCooldown(damageDealerCooldown)
+        } else {
+            damageDealer.heroUnit.resetCooldown()
+        }
+
         if (!dead) {
-            val defenderCooldownIncrease =
-                damageDealer.skills.cooldownBuff.asSequence().map {
-                    it.apply(
-                        this,
-                        damageReceiver,
-                        damageDealer,
-                        false
-                    )
-                }.max() ?: 0
-            val defenderCooldownReduce =
-                damageReceiver.skills.cooldownDebuff.asSequence().map {
-                    it.apply(
-                        this,
-                        damageDealer,
-                        damageReceiver,
-                        true
-                    )
-                }.max()
-                    ?: 0
-            damageReceiver.heroUnit.reduceCooldown(1 + defenderCooldownIncrease - defenderCooldownReduce)
+            damageReceiver.heroUnit.reduceCooldown(damageReceiverCooldown)
         } else {
             locationMap.remove(damageReceiver.heroUnit.position)
             val teamDied = damageReceiver.heroUnit.team

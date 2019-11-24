@@ -1,41 +1,30 @@
 package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.CombatStartSkill
+import me.kumatheta.feh.CooldownChange
 import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.InCombatStatus
 import me.kumatheta.feh.Passive
-import me.kumatheta.feh.CombatStartSkill
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.BlowOrStance
 
 object WardingBreath : Passive {
     override val inCombatStat: CombatStartSkill<Stat>?
-        get() = object : CombatStartSkill<Stat> {
-            override fun apply(
-                battleState: BattleState,
-                self: HeroUnit,
-                foe: HeroUnit,
-                initAttack: Boolean
-            ): Stat {
-                return if (initAttack) {
-                    Stat.ZERO
-                } else {
-                    Stat(res = 4)
-                }
-            }
-        }
-    override val cooldownBuff: InCombatSkill<Int>?
-        get() = object : InCombatSkill<Int> {
+        get() = BlowOrStance(Stat.ZERO, Stat(res = 4))
+
+    override val cooldownBuff: InCombatSkill<CooldownChange>?
+        get() = object : InCombatSkill<CooldownChange> {
             override fun apply(
                 battleState: BattleState,
                 self: InCombatStatus,
                 foe: InCombatStatus,
                 initAttack: Boolean
-            ): Int {
+            ): CooldownChange {
                 return if (initAttack) {
-                    0
+                    CooldownChange(0, 0)
                 } else {
-                    1
+                    CooldownChange(1, 1)
                 }
             }
         }
