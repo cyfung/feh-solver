@@ -2,7 +2,7 @@ package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
 
-class Seal(private val stat: Stat) : CombatEndSkillMethod {
+class Seal(private val stat: Stat) : CombatEndSkill {
 
     override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean, attacked: Boolean) {
         if(!self.isDead && !foe.isDead) {

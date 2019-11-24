@@ -1,11 +1,22 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.InCombatStatus
+import me.kumatheta.feh.Passive
+import me.kumatheta.feh.PreCombatSkill
+import me.kumatheta.feh.Stat
 
 object WardingBreath : Passive {
-    override val buff: CombatSkillMethod<Stat>?
-        get() = object : CombatSkillMethod<Stat> {
-            override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): Stat {
+    override val inCombatStat: PreCombatSkill<Stat>?
+        get() = object : PreCombatSkill<Stat> {
+            override fun apply(
+                battleState: BattleState,
+                self: HeroUnit,
+                foe: HeroUnit,
+                attack: Boolean
+            ): Stat {
                 return if (attack) {
                     Stat.ZERO
                 } else {
@@ -13,9 +24,14 @@ object WardingBreath : Passive {
                 }
             }
         }
-    override val cooldownBuff: CombatSkillMethod<Int>?
-        get() = object : CombatSkillMethod<Int> {
-            override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): Int {
+    override val cooldownBuff: InCombatSkill<Int>?
+        get() = object : InCombatSkill<Int> {
+            override fun apply(
+                battleState: BattleState,
+                self: InCombatStatus,
+                foe: InCombatStatus,
+                attack: Boolean
+            ): Int {
                 return if (attack) {
                     0
                 } else {

@@ -165,37 +165,49 @@ class BattleState private constructor(
     }
 
     private class PotentialDamage(
-        val attackerStat: Stat,
-        val defenderStat: Stat,
+        val attackerInCombat: InCombatStatus,
+        val defenderInCombat: InCombatStatus,
         val attackOrder: List<Boolean>,
         val potentialDamage: Int
     )
 
-    private fun preCalculateDamage(attacker: HeroUnit, defender: HeroUnit): PotentialDamage {
-        val attackerStat = attacker.stat + attacker.buff + attacker.debuff + skillMethodSumStat(
-            attacker,
-            defender,
-            SkillSet::buffSkill,
-            SkillSet::debuffSkill
+    private fun preCalculateDamage(
+        attacker: HeroUnit,
+        defender: HeroUnit
+    ): PotentialDamage {
+        val attackerSkills = SkillSet(
+            defender.skillSet.skills + attacker.skillSet.foeEffect.attackerSkillsSeq(
+                attacker,
+                defender
+            )
         )
-        val defenderStat = defender.stat + defender.buff + defender.debuff + skillMethodSumStat(
-            attacker,
-            defender,
-            SkillSet::debuffSkill,
-            SkillSet::buffSkill
+        val defenderSkills = SkillSet(
+            defender.skillSet.skills + attacker.skillSet.foeEffect.attackerSkillsSeq(
+                attacker,
+                defender
+            )
         )
+        val attackerStat = attacker.stat + attacker.buff + attacker.debuff +
+                attackerSkills.inCombatStat.attackerSkillsSeq(attacker, defender).fold(Stat.ZERO) { acc, stat ->
+                    acc + stat
+                }
+        val defenderStat = defender.stat + defender.buff + defender.debuff +
+                defenderSkills.inCombatStat.defenderSkillsSeq(attacker, defender).fold(Stat.ZERO) { acc, stat ->
+                    acc + stat
+                }
 
         val spdDiff = attackerStat.spd - defenderStat.spd
 
-        val attackOrder = createAttackOrder(attacker, defender, spdDiff)
+        val attackerInCombat = InCombatStatus(attacker, attackerStat, attackerSkills)
+        val defenderInCombat = InCombatStatus(attacker, defenderStat, defenderSkills)
+
+        val attackOrder = createAttackOrder(attackerInCombat, attackerInCombat, spdDiff)
 
         val potentialDamage = attackOrder.asSequence().filter { it }.count() * calculateDamage(
-            attacker,
-            defender,
-            attackerStat,
-            defenderStat
+            attackerInCombat,
+            defenderInCombat
         )
-        return PotentialDamage(attackerStat, defenderStat, attackOrder, potentialDamage)
+        return PotentialDamage(attackerInCombat, defenderInCombat, attackOrder, potentialDamage)
     }
 
     private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
@@ -207,14 +219,14 @@ class BattleState private constructor(
         val deadUnit = potentialDamage.attackOrder.asSequence().mapNotNull { attackerTurn ->
             if (attackerTurn) {
                 attackerAttacked = true
-                if (singleAttack(attacker, defender, potentialDamage.attackerStat, potentialDamage.defenderStat)) {
+                if (singleAttack(potentialDamage.attackerInCombat, potentialDamage.defenderInCombat)) {
                     defender
                 } else {
                     null
                 }
             } else {
                 defenderAttacked = true
-                if (singleAttack(defender, attacker, potentialDamage.defenderStat, potentialDamage.attackerStat)) {
+                if (singleAttack(potentialDamage.defenderInCombat, potentialDamage.attackerInCombat)) {
                     attacker
                 } else {
                     null
@@ -252,53 +264,89 @@ class BattleState private constructor(
     }
 
     private fun singleAttack(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        attackerStat: Stat,
-        defenderStat: Stat
+        damageDealer: InCombatStatus,
+        damageReceiver: InCombatStatus
     ): Boolean {
-        val dead = defender.takeDamage(calculateDamage(attacker, defender, attackerStat, defenderStat))
+        val dead = damageReceiver.heroUnit.takeDamage(calculateDamage(damageDealer, damageReceiver))
         val attackerCooldownIncrease =
-            attacker.skillSet.cooldownBuff.asSequence().map { it.apply(this, attacker, defender, true) }.max() ?: 0
+            damageDealer.skills.cooldownBuff.asSequence().map {
+                it.apply(
+                    this,
+                    damageDealer,
+                    damageReceiver,
+                    true
+                )
+            }.max() ?: 0
         val attackerCooldownReduce =
-            defender.skillSet.cooldownDebuff.asSequence().map { it.apply(this, defender, attacker, false) }.max() ?: 0
+            damageReceiver.skills.cooldownDebuff.asSequence().map {
+                it.apply(
+                    this,
+                    damageReceiver,
+                    damageDealer,
+                    false
+                )
+            }.max() ?: 0
 
-        attacker.reduceCooldown(1 + attackerCooldownIncrease - attackerCooldownReduce)
+        damageDealer.heroUnit.reduceCooldown(1 + attackerCooldownIncrease - attackerCooldownReduce)
         if (!dead) {
             val defenderCooldownIncrease =
-                attacker.skillSet.cooldownBuff.asSequence().map { it.apply(this, defender, attacker, false) }.max() ?: 0
+                damageDealer.skills.cooldownBuff.asSequence().map {
+                    it.apply(
+                        this,
+                        damageReceiver,
+                        damageDealer,
+                        false
+                    )
+                }.max() ?: 0
             val defenderCooldownReduce =
-                defender.skillSet.cooldownDebuff.asSequence().map { it.apply(this, attacker, defender, true) }.max()
+                damageReceiver.skills.cooldownDebuff.asSequence().map {
+                    it.apply(
+                        this,
+                        damageDealer,
+                        damageReceiver,
+                        true
+                    )
+                }.max()
                     ?: 0
-            defender.reduceCooldown(1 + defenderCooldownIncrease - defenderCooldownReduce)
+            damageReceiver.heroUnit.reduceCooldown(1 + defenderCooldownIncrease - defenderCooldownReduce)
         } else {
-            locationMap.remove(defender.position)
-            if (defender.team == Team.PLAYER) {
+            locationMap.remove(damageReceiver.heroUnit.position)
+            val teamDied = damageReceiver.heroUnit.team
+            if (teamDied == Team.PLAYER) {
                 playerDied++
             } else {
                 enemyDied++
             }
-            if (unitsSeq(defender.team).none()) {
-                winningTeam = defender.team.foe
+            if (unitsSeq(teamDied).none()) {
+                winningTeam = teamDied.foe
             }
         }
         return dead
     }
 
     private fun createAttackOrder(
-        attacker: HeroUnit,
-        defender: HeroUnit,
+        attackerInCombat: InCombatStatus,
+        defenderInCombat: InCombatStatus,
         spdDiff: Int
     ): MutableList<Boolean> {
+        val attacker = attackerInCombat.heroUnit
+        val defender = defenderInCombat.heroUnit
+        val attackerSkillSet = attackerInCombat.skills
+        val defenderSkillSet = defenderInCombat.skills
+
         val rangeMatch = when {
             attacker.isEmptyHanded -> false
             attacker.weaponType.isRanged == defender.weaponType.isRanged -> true
-            else -> skillMethodAnyBoth(attacker, defender, SkillSet::counterIgnoreRange)
+            else -> {
+                defenderSkillSet.counterIgnoreRange.defenderSkillsSeq(attackerInCombat, defenderInCombat).any()
+            }
         }
 
         val canCounter = rangeMatch
 
-        val disablePriorityChange = skillMethodAnyBoth(attacker, defender, SkillSet::disablePriorityChange)
+        val disablePriorityChange =
+            attackerSkillSet.disablePriorityChange.attackerSkillsSeq(attackerInCombat, defenderInCombat).any() ||
+                    defenderSkillSet.disablePriorityChange.defenderSkillsSeq(attackerInCombat, defenderInCombat).any()
 
         val desperation: Boolean
         val vantage: Boolean
@@ -306,24 +354,24 @@ class BattleState private constructor(
             desperation = false
             vantage = false
         } else {
-            desperation = skillMethodAnyAttacker(attacker, defender, SkillSet::desperation)
-            vantage = skillMethodAnyDefender(attacker, defender, SkillSet::vantage)
+            desperation = attackerSkillSet.desperation.attackerSkillsSeq(attackerInCombat, defenderInCombat).any()
+            vantage = defenderSkillSet.vantage.defenderSkillsSeq(attackerInCombat, defenderInCombat).any()
         }
 
         val attackerFollowup = when (val guarantee =
-            skillMethodSum(attacker, defender, SkillSet::followUpSelf, SkillSet::followUpOpponent)) {
+            attackerSkillSet.followUp.attackerSkillsSeq(attackerInCombat, defenderInCombat).sum()) {
             0 -> spdDiff >= 5
             else -> guarantee > 0
         }
         val defenderFollowup = when (val guarantee =
-            skillMethodSum(attacker, defender, SkillSet::followUpOpponent, SkillSet::followUpSelf)) {
+            defenderSkillSet.followUp.defenderSkillsSeq(attackerInCombat, defenderInCombat).sum()) {
             0 -> spdDiff <= -5
             else -> guarantee > 0
         }
 
         val attackOrder = mutableListOf<Boolean>()
-        val attackerBrave = skillMethodAnyAttacker(attacker, defender, SkillSet::brave)
-        val defenderBrave = skillMethodAnyDefender(attacker, defender, SkillSet::brave)
+        val attackerBrave = attackerSkillSet.brave.attackerSkillsSeq(attackerInCombat, defenderInCombat).any()
+        val defenderBrave = defenderSkillSet.brave.defenderSkillsSeq(attackerInCombat, defenderInCombat).any()
         val addAttacker = {
             attackOrder.add(true)
             if (attackerBrave) {
@@ -332,7 +380,7 @@ class BattleState private constructor(
         }
         val addDefender = {
             attackOrder.add(false)
-            if(defenderBrave) {
+            if (defenderBrave) {
                 attackOrder.add(false)
             }
         }
@@ -377,23 +425,21 @@ class BattleState private constructor(
     }
 
     private fun calculateDamage(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        attackerStat: Stat,
-        defenderStat: Stat
+        damageDealer: InCombatStatus,
+        damageReceiver: InCombatStatus
     ): Int {
-        val targetRes = attacker.weaponType.targetRes
+        val targetRes = damageDealer.heroUnit.weaponType.targetRes
         val defenderDefRes = if (targetRes) {
-            defenderStat.res
+            damageReceiver.inCombatStat.res
         } else {
-            defenderStat.def
+            damageReceiver.inCombatStat.def
         }
-        val effAtk = if (isEffective(attacker, defender)) {
-            attackerStat.atk * 3 / 2
+        val effAtk = if (isEffective(damageDealer.heroUnit, damageReceiver.heroUnit)) {
+            damageDealer.inCombatStat.atk * 3 / 2
         } else {
-            attackerStat.atk
+            damageDealer.inCombatStat.atk
         }
-        val colorAdvantage = attacker.getColorAdvantage(defender)
+        val colorAdvantage = damageDealer.heroUnit.getColorAdvantage(damageReceiver.heroUnit)
         val atk = if (colorAdvantage != 0) {
             effAtk + effAtk * colorAdvantage / 100
         } else {
@@ -1108,66 +1154,15 @@ class BattleState private constructor(
         }
     }
 
-    private inline fun skillMethodAnyBoth(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        f: (SkillSet) -> List<CombatSkillMethod<Boolean>>
-    ) =
-        skillMethodAnyAttacker(attacker, defender, f) ||
-                skillMethodAnyDefender(attacker, defender, f)
+    private fun <T, U> List<CombatSkill<T, U>>.attackerSkillsSeq(
+        attacker: U,
+        defender: U
+    ) = asSequence().map { it.apply(this@BattleState, attacker, defender, true) }
 
-    private inline fun skillMethodAnyAttacker(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        f: (SkillSet) -> List<CombatSkillMethod<Boolean>>
-    ) = f(attacker.skillSet).any { it.apply(this, attacker, defender, true) }
-
-    private inline fun skillMethodAnyDefender(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        f: (SkillSet) -> List<CombatSkillMethod<Boolean>>
-    ) = f(defender.skillSet).any { it.apply(this, defender, attacker, false) }
-
-    private inline fun skillMethodApply(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        f: (SkillSet) -> List<CombatSkillMethod<Unit>>
-    ) {
-        f(attacker.skillSet).forEach { it.apply(this, attacker, defender, true) }
-        f(defender.skillSet).forEach { it.apply(this, defender, attacker, false) }
-    }
-
-    private inline fun skillMethodSum(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        f: (SkillSet) -> List<CombatSkillMethod<Int>>,
-        g: (SkillSet) -> List<CombatSkillMethod<Int>>
-    ) =
-        f(attacker.skillSet).sumBy { it.apply(this, attacker, defender, true) } +
-                g(defender.skillSet).sumBy { it.apply(this, defender, attacker, false) }
-
-    private inline fun skillMethodSumStat(
-        attacker: HeroUnit,
-        defender: HeroUnit,
-        f: (SkillSet) -> List<CombatSkillMethod<Stat>>,
-        g: (SkillSet) -> List<CombatSkillMethod<Stat>>
-    ) =
-        f(attacker.skillSet).asSequence().map {
-            it.apply(
-                this,
-                attacker,
-                defender,
-                true
-            )
-        }.ifEmpty { sequenceOf(Stat.ZERO) }.reduce(Stat::plus) +
-                g(defender.skillSet).asSequence().map {
-                    it.apply(
-                        this,
-                        defender,
-                        attacker,
-                        false
-                    )
-                }.ifEmpty { sequenceOf(Stat.ZERO) }.reduce(Stat::plus)
+    private fun <T, U> List<CombatSkill<T, U>>.defenderSkillsSeq(
+        attacker: U,
+        defender: U
+    ) = asSequence().map { it.apply(this@BattleState, defender, attacker, false) }
 
     fun getAllPlayerMovements(): Sequence<UnitAction> {
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->

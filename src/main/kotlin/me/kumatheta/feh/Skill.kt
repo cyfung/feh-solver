@@ -17,38 +17,40 @@ interface Skill {
     val teleport: MapSkillMethod<Sequence<Position>>?
         get() = null
 
-    val counterIgnoreRange: CombatSkillMethod<Boolean>?
+    val counterIgnoreRange: InCombatSkill<Boolean>?
         get() = null
-    val brave: CombatSkillMethod<Boolean>?
+    val brave: InCombatSkill<Boolean>?
         get() = null
-    val disablePriorityChange: CombatSkillMethod<Boolean>?
+    val disablePriorityChange: InCombatSkill<Boolean>?
         get() = null
-    val desperation: CombatSkillMethod<Boolean>?
+    val desperation: InCombatSkill<Boolean>?
         get() = null
-    val vantage: CombatSkillMethod<Boolean>?
+    val vantage: InCombatSkill<Boolean>?
         get() = null
-    val followUpSelf: CombatSkillMethod<Int>?
+    val followUp: InCombatSkill<Int>?
         get() = null
-    val followUpOpponent: CombatSkillMethod<Int>?
+    val cooldownBuff: InCombatSkill<Int>?
         get() = null
-    val buff: CombatSkillMethod<Stat>?
+    val cooldownDebuff: InCombatSkill<Int>?
         get() = null
-    val debuff: CombatSkillMethod<Stat>?
+    val postCombat: CombatEndSkill?
         get() = null
-    val cooldownBuff: CombatSkillMethod<Int>?
+
+    val foeEffect: PreCombatSkill<Skill>?
         get() = null
-    val cooldownDebuff: CombatSkillMethod<Int>?
+    val inCombatStat: PreCombatSkill<Stat>?
         get() = null
-    val postCombat: CombatEndSkillMethod?
+
+    val supportInCombatBuff: InCombatSkill<Skill>?
         get() = null
-    val supportInCombatBuff: CombatSkillMethod<Skill>?
-        get() = null
-    val supportInCombatDebuff: CombatSkillMethod<Skill>?
+    val supportInCombatDebuff: InCombatSkill<Skill>?
         get() = null
 }
 
 
-class SkillSet(skills: List<Skill>) {
+class SkillSet(skills: Sequence<Skill>) {
+    constructor(skills: List<Skill>) : this(skills.asSequence())
+
     val skills = skills.toList()
 
     val startOfTurn = this.skills.mapNotNull(Skill::startOfTurn)
@@ -60,13 +62,13 @@ class SkillSet(skills: List<Skill>) {
     val disablePriorityChange = this.skills.mapNotNull(Skill::disablePriorityChange)
     val desperation = this.skills.mapNotNull(Skill::desperation)
     val vantage = this.skills.mapNotNull(Skill::vantage)
-    val followUpSelf = this.skills.mapNotNull(Skill::followUpSelf)
-    val followUpOpponent = this.skills.mapNotNull(Skill::followUpOpponent)
-    val buffSkill = this.skills.mapNotNull(Skill::buff)
-    val debuffSkill = this.skills.mapNotNull(Skill::debuff)
+    val followUp = this.skills.mapNotNull(Skill::followUp)
     val cooldownBuff = this.skills.mapNotNull(Skill::cooldownBuff)
     val cooldownDebuff = this.skills.mapNotNull(Skill::cooldownDebuff)
     val postCombat = this.skills.mapNotNull(Skill::postCombat)
+
+    val foeEffect = this.skills.mapNotNull(Skill::foeEffect)
+    val inCombatStat = this.skills.mapNotNull(Skill::inCombatStat)
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill {
@@ -87,11 +89,17 @@ abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 
 interface Passive : Skill
 
-interface CombatSkillMethod<T> {
-    fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): T
+class InCombatStatus(val heroUnit: HeroUnit, val inCombatStat: Stat, val skills: SkillSet)
+
+interface CombatSkill<T, U> {
+    fun apply(battleState: BattleState, self: U, foe: U, attack: Boolean): T
 }
 
-interface CombatEndSkillMethod {
+interface PreCombatSkill<T> : CombatSkill<T, HeroUnit>
+
+interface InCombatSkill<T>: CombatSkill<T, InCombatStatus>
+
+interface CombatEndSkill {
     fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean, attacked: Boolean)
 }
 
@@ -99,10 +107,10 @@ interface MapSkillMethod<T> {
     fun apply(battleState: BattleState, self: HeroUnit): T
 }
 
-abstract class ConstantCombatSkillMethod<T>(private val value: T) : CombatSkillMethod<T> {
-    final override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): T {
+abstract class ConstantCombatSkill<T>(private val value: T) : InCombatSkill<T> {
+    final override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, attack: Boolean): T {
         return value
     }
 }
 
-object CombatSkillMethodTrue : ConstantCombatSkillMethod<Boolean>(true)
+object CombatSkillTrue : ConstantCombatSkill<Boolean>(true)
