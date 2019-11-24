@@ -179,13 +179,13 @@ class BattleState private constructor(
             defender.skillSet.skills.asSequence() + attacker.skillSet.foeEffect.attackerSkillsSeq(
                 attacker,
                 defender
-            )
+            ).filterNotNull()
         )
         val defenderSkills = InCombatSkillSet(
             defender.skillSet.skills.asSequence() + attacker.skillSet.foeEffect.attackerSkillsSeq(
                 attacker,
                 defender
-            )
+            ).filterNotNull()
         )
         val attackerStat = attacker.stat + attacker.buff + attacker.debuff +
                 attackerSkills.inCombatStat.mapAttackerSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
