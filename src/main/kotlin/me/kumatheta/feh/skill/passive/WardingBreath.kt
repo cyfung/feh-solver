@@ -5,12 +5,12 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.InCombatStatus
 import me.kumatheta.feh.Passive
-import me.kumatheta.feh.PreCombatSkill
+import me.kumatheta.feh.CombatStartSkill
 import me.kumatheta.feh.Stat
 
 object WardingBreath : Passive {
-    override val inCombatStat: PreCombatSkill<Stat>?
-        get() = object : PreCombatSkill<Stat> {
+    override val inCombatStat: CombatStartSkill<Stat>?
+        get() = object : CombatStartSkill<Stat> {
             override fun apply(
                 battleState: BattleState,
                 self: HeroUnit,

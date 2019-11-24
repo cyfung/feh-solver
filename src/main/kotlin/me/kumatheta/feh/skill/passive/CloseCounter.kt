@@ -4,5 +4,5 @@ import me.kumatheta.feh.*
 
 object CloseCounter : Passive {
     override val counterIgnoreRange: InCombatSkill<Boolean>?
-        get() = CombatSkillTrue
+        get() = inCombatSkillTrue
 }

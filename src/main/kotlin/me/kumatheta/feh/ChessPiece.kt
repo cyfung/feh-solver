@@ -59,6 +59,8 @@ class HeroUnit(
     val isDead
         get() = currentHp == 0
 
+    val combatSkillData = mutableMapOf<Skill, Any>()
+
     fun isEffective(foe: HeroUnit): Boolean {
         return heroModel.weapon.isEffective(foe)
     }
@@ -199,6 +201,7 @@ class HeroUnit(
             takeNonLethalDamage(hp)
         }
         endOfCombatEffects = EndOfCombatEffect()
+        combatSkillData.clear()
     }
 
     fun hpThreshold(percentage: Int): Int {

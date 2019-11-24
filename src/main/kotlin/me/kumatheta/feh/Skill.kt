@@ -33,12 +33,12 @@ interface Skill {
         get() = null
     val cooldownDebuff: InCombatSkill<Int>?
         get() = null
-    val postCombat: CombatEndSkill?
+    val combatEnd: CombatEndSkill?
         get() = null
 
-    val foeEffect: PreCombatSkill<Skill>?
+    val foeEffect: CombatStartSkill<Skill?>?
         get() = null
-    val inCombatStat: PreCombatSkill<Stat>?
+    val inCombatStat: CombatStartSkill<Stat>?
         get() = null
 
     val supportInCombatBuff: InCombatSkill<Skill>?
@@ -64,11 +64,11 @@ class SkillSet(skills: Sequence<Skill>) {
 class InCombatSkillSet(skills: Sequence<Skill>) {
     private val skills = skills.toList()
 
-    val inCombatStat: Sequence<PreCombatSkill<Stat>>
+    val inCombatStat: Sequence<CombatStartSkill<Stat>>
         get() = skills.asSequence().mapNotNull(Skill::inCombatStat)
 
     val postCombat: Sequence<CombatEndSkill>
-        get() = skills.asSequence().mapNotNull(Skill::postCombat)
+        get() = skills.asSequence().mapNotNull(Skill::combatEnd)
 
     val counterIgnoreRange: Sequence<InCombatSkill<Boolean>>
         get() = skills.asSequence().mapNotNull(Skill::counterIgnoreRange)
@@ -112,7 +112,7 @@ interface CombatSkill<T, U> {
     fun apply(battleState: BattleState, self: U, foe: U, attack: Boolean): T
 }
 
-interface PreCombatSkill<T> : CombatSkill<T, HeroUnit>
+interface CombatStartSkill<T> : CombatSkill<T, HeroUnit>
 
 interface InCombatSkill<T>: CombatSkill<T, InCombatStatus>
 
@@ -124,10 +124,17 @@ interface MapSkillMethod<T> {
     fun apply(battleState: BattleState, self: HeroUnit): T
 }
 
-abstract class ConstantCombatSkill<T>(private val value: T) : InCombatSkill<T> {
-    final override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, attack: Boolean): T {
+
+class ConstantCombatStartSkill<T>(private val value: T) : CombatStartSkill<T> {
+    override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean): T {
         return value
     }
 }
 
-object CombatSkillTrue : ConstantCombatSkill<Boolean>(true)
+class ConstantInCombatSkill<T>(private val value: T) : InCombatSkill<T> {
+    override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, attack: Boolean): T {
+        return value
+    }
+}
+
+val inCombatSkillTrue = ConstantInCombatSkill(true)

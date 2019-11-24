@@ -3,7 +3,7 @@ package me.kumatheta.feh.skill.weapon
 import me.kumatheta.feh.*
 
 object Pain : BasicWeapon(Staff, 3) {
-    override val postCombat: CombatEndSkill? = object : CombatEndSkill {
+    override val combatEnd: CombatEndSkill? = object : CombatEndSkill {
         override fun apply(
             battleState: BattleState,
             self: HeroUnit,
