@@ -57,18 +57,35 @@ class SkillSet(skills: Sequence<Skill>) {
     val pass = this.skills.mapNotNull(Skill::pass)
     val teleport = this.skills.mapNotNull(Skill::teleport)
 
-    val counterIgnoreRange = this.skills.mapNotNull(Skill::counterIgnoreRange)
-    val brave = this.skills.mapNotNull(Skill::brave)
-    val disablePriorityChange = this.skills.mapNotNull(Skill::disablePriorityChange)
-    val desperation = this.skills.mapNotNull(Skill::desperation)
-    val vantage = this.skills.mapNotNull(Skill::vantage)
-    val followUp = this.skills.mapNotNull(Skill::followUp)
-    val cooldownBuff = this.skills.mapNotNull(Skill::cooldownBuff)
-    val cooldownDebuff = this.skills.mapNotNull(Skill::cooldownDebuff)
-    val postCombat = this.skills.mapNotNull(Skill::postCombat)
-
     val foeEffect = this.skills.mapNotNull(Skill::foeEffect)
-    val inCombatStat = this.skills.mapNotNull(Skill::inCombatStat)
+
+}
+
+class InCombatSkillSet(skills: Sequence<Skill>) {
+    private val skills = skills.toList()
+
+    val inCombatStat: Sequence<PreCombatSkill<Stat>>
+        get() = skills.asSequence().mapNotNull(Skill::inCombatStat)
+
+    val postCombat: Sequence<CombatEndSkill>
+        get() = skills.asSequence().mapNotNull(Skill::postCombat)
+
+    val counterIgnoreRange: Sequence<InCombatSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::counterIgnoreRange)
+    val brave: Sequence<InCombatSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::brave)
+    val disablePriorityChange: Sequence<InCombatSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::disablePriorityChange)
+    val desperation: Sequence<InCombatSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::desperation)
+    val vantage: Sequence<InCombatSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::vantage)
+    val followUp: Sequence<InCombatSkill<Int>>
+        get() = skills.asSequence().mapNotNull(Skill::followUp)
+    val cooldownBuff: Sequence<InCombatSkill<Int>>
+        get() = skills.asSequence().mapNotNull(Skill::cooldownBuff)
+    val cooldownDebuff: Sequence<InCombatSkill<Int>>
+        get() = skills.asSequence().mapNotNull(Skill::cooldownDebuff)
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill {
@@ -89,7 +106,7 @@ abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 
 interface Passive : Skill
 
-class InCombatStatus(val heroUnit: HeroUnit, val inCombatStat: Stat, val skills: SkillSet)
+class InCombatStatus(val heroUnit: HeroUnit, val inCombatStat: Stat, val skills: InCombatSkillSet)
 
 interface CombatSkill<T, U> {
     fun apply(battleState: BattleState, self: U, foe: U, attack: Boolean): T
