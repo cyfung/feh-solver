@@ -13,14 +13,14 @@ object WardingBreath : Passive {
     override val inCombatStat: CombatStartSkill<Stat>?
         get() = BlowOrStance(Stat.ZERO, Stat(res = 4))
 
-    override val cooldownBuff: InCombatSkill<CooldownChange>?
-        get() = object : InCombatSkill<CooldownChange> {
+    override val cooldownBuff: InCombatSkill<CooldownChange<Int>>?
+        get() = object : InCombatSkill<CooldownChange<Int>> {
             override fun apply(
                 battleState: BattleState,
                 self: InCombatStatus,
                 foe: InCombatStatus,
                 initAttack: Boolean
-            ): CooldownChange {
+            ): CooldownChange<Int> {
                 return if (initAttack) {
                     CooldownChange(0, 0)
                 } else {

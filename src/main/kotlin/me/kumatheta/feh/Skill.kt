@@ -29,8 +29,6 @@ interface Skill {
         get() = null
     val followUp: InCombatSkill<Int>?
         get() = null
-
-
     val cooldownBuff: InCombatSkill<CooldownChange<Int>>?
         get() = null
     val cooldownDebuff: InCombatSkill<CooldownChange<Int>>?
@@ -42,6 +40,12 @@ interface Skill {
         get() = null
     val inCombatStat: CombatStartSkill<Stat>?
         get() = null
+
+    val adaptiveDamage: CombatStartSkill<Boolean>?
+        get() = null
+    val denyAdaptiveDamage: CombatStartSkill<Boolean>?
+        get() = null
+
 
     val supportInCombatBuff: InCombatSkill<Skill>?
         get() = null
@@ -69,6 +73,10 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
 
     val inCombatStat: Sequence<CombatStartSkill<Stat>>
         get() = skills.asSequence().mapNotNull(Skill::inCombatStat)
+    val adaptiveDamage: Sequence<CombatStartSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::adaptiveDamage)
+    val denyAdaptiveDamage: Sequence<CombatStartSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::denyAdaptiveDamage)
 
     val postCombat: Sequence<CombatEndSkill>
         get() = skills.asSequence().mapNotNull(Skill::combatEnd)
@@ -113,7 +121,12 @@ abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 
 interface Passive : Skill
 
-class InCombatStatus(val heroUnit: HeroUnit, val inCombatStat: Stat, val skills: InCombatSkillSet)
+class InCombatStatus(
+    val heroUnit: HeroUnit,
+    val inCombatStat: Stat,
+    val skills: InCombatSkillSet,
+    val adaptiveDamage: Boolean
+)
 
 interface CombatSkill<T, U> {
     fun apply(battleState: BattleState, self: U, foe: U, initAttack: Boolean): T

@@ -10,6 +10,7 @@ import me.kumatheta.feh.util.moveTargetOrder
 import me.kumatheta.feh.util.surroundings
 import me.kumatheta.feh.util.unitMoveOrder
 import kotlin.math.max
+import kotlin.math.min
 
 private val protectiveAssistPositionOrder = compareBy<Triple<HeroUnit, MoveStep, Int>>({
     it.third
@@ -188,6 +189,18 @@ class BattleState private constructor(
                 defender
             ).filterNotNull()
         )
+        val attackerAdaptive =
+            if (defenderSkills.denyAdaptiveDamage.mapDefenderSkills(attacker, defender).any { it }) {
+                false
+            } else {
+                attackerSkills.adaptiveDamage.mapAttackerSkills(attacker, defender).any { it }
+            }
+        val defenderAdaptive =
+            if (attackerSkills.denyAdaptiveDamage.mapAttackerSkills(attacker, defender).any { it }) {
+                false
+            } else {
+                defenderSkills.adaptiveDamage.mapDefenderSkills(attacker, defender).any { it }
+            }
         val attackerStat = attacker.stat + attacker.buff + attacker.debuff +
                 attackerSkills.inCombatStat.mapAttackerSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
                     acc + stat
@@ -199,8 +212,8 @@ class BattleState private constructor(
 
         val spdDiff = attackerStat.spd - defenderStat.spd
 
-        val attackerInCombat = InCombatStatus(attacker, attackerStat, attackerSkills)
-        val defenderInCombat = InCombatStatus(attacker, defenderStat, defenderSkills)
+        val attackerInCombat = InCombatStatus(attacker, attackerStat, attackerSkills, attackerAdaptive)
+        val defenderInCombat = InCombatStatus(attacker, defenderStat, defenderSkills, defenderAdaptive)
 
         val attackOrder = createAttackOrder(attackerInCombat, attackerInCombat, spdDiff)
 
@@ -237,7 +250,7 @@ class BattleState private constructor(
                 Pair(
                     1 + attackerCooldownIncrease.unitAttack - defenderGuard.foeAttack,
                     1 + defenderCooldownIncrease.foeAttack - attackerGuard.unitAttack
-                    ),
+                ),
                 Pair(
                     1 + defenderCooldownIncrease.unitAttack - attackerGuard.foeAttack,
                     1 + attackerCooldownIncrease.foeAttack - defenderGuard.unitAttack
@@ -257,14 +270,24 @@ class BattleState private constructor(
         val deadUnit = potentialDamage.attackOrder.asSequence().mapNotNull { attackerTurn ->
             if (attackerTurn) {
                 attackerAttacked = true
-                if (singleAttack(potentialDamage.attackerInCombat, potentialDamage.defenderInCombat, cooldownAmount.unitAttack)) {
+                if (singleAttack(
+                        potentialDamage.attackerInCombat,
+                        potentialDamage.defenderInCombat,
+                        cooldownAmount.unitAttack
+                    )
+                ) {
                     defender
                 } else {
                     null
                 }
             } else {
                 defenderAttacked = true
-                if (singleAttack(potentialDamage.defenderInCombat, potentialDamage.attackerInCombat, cooldownAmount.foeAttack)) {
+                if (singleAttack(
+                        potentialDamage.defenderInCombat,
+                        potentialDamage.attackerInCombat,
+                        cooldownAmount.foeAttack
+                    )
+                ) {
                     attacker
                 } else {
                     null
@@ -371,15 +394,21 @@ class BattleState private constructor(
             attacker.isEmptyHanded -> false
             attacker.weaponType.isRanged == defender.weaponType.isRanged -> true
             else -> {
-                defenderSkillSet.counterIgnoreRange.mapDefenderSkills(attackerInCombat, defenderInCombat).any()
+                defenderSkillSet.counterIgnoreRange.mapDefenderSkills(attackerInCombat, defenderInCombat).any { it }
             }
         }
 
         val canCounter = rangeMatch
 
         val disablePriorityChange =
-            attackerSkillSet.disablePriorityChange.mapAttackerSkills(attackerInCombat, defenderInCombat).any() ||
-                    defenderSkillSet.disablePriorityChange.mapDefenderSkills(attackerInCombat, defenderInCombat).any()
+            attackerSkillSet.disablePriorityChange.mapAttackerSkills(
+                attackerInCombat,
+                defenderInCombat
+            ).any { it } ||
+                    defenderSkillSet.disablePriorityChange.mapDefenderSkills(
+                        attackerInCombat,
+                        defenderInCombat
+                    ).any { it }
 
         val desperation: Boolean
         val vantage: Boolean
@@ -387,8 +416,8 @@ class BattleState private constructor(
             desperation = false
             vantage = false
         } else {
-            desperation = attackerSkillSet.desperation.mapAttackerSkills(attackerInCombat, defenderInCombat).any()
-            vantage = defenderSkillSet.vantage.mapDefenderSkills(attackerInCombat, defenderInCombat).any()
+            desperation = attackerSkillSet.desperation.mapAttackerSkills(attackerInCombat, defenderInCombat).any { it }
+            vantage = defenderSkillSet.vantage.mapDefenderSkills(attackerInCombat, defenderInCombat).any { it }
         }
 
         val attackerFollowup = when (val guarantee =
@@ -403,8 +432,8 @@ class BattleState private constructor(
         }
 
         val attackOrder = mutableListOf<Boolean>()
-        val attackerBrave = attackerSkillSet.brave.mapAttackerSkills(attackerInCombat, defenderInCombat).any()
-        val defenderBrave = defenderSkillSet.brave.mapDefenderSkills(attackerInCombat, defenderInCombat).any()
+        val attackerBrave = attackerSkillSet.brave.mapAttackerSkills(attackerInCombat, defenderInCombat).any { it }
+        val defenderBrave = defenderSkillSet.brave.mapDefenderSkills(attackerInCombat, defenderInCombat).any { it }
         val addAttacker = {
             attackOrder.add(true)
             if (attackerBrave) {
@@ -462,11 +491,15 @@ class BattleState private constructor(
         damageReceiver: InCombatStatus,
         damagingSpecial: DamagingSpecial?
     ): Int {
-        val targetRes = damageDealer.heroUnit.weaponType.targetRes
-        val defenderDefRes = if (targetRes) {
-            damageReceiver.inCombatStat.res
+        val defenderDefRes = if (damageDealer.adaptiveDamage) {
+            min(damageReceiver.inCombatStat.res, damageReceiver.inCombatStat.def)
         } else {
-            damageReceiver.inCombatStat.def
+            val targetRes = damageDealer.heroUnit.weaponType.targetRes
+            if (targetRes) {
+                damageReceiver.inCombatStat.res
+            } else {
+                damageReceiver.inCombatStat.def
+            }
         }
         val effAtk = if (isEffective(damageDealer.heroUnit, damageReceiver.heroUnit)) {
             damageDealer.inCombatStat.atk * 3 / 2
