@@ -46,11 +46,16 @@ interface Skill {
     val denyAdaptiveDamage: CombatStartSkill<Boolean>?
         get() = null
 
+    val staffAsNormal: CombatStartSkill<Boolean>?
+        get() = null
+    val denyStaffAsNormal: CombatStartSkill<Boolean>?
+        get() = null
 
     val supportInCombatBuff: InCombatSkill<Skill>?
         get() = null
     val supportInCombatDebuff: InCombatSkill<Skill>?
         get() = null
+
 }
 
 class CooldownChange<T>(val unitAttack: T, val foeAttack: T)
@@ -77,6 +82,11 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
         get() = skills.asSequence().mapNotNull(Skill::adaptiveDamage)
     val denyAdaptiveDamage: Sequence<CombatStartSkill<Boolean>>
         get() = skills.asSequence().mapNotNull(Skill::denyAdaptiveDamage)
+    val staffAsNormal: Sequence<CombatStartSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::staffAsNormal)
+    val denyStaffAsNormal: Sequence<CombatStartSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::denyStaffAsNormal)
+
 
     val postCombat: Sequence<CombatEndSkill>
         get() = skills.asSequence().mapNotNull(Skill::combatEnd)
@@ -125,7 +135,8 @@ class InCombatStatus(
     val heroUnit: HeroUnit,
     val inCombatStat: Stat,
     val skills: InCombatSkillSet,
-    val adaptiveDamage: Boolean
+    val adaptiveDamage: Boolean,
+    val reducedStaffDamage: Boolean
 )
 
 interface CombatSkill<T, U> {

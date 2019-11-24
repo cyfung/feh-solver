@@ -139,7 +139,7 @@ fun main() {
 
     val state =
         BattleState(BasicBattleMap(positionMap, spawnMap, playerMap))//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
-    val phraseLimit = 7
+    val phraseLimit = 10
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
     repeat(10) {

@@ -189,6 +189,7 @@ class BattleState private constructor(
                 defender
             ).filterNotNull()
         )
+        // check adaptive
         val attackerAdaptive =
             if (defenderSkills.denyAdaptiveDamage.mapDefenderSkills(attacker, defender).any { it }) {
                 false
@@ -201,6 +202,26 @@ class BattleState private constructor(
             } else {
                 defenderSkills.adaptiveDamage.mapDefenderSkills(attacker, defender).any { it }
             }
+        // check staff damage
+        val attackerReducedStaffDamage = if (attacker.weaponType == Staff) {
+            if (defenderSkills.denyStaffAsNormal.mapDefenderSkills(attacker, defender).any { it }) {
+                true
+            } else {
+                !attackerSkills.staffAsNormal.mapAttackerSkills(attacker, defender).any { it }
+            }
+        } else {
+            true
+        }
+        val defenderReducedStaffDamage = if (defender.weaponType == Staff) {
+            if (attackerSkills.denyStaffAsNormal.mapAttackerSkills(attacker, defender).any { it }) {
+                true
+            } else {
+                !defenderSkills.staffAsNormal.mapDefenderSkills(attacker, defender).any { it }
+            }
+        } else {
+            true
+        }
+
         val attackerStat = attacker.stat + attacker.buff + attacker.debuff +
                 attackerSkills.inCombatStat.mapAttackerSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
                     acc + stat
@@ -212,8 +233,20 @@ class BattleState private constructor(
 
         val spdDiff = attackerStat.spd - defenderStat.spd
 
-        val attackerInCombat = InCombatStatus(attacker, attackerStat, attackerSkills, attackerAdaptive)
-        val defenderInCombat = InCombatStatus(attacker, defenderStat, defenderSkills, defenderAdaptive)
+        val attackerInCombat = InCombatStatus(
+            heroUnit = attacker,
+            inCombatStat = attackerStat,
+            skills = attackerSkills,
+            adaptiveDamage = attackerAdaptive,
+            reducedStaffDamage = attackerReducedStaffDamage
+        )
+        val defenderInCombat = InCombatStatus(
+            heroUnit = defender,
+            inCombatStat = defenderStat,
+            skills = defenderSkills,
+            adaptiveDamage = defenderAdaptive,
+            reducedStaffDamage = defenderReducedStaffDamage
+        )
 
         val attackOrder = createAttackOrder(attackerInCombat, attackerInCombat, spdDiff)
 
@@ -515,7 +548,12 @@ class BattleState private constructor(
 
         val bonusDamage = damagingSpecial?.getDamage(this, damageDealer, damageReceiver) ?: 0
 
-        return max(atk + bonusDamage - defenderDefRes, 0)
+        val damage = max(atk + bonusDamage - defenderDefRes, 0)
+        return if (damageDealer.reducedStaffDamage) {
+            damage / 2
+        } else {
+            damage
+        }
     }
 
     private fun isEffective(attacker: HeroUnit, defender: HeroUnit): Boolean {
