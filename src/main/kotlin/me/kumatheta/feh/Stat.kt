@@ -3,7 +3,7 @@ package me.kumatheta.feh
 import kotlin.math.max
 import kotlin.math.min
 
-class Stat(
+data class Stat(
     val hp: Int = 0,
     val atk: Int = 0,
     val spd: Int = 0,

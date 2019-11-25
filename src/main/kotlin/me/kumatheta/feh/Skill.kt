@@ -42,7 +42,8 @@ interface Skill {
         get() = null
     val inCombatStat: CombatStartSkill<Stat>?
         get() = null
-
+    val additionalInCombatStat: InCombatSkill<Stat>?
+        get() = null
 
     val raven: InCombatSkill<Boolean>?
         get() = null
@@ -82,6 +83,10 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
 
     val inCombatStat: Sequence<CombatStartSkill<Stat>>
         get() = skills.asSequence().mapNotNull(Skill::inCombatStat)
+
+
+    val additionalInCombatStat: Sequence<InCombatSkill<Stat>>
+        get() = skills.asSequence().mapNotNull(Skill::additionalInCombatStat)
     val adaptiveDamage: Sequence<InCombatSkill<Boolean>>
         get() = skills.asSequence().mapNotNull(Skill::adaptiveDamage)
     val denyAdaptiveDamage: Sequence<InCombatSkill<Boolean>>
@@ -136,7 +141,7 @@ abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 }
 
 abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
-    abstract fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat): Int
+    abstract fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, defenderDefRes: Int): Int
 }
 
 interface Passive : Skill
