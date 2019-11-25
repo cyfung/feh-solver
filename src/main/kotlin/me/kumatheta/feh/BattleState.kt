@@ -1356,6 +1356,8 @@ class BattleState private constructor(
         calculateDistance(heroUnit, distanceReceiver)
         heroUnit.skillSet.teleport.asSequence().flatMap {
             it.apply(this, heroUnit)
+        }.filter {
+            locationMap[it] == null && battleMap.getTerrain(it).moveCost(heroUnit.moveType) != null
         }.map {
             MoveStep(it, battleMap.getTerrain(it), true, 0)
         }.forEach {

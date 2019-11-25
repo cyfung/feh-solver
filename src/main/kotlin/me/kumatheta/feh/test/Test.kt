@@ -24,8 +24,10 @@ fun main() {
 //        (it.key - 4) to it.value.heroModel
 //    }.toMap()
 
+
+    val heroModel = playerMap[1]?: throw IllegalStateException()
     val state =
-        BattleState(BasicBattleMap(positionMap, spawnMap, playerMap))//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
+        BattleState(BasicBattleMap(positionMap, spawnMap, (1..4).associateWith { heroModel }))//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
     val phraseLimit = 10
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
