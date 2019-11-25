@@ -121,6 +121,12 @@ class BattleState private constructor(
                 val assist = heroUnit.assist ?: throw IllegalStateException()
                 val target = getUnit(unitAction.assistTargetId)
                 assist.apply(heroUnit, target, this)
+                heroUnit.skillSet.assistRelated.forEach {
+                    it.apply(this, heroUnit, target, assist, true)
+                }
+                target.skillSet.assistRelated.forEach {
+                    it.apply(this, target, heroUnit, assist, false)
+                }
                 heroUnit.endOfTurn()
                 null
             }

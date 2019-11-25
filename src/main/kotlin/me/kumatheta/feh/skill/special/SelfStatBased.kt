@@ -15,3 +15,9 @@ object Bonfire: DamagingSpecial(3) {
         return self.inCombatStat.def / 2
     }
 }
+
+object DraconicAura: DamagingSpecial(3) {
+    override fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, defenderDefRes: Int): Int {
+        return self.inCombatStat.atk * 3 / 10
+    }
+}

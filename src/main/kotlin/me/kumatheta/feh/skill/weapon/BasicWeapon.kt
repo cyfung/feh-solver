@@ -22,8 +22,10 @@ object SteelBow : BasicWeapon(BowC, 6)
 
 object Assault : BasicWeapon(Staff, 10)
 
+object SlayingBowB : SlayingWeapon(BowB, 14)
+
 abstract class SlayingWeapon(weaponType: WeaponType, might: Int) : BasicWeapon(weaponType, might) {
     override val coolDownCountAdj: Int = -1
 }
 
-object SlayingBowB : SlayingWeapon(BowB, 14)
+object ThoronPlus : BasicWeapon(MagicB, 13)

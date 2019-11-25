@@ -69,11 +69,13 @@ interface Skill {
     val denyStaffAsNormal: InCombatSkill<Boolean>?
         get() = null
 
-    val supportInCombatBuff: CombatSupportSkillMethod<Skill?>?
-        get() = null
-    val supportInCombatDebuff: CombatSupportSkillMethod<Skill?>?
+    val assistRelated: AssistRelated?
         get() = null
 
+    val supportInCombatBuff: MapSkillWithTarget<Skill?>?
+        get() = null
+    val supportInCombatDebuff: MapSkillWithTarget<Skill?>?
+        get() = null
 }
 
 class CooldownChange<T>(val unitAttack: T, val foeAttack: T)
@@ -91,6 +93,8 @@ class SkillSet(skills: Sequence<Skill>) {
 
     val supportInCombatBuff = this.skills.mapNotNull(Skill::supportInCombatBuff)
     val supportInCombatDebuff = this.skills.mapNotNull(Skill::supportInCombatDebuff)
+
+    val assistRelated = this.skills.mapNotNull(Skill::assistRelated)
 
     fun <T> groupAsSet(f: (Skill) -> Set<T>?): Set<T> {
         return skills.asSequence().mapNotNull(f).flatMap { it.asSequence() }.toSet()
@@ -201,8 +205,12 @@ interface MapSkillMethod<T> {
     fun apply(battleState: BattleState, self: HeroUnit): T
 }
 
-interface CombatSupportSkillMethod<T> {
+interface MapSkillWithTarget<T> {
     fun apply(battleState: BattleState, self: HeroUnit, target: HeroUnit): T
+}
+
+interface AssistRelated {
+    fun apply(battleState: BattleState, self: HeroUnit, ally: HeroUnit, assist: Assist, useAssist: Boolean)
 }
 
 class ConstantCombatStartSkill<T>(private val value: T) : CombatStartSkill<T> {

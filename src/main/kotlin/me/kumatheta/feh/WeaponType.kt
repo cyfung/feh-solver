@@ -28,4 +28,8 @@ object BowC: Bow(Color.COLORLESS)
 object BowB: Bow(Color.BLUE)
 
 object MagicR : Magic(Color.RED)
+object MagicB : Magic(Color.BLUE)
+object MagicG : Magic(Color.GREEN)
+object MagicC : Magic(Color.COLORLESS)
+
 
