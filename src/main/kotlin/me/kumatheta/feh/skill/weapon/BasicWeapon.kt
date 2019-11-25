@@ -8,6 +8,9 @@ object SilverLance : BasicWeapon(Lance, 11)
 
 object IronSword : BasicWeapon(Sword, 6)
 object SilverSword : BasicWeapon(Sword, 11)
+object ArmorsmasherPlus : BasicWeapon(Sword, 14) {
+    override val effectiveAgainstMoveType: Set<MoveType>? = setOf(MoveType.ARMORED)
+}
 
 object IronAxe : BasicWeapon(Axe, 6)
 object SilverAxe : BasicWeapon(Axe, 11)
@@ -15,7 +18,7 @@ object SlayingHammerPlus : BasicWeapon(Axe, 14) {
     override val effectiveAgainstMoveType: Set<MoveType>? = setOf(MoveType.ARMORED)
 }
 
-object SteelBow : BasicWeapon(Bow(Color.COLORLESS), 6)
+object SteelBow : BasicWeapon(BowC, 6)
 
 object Assault : BasicWeapon(Staff, 10)
 
@@ -23,4 +26,4 @@ abstract class SlayingWeapon(weaponType: WeaponType, might: Int) : BasicWeapon(w
     override val coolDownCountAdj: Int = -1
 }
 
-object SlayingBowB : SlayingWeapon(Bow(Color.BLUE), 14)
+object SlayingBowB : SlayingWeapon(BowB, 14)

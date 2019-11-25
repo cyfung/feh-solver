@@ -15,6 +15,7 @@ data class Stat(
 
     companion object {
         val ZERO = Stat()
+        val ONES = Stat(1, 1, 1, 1, 1)
     }
 
     operator fun plus(o: Stat): Stat {
@@ -47,6 +48,19 @@ data class Stat(
             spd = -spd,
             def = -def,
             res = -res
+        )
+    }
+
+    operator fun times(stat: Stat): Stat {
+        if (this == ONES) {
+            return stat
+        }
+        return Stat(
+            hp = hp * stat.hp,
+            atk = atk * stat.atk,
+            spd = spd * stat.spd,
+            def = def * stat.def,
+            res = res * stat.res
         )
     }
 }

@@ -51,6 +51,12 @@ class HeroUnit(
         } else {
             buff
         }
+    val bonusAndPenalty: Pair<Stat, Stat>
+        get() = if (withPanic) {
+            Pair(Stat.ZERO, -buff + debuff)
+        } else {
+            Pair(buff, debuff)
+        }
 
     var currentHp = stat.hp
         private set
@@ -111,15 +117,15 @@ class HeroUnit(
         }
     }
 
-    fun takeDamage(damage: Int): Boolean {
+    fun takeDamage(damage: Int): Int {
         check(damage >= 0)
-        if (damage == 0) return false
+        if (damage == 0) return currentHp
+        val hpBefore = currentHp
         currentHp -= damage
         if (currentHp <= 0) {
             currentHp = 0
-            return true
         }
-        return false
+        return hpBefore
     }
 
     fun reduceCooldown(count: Int) {
@@ -198,6 +204,7 @@ class HeroUnit(
     }
 
     fun endOfCombat() {
+        if (isDead) return
         val hp = endOfCombatEffects.hp
         if (hp > 0) {
             heal(hp)

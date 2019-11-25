@@ -2,13 +2,12 @@ package me.kumatheta.feh.skill.weapon
 
 import me.kumatheta.feh.BasicWeapon
 import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.Color
 import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.InCombatStat
-import me.kumatheta.feh.Magic
+import me.kumatheta.feh.MagicR
 import me.kumatheta.feh.Stat
 
-object RaudrbladePlus : BasicWeapon(Magic(Color.RED), 14) {
+object RaudrbladePlus : BasicWeapon(MagicR, 14) {
     override val coolDownCountAdj: Int
         get() = 1
 

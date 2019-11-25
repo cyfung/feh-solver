@@ -1,7 +1,15 @@
 package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.assist.Pivot
-import me.kumatheta.feh.util.*
+import me.kumatheta.feh.skill.special.Miracle
+import me.kumatheta.feh.util.attackPositionOrder
+import me.kumatheta.feh.util.attackTargetOrder
+import me.kumatheta.feh.util.attackTargetPositions
+import me.kumatheta.feh.util.attackerOrder
+import me.kumatheta.feh.util.bodyBlockTargetOrder
+import me.kumatheta.feh.util.moveTargetOrder
+import me.kumatheta.feh.util.surroundings
+import me.kumatheta.feh.util.unitMoveOrder
 import kotlin.math.max
 import kotlin.math.min
 
@@ -171,20 +179,11 @@ class BattleState private constructor(
         attacker: HeroUnit,
         defender: HeroUnit
     ): PotentialDamage {
-        val attackerSkills = InCombatSkillSet(
-            attacker.skillSet.skills.asSequence() + attacker.skillSet.foeEffect.asSequence().mapAttackerSkills(
-                attacker,
-                defender
-            ).filterNotNull()
-        )
-        val defenderSkills = InCombatSkillSet(
-            defender.skillSet.skills.asSequence() + defender.skillSet.foeEffect.asSequence().mapDefenderSkills(
-                attacker,
-                defender
-            ).filterNotNull()
-        )
+        val attackerTeam = unitsSeq(attacker.team).toList()
+        val defenderTeam = unitsSeq(defender.team).toList()
+        val attackerSkills = InCombatSkillSet(getAttackerSkillSeq(attacker, defender, attackerTeam, defenderTeam))
+        val defenderSkills = InCombatSkillSet(getDefenderSkillSeq(attacker, defender, attackerTeam, defenderTeam))
         val statPair = getInCombatStat(attacker, attackerSkills, defender, defenderSkills)
-
 
         // check adaptive
         val attackerAdaptive = attackerSkills.adaptiveDamage.mapAttackerSkills(statPair).any { it } &&
@@ -238,10 +237,59 @@ class BattleState private constructor(
         return PotentialDamage(attackerInCombat, defenderInCombat, attackOrder, colorAdvantage, potentialDamage)
     }
 
-    private val HeroUnit.basicStat: Stat
-        get() {
-            return visibleStat
-        }
+    private fun getAttackerSkillSeq(
+        attacker: HeroUnit,
+        defender: HeroUnit,
+        attackerTeam: List<HeroUnit>,
+        defenderTeam: List<HeroUnit>
+    ): Sequence<Skill> {
+        return attacker.skillSet.skills.asSequence() + attackerTeam.asSequence().map { heroUnit ->
+            heroUnit.skillSet.supportInCombatBuff.asSequence().map {
+                it.apply(this, heroUnit, attacker)
+            }
+        }.flatMap { it }.filterNotNull() + defenderTeam.asSequence().map { heroUnit ->
+            heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
+                it.apply(this, heroUnit, attacker)
+            }
+        }.flatMap { it }.filterNotNull() + attacker.skillSet.foeEffect.asSequence().mapAttackerSkills(
+            attacker,
+            defender
+        ).filterNotNull()
+    }
+
+    private fun getDefenderSkillSeq(
+        attacker: HeroUnit,
+        defender: HeroUnit,
+        attackerTeam: List<HeroUnit>,
+        defenderTeam: List<HeroUnit>
+    ): Sequence<Skill> {
+        return defender.skillSet.skills.asSequence() + defenderTeam.asSequence().map { heroUnit ->
+            heroUnit.skillSet.supportInCombatBuff.asSequence().map {
+                it.apply(this, heroUnit, defender)
+            }
+        }.flatMap { it }.filterNotNull() + attackerTeam.asSequence().map { heroUnit ->
+            heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
+                it.apply(this, heroUnit, defender)
+            }
+        }.flatMap { it }.filterNotNull() + defender.skillSet.foeEffect.asSequence().mapDefenderSkills(
+            attacker,
+            defender
+        ).filterNotNull()
+    }
+
+    private fun HeroUnit.basicStat(
+        skills: InCombatSkillSet,
+        mapping: Sequence<CombatStartSkill<Stat?>>.() -> Sequence<Stat?>
+    ): Stat {
+        val (bonus, penalty) = bonusAndPenalty
+        val modifiedBonus = skills.neutralizeBonus.mapping().filterNotNull().fold(Stat.ONES) { acc, stat ->
+            acc * stat
+        } * bonus
+        val modifiedPenalty = skills.neutralizePenalty.mapping().filterNotNull().fold(Stat.ONES) { acc, stat ->
+            acc * stat
+        } * penalty
+        return stat + modifiedBonus + modifiedPenalty
+    }
 
     private fun getInCombatStat(
         attacker: HeroUnit,
@@ -249,14 +297,16 @@ class BattleState private constructor(
         defender: HeroUnit,
         defenderSkills: InCombatSkillSet
     ): AttackerDefenderPair<BasicInCombatStat> {
-        var attackerStat = attacker.basicStat +
-                attackerSkills.inCombatStat.mapAttackerSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
-                    acc + stat
-                }
-        var defenderStat = defender.basicStat +
-                defenderSkills.inCombatStat.mapDefenderSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
-                    acc + stat
-                }
+        var attackerStat = attacker.basicStat(attackerSkills) {
+            mapAttackerSkills(attacker, defender)
+        } + attackerSkills.inCombatStat.mapAttackerSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
+            acc + stat
+        }
+        var defenderStat = defender.basicStat(defenderSkills) {
+            mapDefenderSkills(attacker, defender)
+        } + defenderSkills.inCombatStat.mapDefenderSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
+            acc + stat
+        }
 
         val attackerInCombatStat = BasicInCombatStat(
             heroUnit = attacker,
@@ -513,7 +563,16 @@ class BattleState private constructor(
             damageDealer, damageReceiver, colorAdvantage, damagingSpecial
         )
 
-        val dead = damageReceiver.heroUnit.takeDamage(baseDamage)
+        val previousHp = damageReceiver.heroUnit.takeDamage(baseDamage)
+
+        var defenseSpecialUsed = false
+        if (damageReceiver.heroUnit.isDead && previousHp > 1) {
+            if (damageReceiver.heroUnit.special == Miracle) {
+                damageReceiver.heroUnit.heal(1)
+                defenseSpecialUsed = true
+            }
+        }
+
 
         // attacker reduce cooldown when special is not used
         if (damagingSpecial == null) {
@@ -522,9 +581,8 @@ class BattleState private constructor(
             damageDealer.heroUnit.resetCooldown()
         }
 
-        if (!dead) {
-            damageReceiver.heroUnit.reduceCooldown(damageReceiverCooldown)
-        } else {
+        val dead = damageReceiver.heroUnit.isDead
+        if (dead) {
             locationMap.remove(damageReceiver.heroUnit.position)
             val teamDied = damageReceiver.heroUnit.team
             if (teamDied == Team.PLAYER) {
@@ -535,6 +593,10 @@ class BattleState private constructor(
             if (unitsSeq(teamDied).none()) {
                 winningTeam = teamDied.foe
             }
+        } else if (defenseSpecialUsed) {
+            damageReceiver.heroUnit.resetCooldown()
+        } else {
+            damageReceiver.heroUnit.reduceCooldown(damageReceiverCooldown)
         }
         return dead
     }

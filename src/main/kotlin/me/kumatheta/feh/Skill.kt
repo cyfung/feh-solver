@@ -25,6 +25,7 @@ interface Skill {
     val teleport: MapSkillMethod<Sequence<Position>>?
         get() = null
 
+
     val counterIgnoreRange: InCombatSkill<Boolean>?
         get() = null
     val brave: InCombatSkill<Boolean>?
@@ -45,6 +46,10 @@ interface Skill {
         get() = null
     val triangleAdept: InCombatSkill<Int>?
         get() = null
+    val neutralizeBonus: CombatStartSkill<Stat?>?
+        get() = null
+    val neutralizePenalty: CombatStartSkill<Stat?>?
+        get() = null
 
     val foeEffect: CombatStartSkill<Skill?>?
         get() = null
@@ -64,9 +69,9 @@ interface Skill {
     val denyStaffAsNormal: InCombatSkill<Boolean>?
         get() = null
 
-    val supportInCombatBuff: InCombatSkill<Skill>?
+    val supportInCombatBuff: CombatSupportSkillMethod<Skill?>?
         get() = null
-    val supportInCombatDebuff: InCombatSkill<Skill>?
+    val supportInCombatDebuff: CombatSupportSkillMethod<Skill?>?
         get() = null
 
 }
@@ -84,7 +89,10 @@ class SkillSet(skills: Sequence<Skill>) {
 
     val foeEffect = this.skills.mapNotNull(Skill::foeEffect)
 
-    fun <T> groupAsSet(f: (Skill)->Set<T>?): Set<T> {
+    val supportInCombatBuff = this.skills.mapNotNull(Skill::supportInCombatBuff)
+    val supportInCombatDebuff = this.skills.mapNotNull(Skill::supportInCombatDebuff)
+
+    fun <T> groupAsSet(f: (Skill) -> Set<T>?): Set<T> {
         return skills.asSequence().mapNotNull(f).flatMap { it.asSequence() }.toSet()
     }
 }
@@ -132,10 +140,13 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
         get() = skills.asSequence().mapNotNull(Skill::triangleAdept)
     val cancelAffinity: Sequence<InCombatSkill<Int>>
         get() = skills.asSequence().mapNotNull(Skill::triangleAdept)
+    val neutralizeBonus: Sequence<CombatStartSkill<Stat?>>
+        get() = skills.asSequence().mapNotNull(Skill::neutralizeBonus)
+    val neutralizePenalty: Sequence<CombatStartSkill<Stat?>>
+        get() = skills.asSequence().mapNotNull(Skill::neutralizePenalty)
 }
 
-abstract class Weapon(val weaponType: WeaponType) : Skill {
-}
+abstract class Weapon(val weaponType: WeaponType) : Skill
 
 abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) {
     override val extraStat = Stat(atk = might)
@@ -151,6 +162,10 @@ abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
     abstract fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, defenderDefRes: Int): Int
 }
 
+abstract class DefenseSpecial(coolDownCount: Int) : Special(coolDownCount) {
+    abstract fun getReducedDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, incomingDamage: Int): Int?
+}
+
 interface Passive : Skill
 
 interface InCombatStat {
@@ -158,10 +173,10 @@ interface InCombatStat {
     val inCombatStat: Stat
 }
 
-class BasicInCombatStat (
+class BasicInCombatStat(
     override val heroUnit: HeroUnit,
     override val inCombatStat: Stat
-): InCombatStat
+) : InCombatStat
 
 class FullInCombatStat(
     private val basicStat: BasicInCombatStat,
@@ -186,6 +201,9 @@ interface MapSkillMethod<T> {
     fun apply(battleState: BattleState, self: HeroUnit): T
 }
 
+interface CombatSupportSkillMethod<T> {
+    fun apply(battleState: BattleState, self: HeroUnit, target: HeroUnit): T
+}
 
 class ConstantCombatStartSkill<T>(private val value: T) : CombatStartSkill<T> {
     override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, initAttack: Boolean): T {

@@ -11,15 +11,21 @@ sealed class WeaponType(val color: Color, val isRanged: Boolean, val targetRes: 
     val range = if (isRanged) 2 else 1
 }
 
-class Beast(color: Color) : WeaponType(color, false, false)
-
-class Dragon(color: Color) : WeaponType(color, false, true)
-
 object Sword : WeaponType(Color.RED, false, false)
 object Axe : WeaponType(Color.GREEN, false, false)
 object Lance : WeaponType(Color.BLUE, false, false)
 object Staff : WeaponType(Color.COLORLESS, true, true)
-class Dagger(color: Color) : WeaponType(color, true, false)
-class Bow(color: Color) : WeaponType(color, true, false)
 
-class Magic(color: Color) : WeaponType(color, true, true)
+abstract class Dagger(color: Color) : WeaponType(color, true, false)
+abstract class Bow(color: Color) : WeaponType(color, true, false)
+abstract class Magic(color: Color) : WeaponType(color, true, true)
+abstract class Beast(color: Color) : WeaponType(color, false, false)
+abstract class Dragon(color: Color) : WeaponType(color, false, true)
+
+object DaggerC: Dagger(Color.COLORLESS)
+
+object BowC: Bow(Color.COLORLESS)
+object BowB: Bow(Color.BLUE)
+
+object MagicR : Magic(Color.RED)
+
