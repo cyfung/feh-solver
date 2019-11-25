@@ -4,8 +4,11 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatEndSkill
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Passive
+import me.kumatheta.feh.Stat
 
-object PoisonStrike3 : Passive {
+object Fury3 : Passive {
+    override val extraStat: Stat? = Stat(atk = 3, spd =3, def = 3, res = 3)
+
     override val combatEnd: CombatEndSkill? = object : CombatEndSkill {
         override fun apply(
             battleState: BattleState,
@@ -14,9 +17,7 @@ object PoisonStrike3 : Passive {
             attack: Boolean,
             attacked: Boolean
         ) {
-            if (attack) {
-                foe.endOfCombatEffects.takeNonLethalDamage(10)
-            }
+            self.endOfCombatEffects.takeNonLethalDamage(6)
         }
     }
 }

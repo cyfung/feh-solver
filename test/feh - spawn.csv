@@ -1,5 +1,5 @@
 id,spawn time,name,group,engage delay,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
 5,START,Titania,1,,CAVALRY,DraconicPoleaxEff,ReciprocalAid,Luna,63,47,37,28,33,SwiftSparrow2,Guard3,SpdTactics3
 6,START,Blue Bow,1,,INFANTRY,SlayingBowB,,Moonbow,59,47,32,32,17,TriangleAdept3,PoisonStrike3,PanicPloy3
-7,START,Subaki,1,,FLYING,SteelLance,,,28,23,21,21,13,QuickRiposte2,,
+7,START,Red Flier,1,,FLYING,RaudrbladePlus,,Iceberg,46,48,44,20,38,Fury3,Aerobatics3,AtkTactics3
 8,START,Setsuna,1,,INFANTRY,SteelBow,ReciprocalAid,,27,22,22,13,14,,,
