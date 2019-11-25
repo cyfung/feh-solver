@@ -47,15 +47,15 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
         val name = valueIterator.next()
         val groupString = valueIterator.next()
         val group = if (spawnTime == null) {
-            groupString.toIntOrNull()
-        } else {
             null
+        } else {
+            groupString.toIntOrNull()
         }
         val engagedString = valueIterator.next()
         val engageDelay = if (spawnTime == null) {
-            engagedString.toIntOrNull()
+            null
         } else {
-            1
+            engagedString.toIntOrNull()
         }
         val moveType = MoveType.valueOf(valueIterator.next())
         val weaponName = valueIterator.next()

@@ -7,4 +7,8 @@ class EndOfCombatEffect {
     fun takeNonLethalDamage(damage: Int) {
         hp -= damage
     }
+
+    fun heal(healAmount: Int) {
+        hp += healAmount
+    }
 }

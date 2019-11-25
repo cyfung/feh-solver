@@ -61,9 +61,9 @@ class FehBoard private constructor(
     val stateCopy
         get() = state.copy()
 
-    fun tryMoves(bestMoves: List<FehMove>, printMoves: Boolean = false): BattleState {
+    fun tryMoves(moves: List<FehMove>, printMoves: Boolean = false): BattleState {
         val testState = stateCopy
-        bestMoves.forEach {
+        moves.forEach {
             val unitAction = it.unitAction
             if (printMoves) {
                 println(unitAction)

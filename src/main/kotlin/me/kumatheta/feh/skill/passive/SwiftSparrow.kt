@@ -5,7 +5,7 @@ import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.BlowOrStance
 
-class SwiftSparrow2 : Passive {
+object SwiftSparrow2 : Passive {
     override val inCombatStat: CombatStartSkill<Stat>? = BlowOrStance(Stat(atk = 4, spd = 4), Stat.ZERO)
 }
 

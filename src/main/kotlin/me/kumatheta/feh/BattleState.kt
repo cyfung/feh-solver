@@ -1,14 +1,7 @@
 package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.assist.Pivot
-import me.kumatheta.feh.util.attackPositionOrder
-import me.kumatheta.feh.util.attackTargetOrder
-import me.kumatheta.feh.util.attackTargetPositions
-import me.kumatheta.feh.util.attackerOrder
-import me.kumatheta.feh.util.bodyBlockTargetOrder
-import me.kumatheta.feh.util.moveTargetOrder
-import me.kumatheta.feh.util.surroundings
-import me.kumatheta.feh.util.unitMoveOrder
+import me.kumatheta.feh.util.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -178,13 +171,13 @@ class BattleState private constructor(
         defender: HeroUnit
     ): PotentialDamage {
         val attackerSkills = InCombatSkillSet(
-            defender.skillSet.skills.asSequence() + attacker.skillSet.foeEffect.attackerSkillsSeq(
+            attacker.skillSet.skills.asSequence() + attacker.skillSet.foeEffect.asSequence().mapAttackerSkills(
                 attacker,
                 defender
             ).filterNotNull()
         )
         val defenderSkills = InCombatSkillSet(
-            defender.skillSet.skills.asSequence() + attacker.skillSet.foeEffect.attackerSkillsSeq(
+            defender.skillSet.skills.asSequence() + defender.skillSet.foeEffect.asSequence().mapDefenderSkills(
                 attacker,
                 defender
             ).filterNotNull()
@@ -204,22 +197,16 @@ class BattleState private constructor(
             }
         // check staff damage
         val attackerReducedStaffDamage = if (attacker.weaponType == Staff) {
-            if (defenderSkills.denyStaffAsNormal.mapDefenderSkills(attacker, defender).any { it }) {
-                true
-            } else {
-                !attackerSkills.staffAsNormal.mapAttackerSkills(attacker, defender).any { it }
-            }
+            attackerSkills.staffAsNormal.mapAttackerSkills(attacker, defender).none { it } ||
+                    defenderSkills.denyStaffAsNormal.mapDefenderSkills(attacker, defender).any { it }
         } else {
-            true
+            false
         }
         val defenderReducedStaffDamage = if (defender.weaponType == Staff) {
-            if (attackerSkills.denyStaffAsNormal.mapAttackerSkills(attacker, defender).any { it }) {
-                true
-            } else {
-                !defenderSkills.staffAsNormal.mapDefenderSkills(attacker, defender).any { it }
-            }
+            defenderSkills.staffAsNormal.mapDefenderSkills(attacker, defender).none { it } ||
+                    attackerSkills.denyStaffAsNormal.mapAttackerSkills(attacker, defender).any { it }
         } else {
-            true
+            false
         }
 
         val attackerStat = attacker.stat + attacker.buff + attacker.debuff +
@@ -424,11 +411,9 @@ class BattleState private constructor(
         val defenderSkillSet = defenderInCombat.skills
 
         val rangeMatch = when {
-            attacker.isEmptyHanded -> false
+            defender.isEmptyHanded -> false
             attacker.weaponType.isRanged == defender.weaponType.isRanged -> true
-            else -> {
-                defenderSkillSet.counterIgnoreRange.mapDefenderSkills(attackerInCombat, defenderInCombat).any { it }
-            }
+            else -> defenderSkillSet.counterIgnoreRange.mapDefenderSkills(attackerInCombat, defenderInCombat).any { it }
         }
 
         val canCounter = rangeMatch
@@ -1270,16 +1255,6 @@ class BattleState private constructor(
         attacker: U,
         defender: U
     ) = map { it.apply(this@BattleState, defender, attacker, false) }
-
-    private fun <T, U> List<CombatSkill<T, U>>.attackerSkillsSeq(
-        attacker: U,
-        defender: U
-    ) = asSequence().mapAttackerSkills(attacker, defender)
-
-    private fun <T, U> List<CombatSkill<T, U>>.defenderSkillsSeq(
-        attacker: U,
-        defender: U
-    ) = asSequence().mapDefenderSkills(attacker, defender)
 
     fun getAllPlayerMovements(): Sequence<UnitAction> {
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->

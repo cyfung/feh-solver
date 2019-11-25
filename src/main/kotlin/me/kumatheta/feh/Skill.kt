@@ -168,4 +168,6 @@ class ConstantInCombatSkill<T>(private val value: T) : InCombatSkill<T> {
     }
 }
 
+val combatStartSkillTrue = ConstantCombatStartSkill(true)
+
 val inCombatSkillTrue = ConstantInCombatSkill(true)
