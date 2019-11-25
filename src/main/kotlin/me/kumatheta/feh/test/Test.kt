@@ -145,13 +145,13 @@ fun main() {
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
 
-//    val testMoves = listOf<UnitAction>(
-//        MoveOnly(1, Position(3, 2)),
-//        MoveOnly(1, Position(3, 4))
-//    ).map {
-//        FehMove(it)
-//    }
-//    board.tryMoves(testMoves)
+    val testMoves = listOf<UnitAction>(
+        MoveOnly(1, Position(2, 2)),
+        MoveAndAttack(1, Position(2, 3), 7)
+    ).map {
+        FehMove(it)
+    }
+    board.tryMoves(testMoves)
     repeat(10) {
         val duration = measureTime { mcts.run(1000) }
         println("duration $duration")
@@ -162,7 +162,6 @@ fun main() {
             println(it)
         }
         println("${testState.enemyDied}, ${testState.playerDied}")
-
     }
 }
 

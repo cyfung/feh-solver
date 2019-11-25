@@ -89,7 +89,8 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
             assist = assist,
             special = special,
             stat = stat,
-            passives = passives
+            passives = passives,
+            isFinalStat = true
         )
         if (spawnTime == null) {
             playerMap[id] = heroModel

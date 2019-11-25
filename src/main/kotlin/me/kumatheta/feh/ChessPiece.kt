@@ -103,6 +103,8 @@ class HeroUnit(
     }
 
     fun takeNonLethalDamage(damage: Int): Int {
+        check(damage >= 0)
+        if (damage == 0) return 0
         currentHp -= damage
         return if (currentHp < 1) {
             val actualDamage = damage - (1 - currentHp)
@@ -114,6 +116,8 @@ class HeroUnit(
     }
 
     fun takeDamage(damage: Int): Boolean {
+        check(damage >= 0)
+        if (damage == 0) return false
         currentHp -= damage
         if (currentHp <= 0) {
             currentHp = 0
@@ -198,7 +202,7 @@ class HeroUnit(
         if (hp > 0) {
             heal(hp)
         } else if (hp < 0) {
-            takeNonLethalDamage(hp)
+            takeNonLethalDamage(-hp)
         }
         endOfCombatEffects = EndOfCombatEffect()
         combatSkillData.clear()

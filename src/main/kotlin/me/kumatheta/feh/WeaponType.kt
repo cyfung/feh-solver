@@ -20,6 +20,6 @@ object Axe : WeaponType(Color.GREEN, false, false)
 object Lance : WeaponType(Color.BLUE, false, false)
 object Dagger : WeaponType(Color.COLORLESS, true, false)
 object Staff : WeaponType(Color.COLORLESS, true, true)
-object Bow : WeaponType(Color.COLORLESS, true, true)
+object Bow : WeaponType(Color.COLORLESS, true, false)
 
 class Magic(color: Color) : WeaponType(color, true, true)

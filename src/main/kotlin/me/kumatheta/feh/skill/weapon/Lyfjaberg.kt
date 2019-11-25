@@ -49,7 +49,7 @@ object Lyfjaberg : BasicWeapon(Dagger, 14) {
                     it.applyDebuff(Stat(def = -7, res = -7))
                 }
                 if (self.combatSkillData[this@Lyfjaberg] == true) {
-                    self.endOfCombatEffects.takeNonLethalDamage(6)
+                    self.endOfCombatEffects.takeNonLethalDamage(4)
                 }
             }
         }
