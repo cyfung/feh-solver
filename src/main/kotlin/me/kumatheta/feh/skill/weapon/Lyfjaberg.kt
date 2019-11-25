@@ -1,17 +1,8 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.BasicWeapon
-import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.CombatEndSkill
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.ConstantInCombatSkill
-import me.kumatheta.feh.Dagger
-import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.Skill
-import me.kumatheta.feh.Stat
+import me.kumatheta.feh.*
 
-object Lyfjaberg : BasicWeapon(Dagger, 14) {
+object Lyfjaberg : BasicWeapon(Dagger(Color.COLORLESS), 14) {
     override val extraStat: Stat = Stat(res = 3)
     override val inCombatStat: CombatStartSkill<Stat>? = object : CombatStartSkill<Stat> {
         override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, initAttack: Boolean): Stat {

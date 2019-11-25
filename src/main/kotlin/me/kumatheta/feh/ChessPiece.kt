@@ -193,6 +193,10 @@ class HeroUnit(
         negativeStatus.clear()
     }
 
+    fun addNegativeStatus(status: NegativeStatus) {
+        negativeStatus.add(status)
+    }
+
     fun resetCooldown() {
         cooldown = heroModel.cooldownCount
     }

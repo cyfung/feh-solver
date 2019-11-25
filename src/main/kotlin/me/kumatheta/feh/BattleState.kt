@@ -238,17 +238,22 @@ class BattleState private constructor(
         return PotentialDamage(attackerInCombat, defenderInCombat, attackOrder, colorAdvantage, potentialDamage)
     }
 
+    private val HeroUnit.basicStat: Stat
+        get() {
+            return visibleStat
+        }
+
     private fun getInCombatStat(
         attacker: HeroUnit,
         attackerSkills: InCombatSkillSet,
         defender: HeroUnit,
         defenderSkills: InCombatSkillSet
     ): AttackerDefenderPair<BasicInCombatStat> {
-        var attackerStat = attacker.stat + attacker.buff + attacker.debuff +
+        var attackerStat = attacker.basicStat +
                 attackerSkills.inCombatStat.mapAttackerSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
                     acc + stat
                 }
-        var defenderStat = defender.stat + defender.buff + defender.debuff +
+        var defenderStat = defender.basicStat +
                 defenderSkills.inCombatStat.mapDefenderSkills(attacker, defender).fold(Stat.ZERO) { acc, stat ->
                     acc + stat
                 }
@@ -670,7 +675,7 @@ class BattleState private constructor(
     }
 
     private fun isEffective(attacker: HeroUnit, defender: HeroUnit): Boolean {
-        if (attacker.weaponType == Bow && defender.moveType == MoveType.FLYING) {
+        if (attacker.weaponType is Bow && defender.moveType == MoveType.FLYING) {
             return true
         }
         return attacker.isEffective(defender)
