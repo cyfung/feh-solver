@@ -146,9 +146,8 @@ fun main() {
     val mcts = Mcts(board)
 
 //    val testMoves = listOf<UnitAction>(
-//        MoveOnly(1, Position(1, 1)),
-//        MoveOnly(1, Position(0, 2)),
-//        MoveAndAttack(1, Position(0, 4), 6)
+//        MoveOnly(1, Position(3, 2)),
+//        MoveOnly(1, Position(3, 4))
 //    ).map {
 //        FehMove(it)
 //    }
@@ -158,7 +157,7 @@ fun main() {
         println("duration $duration")
         val bestMoves = mcts.getBestMoves()
         println("best score: ${mcts.getBestScore()}")
-        val testState = board.tryMoves(bestMoves, true)
+        val testState = board.tryMoves(bestMoves)
         bestMoves.forEach {
             println(it)
         }

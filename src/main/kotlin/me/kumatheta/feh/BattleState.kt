@@ -235,7 +235,7 @@ class BattleState private constructor(
             reducedStaffDamage = defenderReducedStaffDamage
         )
 
-        val attackOrder = createAttackOrder(attackerInCombat, attackerInCombat, spdDiff)
+        val attackOrder = createAttackOrder(attackerInCombat, defenderInCombat, spdDiff)
 
         val potentialDamage = attackOrder.asSequence().filter { it }.count() * calculateBaseDamage(
             attackerInCombat,
@@ -459,17 +459,17 @@ class BattleState private constructor(
             }
         }
         val addDefender = {
-            attackOrder.add(false)
-            if (defenderBrave) {
+            if (canCounter) {
                 attackOrder.add(false)
+                if (defenderBrave) {
+                    attackOrder.add(false)
+                }
             }
         }
 
         // actual add attack orders
         if (vantage) {
-            if (canCounter) {
-                addDefender()
-            }
+            addDefender()
         }
         addAttacker()
 
@@ -479,16 +479,12 @@ class BattleState private constructor(
 
         // normal counter
         if (!vantage) {
-            if (canCounter) {
-                addDefender()
-            }
+            addDefender()
         }
 
         // vantage followup counter
         if (defenderFollowup && vantage) {
-            if (canCounter) {
-                addDefender()
-            }
+            addDefender()
         }
 
         if (attackerFollowup && !desperation) {
@@ -497,9 +493,7 @@ class BattleState private constructor(
 
         // normal followup counter
         if (defenderFollowup && !vantage) {
-            if (canCounter) {
-                addDefender()
-            }
+            addDefender()
         }
         return attackOrder
     }
@@ -592,7 +586,7 @@ class BattleState private constructor(
                     attackTargetPositions(heroUnit, moveStep.position, maxPosition).mapNotNull {
                         it to moveStep
                     }
-                }.distinctBy { it.second }.associate { it }
+                }.distinctBy { it.first }.associate { it }
             }
 
             val possibleAttacks = attackTargetPositions.mapValues { (heroUnit, targetPositions) ->

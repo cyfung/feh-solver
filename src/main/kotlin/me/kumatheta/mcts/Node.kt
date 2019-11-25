@@ -72,7 +72,6 @@ class Node<T : Move> private constructor(
     fun selectAndPlayOut(): Node<T>? {
         check(!isTerminalNode)
         if (isPruned) {
-            check(parent == null)
             return null
         }
         val move = moveQueue.poll()
