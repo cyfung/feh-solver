@@ -61,10 +61,6 @@ class HeroUnit(
 
     val combatSkillData = mutableMapOf<Skill, Any>()
 
-    fun isEffective(foe: HeroUnit): Boolean {
-        return heroModel.weapon.isEffective(foe)
-    }
-
     override fun copy(): HeroUnit {
         val newUnit = HeroUnit(id, heroModel, team, position)
         newUnit.available = available
@@ -222,6 +218,11 @@ class HeroUnit(
             isSelf || engageCountDown == null -> engaged = true
             else -> engageCoolDownStarted = true
         }
+    }
+
+    fun isEffective(foe: HeroUnit): Boolean {
+        return (!foe.neutralizeEffectiveMoveType && effectiveAgainstMoveType.contains(foe.moveType)) ||
+                (!foe.neutralizeEffectiveWeaponType && effectiveAgainstWeaponType.contains(foe.weaponType))
     }
 }
 

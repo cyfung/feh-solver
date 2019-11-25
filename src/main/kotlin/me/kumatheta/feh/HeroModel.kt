@@ -13,6 +13,11 @@ interface Hero {
     val stat: Stat
     val group: Int?
     val hasSpecialDebuff: Boolean
+    val effectiveAgainstMoveType: Set<MoveType>
+    val effectiveAgainstWeaponType: Set<WeaponType>
+    val neutralizeEffectiveMoveType: Boolean
+    val neutralizeEffectiveWeaponType: Boolean
+    val name: String
 }
 
 fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
@@ -25,10 +30,10 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
 
 
 open class HeroModel(
-    val name: String,
-    override val group: Int?,
+    override val name: String,
+    final override val group: Int?,
     val engageDelay: Int?,
-    override val moveType: MoveType,
+    final override val moveType: MoveType,
     val weapon: Weapon,
     final override val assist: Assist?,
     final override val special: Special?,
@@ -38,9 +43,14 @@ open class HeroModel(
 ) : Hero {
     final override val isEmptyHanded: Boolean = weapon is EmptyWeapon
     final override val weaponType = weapon.weaponType
-    final override val skillSet = SkillSet(passives.asSequence().plus(weapon).plusIfNotNull(assist).plusIfNotNull(special).toList())
+    final override val skillSet =
+        SkillSet(passives.asSequence().plus(weapon).plusIfNotNull(assist).plusIfNotNull(special).toList())
     final override val debuffer: Boolean = skillSet.skills.any { it.debuffer }
     final override val hasSpecialDebuff: Boolean = skillSet.skills.any { it.hasSpecialDebuff }
+    final override val effectiveAgainstMoveType = skillSet.groupAsSet(Skill::effectiveAgainstMoveType)
+    final override val effectiveAgainstWeaponType = skillSet.groupAsSet(Skill::effectiveAgainstWeaponType)
+    final override val neutralizeEffectiveMoveType = skillSet.groupAsSet(Skill::neutralizeEffectiveMoveType).contains(moveType)
+    final override val neutralizeEffectiveWeaponType = skillSet.groupAsSet(Skill::neutralizeEffectiveWeaponType).contains(weaponType)
 
     final override val stat: Stat = if (isFinalStat) {
         stat

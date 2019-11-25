@@ -12,9 +12,7 @@ object SilverSword : BasicWeapon(Sword, 11)
 object IronAxe : BasicWeapon(Axe, 6)
 object SilverAxe : BasicWeapon(Axe, 11)
 object SlayingHammerPlus : BasicWeapon(Axe, 14) {
-    override fun isEffective(foe: HeroUnit): Boolean {
-        return foe.moveType == MoveType.ARMORED
-    }
+    override val effectiveAgainstMoveType: Set<MoveType>? = setOf(MoveType.ARMORED)
 }
 
 object SteelBow : BasicWeapon(Bow(Color.COLORLESS), 6)

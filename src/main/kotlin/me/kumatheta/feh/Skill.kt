@@ -9,6 +9,14 @@ interface Skill {
         get() = false
     val hasSpecialDebuff: Boolean
         get() = false
+    val neutralizeEffectiveWeaponType: Set<WeaponType>?
+        get() = null
+    val neutralizeEffectiveMoveType: Set<MoveType>?
+        get() = null
+    val effectiveAgainstWeaponType: Set<WeaponType>?
+        get() = null
+    val effectiveAgainstMoveType: Set<MoveType>?
+        get() = null
 
     val startOfTurn: MapSkillMethod<Unit>?
         get() = null
@@ -76,6 +84,9 @@ class SkillSet(skills: Sequence<Skill>) {
 
     val foeEffect = this.skills.mapNotNull(Skill::foeEffect)
 
+    fun <T> groupAsSet(f: (Skill)->Set<T>?): Set<T> {
+        return skills.asSequence().mapNotNull(f).flatMap { it.asSequence() }.toSet()
+    }
 }
 
 class InCombatSkillSet(skills: Sequence<Skill>) {
@@ -83,7 +94,6 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
 
     val inCombatStat: Sequence<CombatStartSkill<Stat>>
         get() = skills.asSequence().mapNotNull(Skill::inCombatStat)
-
 
     val additionalInCombatStat: Sequence<InCombatSkill<Stat>>
         get() = skills.asSequence().mapNotNull(Skill::additionalInCombatStat)
@@ -125,9 +135,6 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill {
-    open fun isEffective(foe: HeroUnit): Boolean {
-        return false
-    }
 }
 
 abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) {
