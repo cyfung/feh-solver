@@ -35,20 +35,24 @@ interface Skill {
         get() = null
     val combatEnd: CombatEndSkill?
         get() = null
+    val triangleAdept: InCombatSkill<Int>?
+        get() = null
 
     val foeEffect: CombatStartSkill<Skill?>?
         get() = null
     val inCombatStat: CombatStartSkill<Stat>?
         get() = null
 
-    val adaptiveDamage: CombatStartSkill<Boolean>?
-        get() = null
-    val denyAdaptiveDamage: CombatStartSkill<Boolean>?
-        get() = null
 
-    val staffAsNormal: CombatStartSkill<Boolean>?
+    val raven: InCombatSkill<Boolean>?
         get() = null
-    val denyStaffAsNormal: CombatStartSkill<Boolean>?
+    val adaptiveDamage: InCombatSkill<Boolean>?
+        get() = null
+    val denyAdaptiveDamage: InCombatSkill<Boolean>?
+        get() = null
+    val staffAsNormal: InCombatSkill<Boolean>?
+        get() = null
+    val denyStaffAsNormal: InCombatSkill<Boolean>?
         get() = null
 
     val supportInCombatBuff: InCombatSkill<Skill>?
@@ -78,14 +82,16 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
 
     val inCombatStat: Sequence<CombatStartSkill<Stat>>
         get() = skills.asSequence().mapNotNull(Skill::inCombatStat)
-    val adaptiveDamage: Sequence<CombatStartSkill<Boolean>>
+    val adaptiveDamage: Sequence<InCombatSkill<Boolean>>
         get() = skills.asSequence().mapNotNull(Skill::adaptiveDamage)
-    val denyAdaptiveDamage: Sequence<CombatStartSkill<Boolean>>
+    val denyAdaptiveDamage: Sequence<InCombatSkill<Boolean>>
         get() = skills.asSequence().mapNotNull(Skill::denyAdaptiveDamage)
-    val staffAsNormal: Sequence<CombatStartSkill<Boolean>>
+    val staffAsNormal: Sequence<InCombatSkill<Boolean>>
         get() = skills.asSequence().mapNotNull(Skill::staffAsNormal)
-    val denyStaffAsNormal: Sequence<CombatStartSkill<Boolean>>
+    val denyStaffAsNormal: Sequence<InCombatSkill<Boolean>>
         get() = skills.asSequence().mapNotNull(Skill::denyStaffAsNormal)
+    val raven: Sequence<InCombatSkill<Boolean>>
+        get() = skills.asSequence().mapNotNull(Skill::raven)
 
 
     val postCombat: Sequence<CombatEndSkill>
@@ -107,6 +113,10 @@ class InCombatSkillSet(skills: Sequence<Skill>) {
         get() = skills.asSequence().mapNotNull(Skill::cooldownBuff)
     val cooldownDebuff: Sequence<InCombatSkill<CooldownChange<Int>>>
         get() = skills.asSequence().mapNotNull(Skill::cooldownDebuff)
+    val triangleAdept: Sequence<InCombatSkill<Int>>
+        get() = skills.asSequence().mapNotNull(Skill::triangleAdept)
+    val cancelAffinity: Sequence<InCombatSkill<Int>>
+        get() = skills.asSequence().mapNotNull(Skill::triangleAdept)
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill {
@@ -126,18 +136,27 @@ abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 }
 
 abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
-    abstract fun getDamage(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus): Int
+    abstract fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat): Int
 }
 
 interface Passive : Skill
 
-class InCombatStatus(
-    val heroUnit: HeroUnit,
-    val inCombatStat: Stat,
+interface InCombatStat {
+    val heroUnit: HeroUnit
+    val inCombatStat: Stat
+}
+
+class BasicInCombatStat (
+    override val heroUnit: HeroUnit,
+    override val inCombatStat: Stat
+): InCombatStat
+
+class FullInCombatStat(
+    private val basicStat: BasicInCombatStat,
     val skills: InCombatSkillSet,
     val adaptiveDamage: Boolean,
     val reducedStaffDamage: Boolean
-)
+) : InCombatStat by basicStat
 
 interface CombatSkill<T, U> {
     fun apply(battleState: BattleState, self: U, foe: U, initAttack: Boolean): T
@@ -145,7 +164,7 @@ interface CombatSkill<T, U> {
 
 interface CombatStartSkill<T> : CombatSkill<T, HeroUnit>
 
-interface InCombatSkill<T>: CombatSkill<T, InCombatStatus>
+interface InCombatSkill<T> : CombatSkill<T, InCombatStat>
 
 interface CombatEndSkill {
     fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean, attacked: Boolean)
@@ -163,7 +182,7 @@ class ConstantCombatStartSkill<T>(private val value: T) : CombatStartSkill<T> {
 }
 
 class ConstantInCombatSkill<T>(private val value: T) : InCombatSkill<T> {
-    override fun apply(battleState: BattleState, self: InCombatStatus, foe: InCombatStatus, initAttack: Boolean): T {
+    override fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, initAttack: Boolean): T {
         return value
     }
 }

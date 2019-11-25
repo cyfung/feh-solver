@@ -4,7 +4,7 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatStartSkill
 import me.kumatheta.feh.CooldownChange
 import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.InCombatStatus
+import me.kumatheta.feh.InCombatStat
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.BlowOrStance
@@ -17,8 +17,8 @@ object WardingBreath : Passive {
         get() = object : InCombatSkill<CooldownChange<Int>> {
             override fun apply(
                 battleState: BattleState,
-                self: InCombatStatus,
-                foe: InCombatStatus,
+                self: InCombatStat,
+                foe: InCombatStat,
                 initAttack: Boolean
             ): CooldownChange<Int> {
                 return if (initAttack) {
