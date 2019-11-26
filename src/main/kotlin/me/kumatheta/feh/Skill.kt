@@ -65,6 +65,8 @@ interface Skill {
         get() = null
     val triangleAdept: InCombatSkill<Int>?
         get() = null
+    val cancelAffinity: InCombatSkill<Int>?
+        get() = null
     val raven: InCombatSkill<Boolean>?
         get() = null
     val adaptiveDamage: InCombatSkill<Boolean>?
@@ -87,6 +89,8 @@ interface Skill {
 
     // listener
     val damageReceivedListener: PerAttackListener<Int>?
+        get() = null
+    val damageReducedListener: PerAttackListener<Int>?
         get() = null
 
     // combat end
@@ -177,7 +181,7 @@ class InCombatSkillSet(
     val triangleAdept: Sequence<InCombatSkill<Int>>
         get() = methodSeq(Skill::triangleAdept)
     val cancelAffinity: Sequence<InCombatSkill<Int>>
-        get() = methodSeq(Skill::triangleAdept)
+        get() = methodSeq(Skill::cancelAffinity)
 
 
     // per attack
@@ -191,6 +195,8 @@ class InCombatSkillSet(
     // listener
     val damageReceivedListener: Sequence<PerAttackListener<Int>>
         get() = methodSeq(Skill::damageReceivedListener)
+    val damageReducedListener: Sequence<PerAttackListener<Int>>
+        get() = methodSeq(Skill::damageReducedListener)
 
     val postCombat: Sequence<CombatEndSkill>
         get() = methodSeq(Skill::combatEnd)
@@ -261,7 +267,8 @@ class InCombatSkillWrapper(
     fun getDamageIncrease(specialTriggered: Boolean): Sequence<Int> =
         baseSkillSet.damageIncrease.applyAllPerAttack(specialTriggered)
 
-    fun onDamageReceived(damage: Int) = baseSkillSet.damageReceivedListener.applyAllPerAttack(damage)
+    fun damageReceived(damage: Int) = baseSkillSet.damageReceivedListener.applyAllPerAttack(damage)
+    fun damageReduced(reduced: Int) = baseSkillSet.damageReducedListener.applyAllPerAttack(reduced)
 
     fun postCombat(attacked: Boolean) = baseSkillSet.postCombat.forEach {
         it.apply(
@@ -281,6 +288,11 @@ abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponTy
 }
 
 abstract class Special(val coolDownCount: Int) : Skill
+
+abstract class AoeSpecial(coolDownCount: Int) : Special(coolDownCount) {
+    abstract fun getTargets(battleState: BattleState, self: InCombatStat, mainTarget: InCombatStat)
+    abstract fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, defenderDefRes: Int): Int
+}
 
 abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
     abstract fun trigger(self: HeroUnit, target: HeroUnit, battleState: BattleState)

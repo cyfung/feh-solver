@@ -46,6 +46,10 @@ class BattleState private constructor(
 
     var phrase = phrase
         private set
+
+    val turn: Int
+        get() = phrase / 2 + 1
+
     private val unitIdMap = locationMap.values.filterIsInstance<HeroUnit>().associateBy { it.id }
 
     fun copy(): BattleState {
@@ -242,7 +246,7 @@ class BattleState private constructor(
         attackerTeam: List<HeroUnit>,
         defenderTeam: List<HeroUnit>
     ): Sequence<Skill> {
-        return attacker.skillSet.skills.asSequence() + attackerTeam.asSequence().map { heroUnit ->
+        return attacker.skillSet.skills.asSequence() + attackerTeam.asSequence().filterNot { it == attacker }.map { heroUnit ->
             heroUnit.skillSet.supportInCombatBuff.asSequence().map {
                 it.apply(this, heroUnit, attacker)
             }
@@ -261,7 +265,7 @@ class BattleState private constructor(
         attackerTeam: List<HeroUnit>,
         defenderTeam: List<HeroUnit>
     ): Sequence<Skill> {
-        return defender.skillSet.skills.asSequence() + defenderTeam.asSequence().map { heroUnit ->
+        return defender.skillSet.skills.asSequence() + defenderTeam.asSequence().filterNot { it == defender }.map { heroUnit ->
             heroUnit.skillSet.supportInCombatBuff.asSequence().map {
                 it.apply(this, heroUnit, defender)
             }
@@ -553,7 +557,12 @@ class BattleState private constructor(
 
         damage -= damageReceiver.skills.getFlatDamageReduce(defenseSpecialUsed).sum()
 
-        damageReceiver.skills.onDamageReceived(damage)
+        if (damage < 0) {
+            damage = 0
+        }
+
+        damageReceiver.skills.damageReceived(damage)
+        damageReceiver.skills.damageReduced(baseDamage - damage)
 
         val previousHp = damageReceiver.heroUnit.takeDamage(damage)
 
@@ -563,7 +572,6 @@ class BattleState private constructor(
                 defenseSpecialUsed = true
             }
         }
-
 
         // attacker reduce cooldown when special is not used
         if (damagingSpecial == null) {

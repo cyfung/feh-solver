@@ -2,7 +2,11 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.MoveOnly
+import me.kumatheta.feh.Position
+import me.kumatheta.feh.UnitAction
 import me.kumatheta.feh.mcts.FehBoard
+import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.readMap
 import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
@@ -29,19 +33,24 @@ fun main() {
             BasicBattleMap(
                 positionMap,
                 spawnMap,
-                (1..4).associateWith { heroModel })
+                playerMap
+            )
+//                (1..4).associateWith { heroModel })
         )//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
-    val phraseLimit = 10
+    val phraseLimit = 14
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
 
-//    val testMoves = listOf<UnitAction>(
-//        MoveOnly(1, Position(2, 2)),
-//        MoveAndAttack(1, Position(2, 3), 7)
-//    ).map {
-//        FehMove(it)
-//    }
-//    board.tryMoves(testMoves)
+    val testMoves = listOf<UnitAction>(
+        MoveOnly(2, Position(5, 6)),
+        MoveOnly(3, Position(4, 4)),
+        MoveOnly(1, Position(3, 5)),
+        MoveOnly(4, Position(4, 5))
+    ).map {
+        FehMove(it)
+    }
+    val tryMoves = board.tryMoves(testMoves)
+    println("${tryMoves.enemyDied}, ${tryMoves.playerDied}")
     repeat(10) {
         val duration = measureTime { mcts.run(1000) }
         println("duration $duration")

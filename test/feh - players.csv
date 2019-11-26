@@ -1,2 +1,5 @@
-id,spawn time,name,group,engage delay,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
-1,,Eir,,,FLYING,Lyfjaberg,,Iceberg,35,46,37,14,34,SwiftSparrow2,MysticBoost3,SparklingBoost
+id,spawn time,name,group,engage delay,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,,
+2,,Eir,,,FLYING,Lyfjaberg,,Iceberg,35,46,37,14,34,SwiftSparrow2,MysticBoost3,SparklingBoost,
+3,,Fjorm,,,INFANTRY,Leiptr,,IceMirror,39,46,31,30,34,AtkDefBond3,ShieldPulse3,DriveAtk2,QuickRiposte3
+1,,Reinhardt,,,CAVALRY,DireThunder,,,38,41,18,27,25,Vantage3,GoadCavalry,AtkResBond3,
+4,,Olivia,,,INFANTRY,SilverSword,Dance,,34,37,31,24,23,HoneAtk3,SpurSpd1,,

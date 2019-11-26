@@ -21,7 +21,7 @@ object IceMirror : DefenseSpecial(2) {
         }
     }
 
-    override val damageReceivedListener: PerAttackListener<Int>? = object : PerAttackListener<Int> {
+    override val damageReducedListener: PerAttackListener<Int>? = object : PerAttackListener<Int> {
         override fun onReceive(battleState: BattleState, self: InCombatStat, foe: InCombatStat, value: Int) {
             val state = self.heroUnit.combatSkillData[IceMirror] as State? ?: return
             if (state.damageReduced == null) {
