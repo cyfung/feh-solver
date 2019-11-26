@@ -52,7 +52,7 @@ fun main() {
     ).map {
         FehMove(it)
     }
-    testMoves.take(3).forEach { move ->
+    testMoves.take(0).forEach { move ->
         val exists = board.moves.any {
             it == move
         }
@@ -62,9 +62,9 @@ fun main() {
         board.applyMove(move)
     }
 
-    val mcts = MctsLowMemory(board)
+    val mcts = Mcts(board)
     repeat(1000) {
-        val duration = measureTime { mcts.run(10000) }
+        val duration = measureTime { mcts.run(100000) }
         println("duration $duration")
         val bestMoves = mcts.getBestMoves()
         println("best score: ${mcts.bestScore}")

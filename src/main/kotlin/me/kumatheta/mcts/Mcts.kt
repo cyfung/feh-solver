@@ -38,13 +38,7 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
         get() = rootNode.bestScore
 
     fun getBestMoves(): List<T> {
-        val bestRoute = generateSequence(rootNode.getBestChild()) {
-            it.getBestChild()
-        }.toList()
-
-        return (bestRoute.asSequence().mapNotNull {
-            it.lastMove ?: throw IllegalStateException()
-        } + (bestRoute.last().playOutMove ?: throw IllegalStateException())).toList()
+        return rootNode.getBestMoves()
     }
 
     val tries

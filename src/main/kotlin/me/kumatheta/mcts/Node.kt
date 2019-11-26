@@ -9,3 +9,13 @@ interface Node<T : Move> {
     val playOutMove: List<T>?
     val lastMove: T?
 }
+
+fun <T: Move> Node<T>.getBestMoves(): List<T> {
+    val bestRoute = generateSequence(this) {
+        it.getBestChild()
+    }.toList()
+
+    return (bestRoute.asSequence().mapNotNull {
+        it.lastMove
+    } + (bestRoute.last().playOutMove ?: throw IllegalStateException())).toList()
+}

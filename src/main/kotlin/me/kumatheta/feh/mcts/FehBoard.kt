@@ -59,8 +59,8 @@ class FehBoard private constructor(
 
     private fun calculateScore() =
         ((phraseLimit - state.phrase).toDouble() / phraseLimit + state.enemyDied.toDouble()) / (enemyCount + 1) * 0.5 +
-                state.unitsSeq(Team.PLAYER).sumBy { it.stat.hp } / totalPlayerHp * 0.2 +
-                if (state.winningTeam == Team.PLAYER && state.playerDied == 0) 0.3 else 0.0
+                0.4 - state.playerDied.toDouble() / playerCount * 0.4 +
+                if (state.winningTeam == Team.PLAYER && state.playerDied == 0) 0.1 else 0.0
 
     private val stateCopy
         get() = state.copy()
