@@ -67,15 +67,12 @@ fun main() {
     val testResult = board.tryMoves(testMoves)
     println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 
-    testMoves.take(4).forEach { move ->
+    testMoves.take(0).forEach { move ->
         val exists = board.moves.any {
             it == move
         }
         if (!exists) {
             throw IllegalStateException()
-        }
-        lazy {
-
         }
         board.applyMove(move)
     }
@@ -85,7 +82,11 @@ fun main() {
         println("duration $duration")
         val bestMoves = mcts.getBestMoves()
         println("best score: ${mcts.bestScore}")
-        val testState = board.tryMoves(bestMoves)
+        val testState = try {
+            board.tryMoves(bestMoves)
+        } catch (t: Throwable) {
+            throw t
+        }
         bestMoves.forEach {
             println(it)
         }

@@ -82,28 +82,25 @@ class ThreadSafeNode<T : Move> private constructor(
 
     override fun selectAndPlayOut(): ThreadSafeNode<T>? {
         check(!isTerminalNode)
-        val board = boardRef.get()
-        if (board == null) {
-//            println("this is pruned")
-//            updateScore(bestScore)
-            return null
-        }
+        val board = boardRef.get() ?: return null
         val move = moveQueue.poll()
         return if (move == null) {
             val tries = scoreRef.get().tries
             val noOutstanding = outstandingChildCount.get() == 0
             // select
-            val child = children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.boardRef.get() == null }.maxBy {
-                val score = it.scoreRef.get()
-                score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
-            }
+            val child =
+                children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.boardRef.get() == null }.maxBy {
+                    val score = it.scoreRef.get()
+                    score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
+                }
             if (child == null) {
                 // play out this node
-//                updateScore(bestScore)
-
                 if (noOutstanding) {
                     if (boardRef.getAndSet(null) != null) {
-                        this.playOutMove = getBestMoves()
+                        val bestChild = getBestChild()
+                        if (bestChild != null) {
+                            this.playOutMove = bestChild.getBestMoves()
+                        }
                         children.clear()
                     }
                 }
@@ -118,7 +115,7 @@ class ThreadSafeNode<T : Move> private constructor(
             val child = ThreadSafeNode(copy, explorationConstant, random, this, move, movesAndScore)
             updateScore(movesAndScore.second)
             children.add(child)
-            outstandingChildCount.decrementAndGet()
+            outstandingChildCount.getAndDecrement()
             null
         }
     }
