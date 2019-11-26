@@ -6,8 +6,16 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Stat
 
+object AtkDefBond1 : Passive {
+    override val inCombatStat: CombatStartSkill<Stat>? = Bond(Stat(atk = 3, def = 3))
+}
+
 object AtkDefBond3 : Passive {
     override val inCombatStat: CombatStartSkill<Stat>? = Bond(Stat(atk = 5, def = 5))
+}
+
+object AtkResBond1 : Passive {
+    override val inCombatStat: CombatStartSkill<Stat>? = Bond(Stat(atk = 3, res = 3))
 }
 
 object AtkResBond3 : Passive {

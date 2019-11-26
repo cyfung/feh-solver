@@ -84,13 +84,14 @@ class ThreadSafeNode<T : Move> private constructor(
         check(!isTerminalNode)
         val board = boardRef.get()
         if (board == null) {
-            println("this is pruned")
+//            println("this is pruned")
 //            updateScore(bestScore)
             return null
         }
         val move = moveQueue.poll()
         return if (move == null) {
             val tries = scoreRef.get().tries
+            val noOutstanding = outstandingChildCount.get() == 0
             // select
             val child = children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.boardRef.get() == null }.maxBy {
                 val score = it.scoreRef.get()
@@ -100,7 +101,7 @@ class ThreadSafeNode<T : Move> private constructor(
                 // play out this node
 //                updateScore(bestScore)
 
-                if (outstandingChildCount.get() == 0) {
+                if (noOutstanding) {
                     if (boardRef.getAndSet(null) != null) {
                         this.playOutMove = getBestMoves()
                         children.clear()

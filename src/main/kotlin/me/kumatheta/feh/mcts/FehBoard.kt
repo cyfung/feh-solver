@@ -51,7 +51,7 @@ class FehBoard private constructor(
             score = calculateScore()
         } else if (movementResult.phraseChange) {
             state.enemyMoves()
-            if (state.winningTeam != null || phraseLimit < state.phrase) {
+            if (state.playerDied > 0 || state.winningTeam != null || phraseLimit < state.phrase) {
                 score = calculateScore()
             }
         }
