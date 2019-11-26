@@ -4,4 +4,6 @@ interface BattleMap {
     val size: Position
     fun getTerrain(position: Position): Terrain
     fun toChessPieceMap(): Map<Position, ChessPiece>
+    val enemyCount: Int
+    val playerCount: Int
 }

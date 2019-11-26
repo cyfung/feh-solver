@@ -31,6 +31,11 @@ class BattleState private constructor(
     enemyDied: Int,
     winningTeam: Team?
 ) {
+    val enemyCount
+        get() = battleMap.enemyCount
+    val playerCount
+        get() = battleMap.playerCount
+
     var playerDied: Int = playerDied
         private set
 

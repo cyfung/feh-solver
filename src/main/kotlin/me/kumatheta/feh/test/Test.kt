@@ -36,9 +36,8 @@ fun main() {
                 spawnMap,
                 playerMap
             )
-//                (1..4).associateWith { heroModel })
-        )//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
-    val phraseLimit = 10
+        )
+    val phraseLimit = 20
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
 
@@ -51,13 +50,13 @@ fun main() {
         MoveOnly(1, Position(3, 5)),
         MoveAndAssist(4, Position(4, 5), 1),
         MoveAndAttack(1, Position(4, 3), 6),
-        MoveOnly(3, Position(4,4)),
-        MoveAndAttack(3,Position(4,2), 7),
-        MoveAndAttack(2, Position(5,5), 5),
-        MoveAndAssist(4, Position(5,6), 2),
-        MoveAndAttack(2, Position(5,5), 5),
-        MoveOnly(1, Position(4,1)),
-        MoveAndAttack(2, Position(5,5),9)
+        MoveOnly(3, Position(4, 4)),
+        MoveAndAttack(3, Position(4, 2), 7),
+        MoveAndAttack(2, Position(5, 5), 5),
+        MoveAndAssist(4, Position(5, 6), 2),
+        MoveAndAttack(2, Position(5, 5), 5),
+        MoveOnly(1, Position(4, 1)),
+        MoveAndAttack(2, Position(5, 5), 9)
     ).map {
         FehMove(it)
     }
@@ -66,23 +65,23 @@ fun main() {
         val exists = testboard.moves.any {
             it == move
         }
-        if(!exists) {
+        if (!exists) {
             throw IllegalStateException()
         }
         testboard.applyMove(move)
     }
     val tryMoves = board.tryMoves(testMoves, true)
-    println("${tryMoves.enemyDied}, ${tryMoves.playerDied} ${try}")
+    println("${tryMoves.enemyDied}, ${tryMoves.playerDied} ${tryMoves.winningTeam}")
     repeat(1000) {
-        val duration = measureTime { mcts.run(1000) }
+        val duration = measureTime { mcts.run(10000) }
         println("duration $duration")
         val bestMoves = mcts.getBestMoves()
-        println("best score: ${mcts.getBestScore()}")
+        println("best score: ${mcts.bestScore}")
         val testState = board.tryMoves(bestMoves)
         bestMoves.forEach {
             println(it)
         }
-        println("${testState.enemyDied}, ${testState.playerDied}")
+        println("tries: ${mcts.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
     }
 }
 

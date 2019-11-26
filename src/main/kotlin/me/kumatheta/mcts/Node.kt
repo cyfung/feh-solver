@@ -58,6 +58,9 @@ class Node<T : Move> private constructor(
     val bestScore
         get() = scoreRef.get().bestScore
 
+    val tries
+        get() = scoreRef.get().tries
+
     fun getBestChild(): Node<T>? {
         val child = children.maxBy {
             it.bestScore

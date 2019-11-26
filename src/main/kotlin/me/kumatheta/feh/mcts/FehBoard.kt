@@ -9,19 +9,19 @@ import me.kumatheta.mcts.Move
 class FehBoard private constructor(
     private val phraseLimit: Int,
     state: BattleState,
-    score: Double?,
-    private val enemyCount: Int,
-    private val playerCount: Int
+    score: Double?
 ) : Board<FehMove> {
     private val state = state.copy()
+    private val enemyCount: Int
+            get() = state.enemyCount
+    private val playerCount: Int
+        get() = state.playerCount
 
     constructor(phraseLimit: Int, state: BattleState) :
             this(
                 phraseLimit,
                 state,
-                null,
-                state.unitsSeq(Team.ENEMY).count(),
-                state.unitsSeq(Team.PLAYER).count()
+                null
             )
 
     override val moves: List<FehMove>
@@ -38,7 +38,7 @@ class FehBoard private constructor(
         private set
 
     override fun copy(): Board<FehMove> {
-        return FehBoard(phraseLimit, state, score, enemyCount, playerCount)
+        return FehBoard(phraseLimit, state, score)
     }
 
     override fun applyMove(move: FehMove) {
@@ -58,7 +58,7 @@ class FehBoard private constructor(
     private fun calculateScore() = (phraseLimit - state.phrase).toDouble() / phraseLimit * 0.3 +
             state.enemyDied.toDouble() / enemyCount * 0.7 - state.playerDied.toDouble() / playerCount * 0.2
 
-    val stateCopy
+    private val stateCopy
         get() = state.copy()
 
     fun tryMoves(moves: List<FehMove>, printMoves: Boolean = false): BattleState {

@@ -195,6 +195,8 @@ class BasicBattleMap(
     spawnMap: Map<Int, Spawn>,
     playerMap: Map<Int, HeroModel>
 ) : BattleMap {
+    override val enemyCount = spawnMap.size
+    override val playerCount = playerMap.size
     private val spawnMap = spawnMap.toMap()
     private val playerMap = playerMap.toMap()
     override val size: Position = positionMap.size
