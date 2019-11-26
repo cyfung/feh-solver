@@ -216,7 +216,7 @@ class BattleState private constructor(
         )
 
         val spdDiff =
-            skillWrappers.attacker.inCombatStat.inCombatStat.spd - skillWrappers.attacker.inCombatStat.inCombatStat.spd
+            skillWrappers.attacker.inCombatStat.inCombatStat.spd - skillWrappers.defender.inCombatStat.inCombatStat.spd
 
         val attackerInCombat = FullInCombatStat(
             skills = skillWrappers.attacker,
@@ -254,7 +254,7 @@ class BattleState private constructor(
             heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
                 it.apply(this, heroUnit, attacker)
             }
-        }.flatMap { it }.filterNotNull() + attacker.skillSet.foeEffect.asSequence().map {
+        }.flatMap { it }.filterNotNull() + defender.skillSet.foeEffect.asSequence().map {
             it.apply(this, attacker, defender, true)
         }.filterNotNull()
     }
@@ -273,7 +273,7 @@ class BattleState private constructor(
             heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
                 it.apply(this, heroUnit, defender)
             }
-        }.flatMap { it }.filterNotNull() + defender.skillSet.foeEffect.asSequence().map {
+        }.flatMap { it }.filterNotNull() + attacker.skillSet.foeEffect.asSequence().map {
             it.apply(this, defender, attacker, false)
         }.filterNotNull()
     }

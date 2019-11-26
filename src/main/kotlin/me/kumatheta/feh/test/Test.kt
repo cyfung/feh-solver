@@ -2,6 +2,7 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.MoveOnly
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.UnitAction
@@ -45,7 +46,8 @@ fun main() {
         MoveOnly(2, Position(5, 6)),
         MoveOnly(3, Position(4, 4)),
         MoveOnly(1, Position(3, 5)),
-        MoveOnly(4, Position(4, 5))
+        MoveOnly(4, Position(4, 5)),
+        MoveAndAttack(2, Position(5, 4), 8)
     ).map {
         FehMove(it)
     }
