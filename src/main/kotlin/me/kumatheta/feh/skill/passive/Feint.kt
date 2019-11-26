@@ -4,7 +4,6 @@ import me.kumatheta.feh.Assist
 import me.kumatheta.feh.AssistRelated
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.foe

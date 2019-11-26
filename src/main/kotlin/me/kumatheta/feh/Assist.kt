@@ -1,13 +1,12 @@
 package me.kumatheta.feh
 
-import java.lang.IllegalStateException
-
 sealed class Assist(val isRange: Boolean) : Skill {
     abstract fun apply(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState
     )
+
     abstract fun isValidAction(
         self: HeroUnit,
         target: HeroUnit,

@@ -4,7 +4,6 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.MapSkillMethod
 import me.kumatheta.feh.Stat
-import java.lang.IllegalStateException
 
 class Tactics(private val stat: Stat) : MapSkillMethod<Unit> {
 

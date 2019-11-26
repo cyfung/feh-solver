@@ -1,6 +1,15 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.BasicWeapon
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.CombatEndSkill
+import me.kumatheta.feh.CombatStartSkill
+import me.kumatheta.feh.ConstantInCombatSkill
+import me.kumatheta.feh.DaggerC
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.Skill
+import me.kumatheta.feh.Stat
 
 object Lyfjaberg : BasicWeapon(DaggerC, 14) {
     override val extraStat: Stat = Stat(res = 3)

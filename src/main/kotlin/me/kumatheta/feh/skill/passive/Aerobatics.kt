@@ -12,7 +12,7 @@ object Aerobatics3 : Passive {
     override val teleport: MapSkillMethod<Sequence<Position>>? = object : MapSkillMethod<Sequence<Position>> {
         override fun apply(battleState: BattleState, self: HeroUnit): Sequence<Position> {
             return battleState.unitsSeq(self.team).filter { it != self }.filter {
-                when(it.moveType) {
+                when (it.moveType) {
                     MoveType.INFANTRY, MoveType.CAVALRY, MoveType.ARMORED -> true
                     else -> false
                 }

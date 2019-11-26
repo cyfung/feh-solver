@@ -1,6 +1,11 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.Axe
+import me.kumatheta.feh.BasicWeapon
+import me.kumatheta.feh.ConstantInCombatSkill
+import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.MapSkillMethod
+import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.Tactics
 
 object DraconicPoleaxEff : BasicWeapon(Axe, 16) {

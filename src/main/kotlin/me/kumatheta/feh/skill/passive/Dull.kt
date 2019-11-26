@@ -11,13 +11,13 @@ import me.kumatheta.feh.Stat
 object DullClose3 : Passive {
     override val foeEffect: CombatStartSkill<Skill?>? = object : CombatStartSkill<Skill?> {
         override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, initAttack: Boolean): Skill? {
-           return if(foe.weaponType.isRanged) {
-               null
-           } else {
-               object : Skill {
-                   override val neutralizeBonus: CombatStartSkill<Stat?>? = ConstantCombatStartSkill(Stat.ZERO)
-               }
-           }
+            return if (foe.weaponType.isRanged) {
+                null
+            } else {
+                object : Skill {
+                    override val neutralizeBonus: CombatStartSkill<Stat?>? = ConstantCombatStartSkill(Stat.ZERO)
+                }
+            }
         }
     }
 }

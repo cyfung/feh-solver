@@ -1,6 +1,10 @@
 package me.kumatheta.feh.util
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.CombatResult
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.MoveStep
+import me.kumatheta.feh.Position
+import me.kumatheta.feh.Terrain
 
 val attackTargetOrder = compareByDescending<CombatResult>(
     {

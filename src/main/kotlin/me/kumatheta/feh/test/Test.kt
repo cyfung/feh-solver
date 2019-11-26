@@ -1,13 +1,11 @@
 package me.kumatheta.feh.test
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.BasicBattleMap
+import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.mcts.FehBoard
-import me.kumatheta.feh.mcts.FehMove
-import me.kumatheta.feh.skill.assist.Pivot
-import me.kumatheta.feh.skill.assist.Smite
-import me.kumatheta.feh.skill.weapon.*
+import me.kumatheta.feh.readMap
+import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
-import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -25,9 +23,14 @@ fun main() {
 //    }.toMap()
 
 
-    val heroModel = playerMap[1]?: throw IllegalStateException()
+    val heroModel = playerMap[1] ?: throw IllegalStateException()
     val state =
-        BattleState(BasicBattleMap(positionMap, spawnMap, (1..4).associateWith { heroModel }))//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
+        BattleState(
+            BasicBattleMap(
+                positionMap,
+                spawnMap,
+                (1..4).associateWith { heroModel })
+        )//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
     val phraseLimit = 10
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)

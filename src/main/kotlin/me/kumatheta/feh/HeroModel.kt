@@ -49,8 +49,10 @@ open class HeroModel(
     final override val hasSpecialDebuff: Boolean = skillSet.skills.any { it.hasSpecialDebuff }
     final override val effectiveAgainstMoveType = skillSet.groupAsSet(Skill::effectiveAgainstMoveType)
     final override val effectiveAgainstWeaponType = skillSet.groupAsSet(Skill::effectiveAgainstWeaponType)
-    final override val neutralizeEffectiveMoveType = skillSet.groupAsSet(Skill::neutralizeEffectiveMoveType).contains(moveType)
-    final override val neutralizeEffectiveWeaponType = skillSet.groupAsSet(Skill::neutralizeEffectiveWeaponType).contains(weaponType)
+    final override val neutralizeEffectiveMoveType =
+        skillSet.groupAsSet(Skill::neutralizeEffectiveMoveType).contains(moveType)
+    final override val neutralizeEffectiveWeaponType =
+        skillSet.groupAsSet(Skill::neutralizeEffectiveWeaponType).contains(weaponType)
 
     final override val stat: Stat = if (isFinalStat) {
         stat

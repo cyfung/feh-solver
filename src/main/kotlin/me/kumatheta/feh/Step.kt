@@ -18,7 +18,7 @@ class MoveOnly(
     }
 }
 
-class MoveAndAttack (
+class MoveAndAttack(
     heroUnitId: Int,
     moveTarget: Position,
     val attackTargetId: Int
@@ -28,7 +28,7 @@ class MoveAndAttack (
     }
 }
 
-class MoveAndBreak (
+class MoveAndBreak(
     heroUnitId: Int,
     moveTarget: Position,
     val obstacle: Position

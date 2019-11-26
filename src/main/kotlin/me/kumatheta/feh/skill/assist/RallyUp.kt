@@ -62,7 +62,7 @@ abstract class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
             val threatened = foeThreat[it.position] ?: 0
             threatened > 0
         }).toSet()
-        
+
         return targets.asSequence().map {
             it to threatOrThreatened.count { ally -> ally.position.distanceTo(it.position) <= 2 }
         }.filter {

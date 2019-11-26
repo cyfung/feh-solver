@@ -22,10 +22,10 @@ abstract class Magic(color: Color) : WeaponType(color, true, true)
 abstract class Beast(color: Color) : WeaponType(color, false, false)
 abstract class Dragon(color: Color) : WeaponType(color, false, true)
 
-object DaggerC: Dagger(Color.COLORLESS)
+object DaggerC : Dagger(Color.COLORLESS)
 
-object BowC: Bow(Color.COLORLESS)
-object BowB: Bow(Color.BLUE)
+object BowC : Bow(Color.COLORLESS)
+object BowB : Bow(Color.BLUE)
 
 object MagicR : Magic(Color.RED)
 object MagicB : Magic(Color.BLUE)

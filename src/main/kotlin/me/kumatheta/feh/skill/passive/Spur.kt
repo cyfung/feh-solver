@@ -2,9 +2,9 @@ package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.MapSkillWithTarget
 import me.kumatheta.feh.ConstantCombatStartSkill
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.MapSkillWithTarget
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat

@@ -1,6 +1,15 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.Axe
+import me.kumatheta.feh.BasicWeapon
+import me.kumatheta.feh.BowB
+import me.kumatheta.feh.BowC
+import me.kumatheta.feh.Lance
+import me.kumatheta.feh.MagicB
+import me.kumatheta.feh.MoveType
+import me.kumatheta.feh.Staff
+import me.kumatheta.feh.Sword
+import me.kumatheta.feh.WeaponType
 
 object IronLance : BasicWeapon(Lance, 6)
 object SteelLance : BasicWeapon(Lance, 8)

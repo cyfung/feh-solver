@@ -1,6 +1,5 @@
 package me.kumatheta.feh
 
-import java.lang.IllegalStateException
 import java.util.*
 
 private class PlayerMovement(

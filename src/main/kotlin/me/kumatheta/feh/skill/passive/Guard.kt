@@ -1,6 +1,10 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.CooldownChange
+import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.InCombatStat
+import me.kumatheta.feh.Passive
 
 object Guard3 : Passive {
     override val cooldownDebuff: InCombatSkill<CooldownChange<Int>>? = object : InCombatSkill<CooldownChange<Int>> {

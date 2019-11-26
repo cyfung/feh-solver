@@ -65,6 +65,6 @@ abstract class Refresh : me.kumatheta.feh.NormalAssist() {
     }
 }
 
-object Dance: Refresh()
+object Dance : Refresh()
 
-object Sing: Refresh()
+object Sing : Refresh()

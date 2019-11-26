@@ -45,7 +45,7 @@ object HarshCommand : BuffRelatedAssist() {
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value
         return targets.asSequence().filter {
-            allyThreat.contains(it) || (foeThreat[it.position]?:0) > 0
+            allyThreat.contains(it) || (foeThreat[it.position] ?: 0) > 0
         }.bestTarget(distanceToClosestFoe)
     }
 

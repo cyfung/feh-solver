@@ -167,7 +167,12 @@ abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 }
 
 abstract class DefenseSpecial(coolDownCount: Int) : Special(coolDownCount) {
-    abstract fun getReducedDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, incomingDamage: Int): Int?
+    abstract fun getReducedDamage(
+        battleState: BattleState,
+        self: InCombatStat,
+        foe: InCombatStat,
+        incomingDamage: Int
+    ): Int?
 }
 
 interface Passive : Skill

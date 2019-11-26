@@ -1,6 +1,8 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.MapSkillMethod
+import me.kumatheta.feh.Passive
+import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.Tactics
 
 object SpdTactics3 : Passive {
