@@ -18,14 +18,35 @@ interface Skill {
     val effectiveAgainstMoveType: Set<MoveType>?
         get() = null
 
+    // outside of combat
     val startOfTurn: MapSkillMethod<Unit>?
         get() = null
     val pass: MapSkillMethod<Boolean>?
         get() = null
     val teleport: MapSkillMethod<Sequence<Position>>?
         get() = null
+    val supportInCombatBuff: MapSkillWithTarget<Skill?>?
+        get() = null
+    val supportInCombatDebuff: MapSkillWithTarget<Skill?>?
+        get() = null
+
+    val assistRelated: AssistRelated?
+        get() = null
 
 
+    // very beginning of combat
+    val foeEffect: CombatStartSkill<Skill?>?
+        get() = null
+    val neutralizeBonus: CombatStartSkill<Stat?>?
+        get() = null
+    val neutralizePenalty: CombatStartSkill<Stat?>?
+        get() = null
+    val inCombatStat: CombatStartSkill<Stat>?
+        get() = null
+    val additionalInCombatStat: InCombatSkill<Stat>?
+        get() = null
+
+    // actual in combat
     val counterIgnoreRange: InCombatSkill<Boolean>?
         get() = null
     val brave: InCombatSkill<Boolean>?
@@ -42,22 +63,8 @@ interface Skill {
         get() = null
     val cooldownDebuff: InCombatSkill<CooldownChange<Int>>?
         get() = null
-    val combatEnd: CombatEndSkill?
-        get() = null
     val triangleAdept: InCombatSkill<Int>?
         get() = null
-    val neutralizeBonus: CombatStartSkill<Stat?>?
-        get() = null
-    val neutralizePenalty: CombatStartSkill<Stat?>?
-        get() = null
-
-    val foeEffect: CombatStartSkill<Skill?>?
-        get() = null
-    val inCombatStat: CombatStartSkill<Stat>?
-        get() = null
-    val additionalInCombatStat: InCombatSkill<Stat>?
-        get() = null
-
     val raven: InCombatSkill<Boolean>?
         get() = null
     val adaptiveDamage: InCombatSkill<Boolean>?
@@ -69,16 +76,29 @@ interface Skill {
     val denyStaffAsNormal: InCombatSkill<Boolean>?
         get() = null
 
-    val assistRelated: AssistRelated?
+
+    // per attack skill
+    val percentageDamageReduce: PerAttackSkill<Int>?
+        get() = null
+    val flatDamageReduce: PerAttackSkill<Int>?
+        get() = null
+    val damageIncrease: PerAttackSkill<Int>?
         get() = null
 
-    val supportInCombatBuff: MapSkillWithTarget<Skill?>?
+    // listener
+    val damageReceivedListener: PerAttackListener<Int>?
         get() = null
-    val supportInCombatDebuff: MapSkillWithTarget<Skill?>?
+
+    // combat end
+    val combatEnd: CombatEndSkill?
         get() = null
 }
 
 class CooldownChange<T>(val unitAttack: T, val foeAttack: T)
+
+class SkillMethodSeq<T, U, S : CombatSkill<T, U>>(private val owner: U, private val sequence: Sequence<S>) {
+
+}
 
 class SkillSet(skills: Sequence<Skill>) {
     constructor(skills: List<Skill>) : this(skills.asSequence())
@@ -101,53 +121,157 @@ class SkillSet(skills: Sequence<Skill>) {
     }
 }
 
-class InCombatSkillSet(skills: Sequence<Skill>) {
+
+class InCombatSkillSet(
+    val battleState: BattleState,
+    val self: HeroUnit,
+    val foe: HeroUnit,
+    val initAttack: Boolean,
+    skills: Sequence<Skill>
+) {
     private val skills = skills.toList()
 
-    val inCombatStat: Sequence<CombatStartSkill<Stat>>
-        get() = skills.asSequence().mapNotNull(Skill::inCombatStat)
+    private fun <T : Any> methodSeq(transform: (Skill) -> T?): Sequence<T> {
+        return skills.asSequence().mapNotNull(transform)
+    }
+
+    private fun <T> Sequence<CombatStartSkill<T>>.applyAll(): Sequence<T> {
+        return map { it.apply(battleState, self, foe, initAttack) }
+    }
+
+    val neutralizeBonus: Sequence<Stat?>
+        get() = methodSeq(Skill::neutralizeBonus).applyAll()
+    val neutralizePenalty: Sequence<Stat?>
+        get() = methodSeq(Skill::neutralizePenalty).applyAll()
+    val inCombatStat: Sequence<Stat>
+        get() = methodSeq(Skill::inCombatStat).applyAll()
 
     val additionalInCombatStat: Sequence<InCombatSkill<Stat>>
-        get() = skills.asSequence().mapNotNull(Skill::additionalInCombatStat)
+        get() = methodSeq(Skill::additionalInCombatStat)
     val adaptiveDamage: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::adaptiveDamage)
+        get() = methodSeq(Skill::adaptiveDamage)
     val denyAdaptiveDamage: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::denyAdaptiveDamage)
+        get() = methodSeq(Skill::denyAdaptiveDamage)
     val staffAsNormal: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::staffAsNormal)
+        get() = methodSeq(Skill::staffAsNormal)
     val denyStaffAsNormal: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::denyStaffAsNormal)
+        get() = methodSeq(Skill::denyStaffAsNormal)
     val raven: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::raven)
+        get() = methodSeq(Skill::raven)
+    val counterIgnoreRange: Sequence<InCombatSkill<Boolean>>
+        get() = methodSeq(Skill::counterIgnoreRange)
+    val brave: Sequence<InCombatSkill<Boolean>>
+        get() = methodSeq(Skill::brave)
+    val disablePriorityChange: Sequence<InCombatSkill<Boolean>>
+        get() = methodSeq(Skill::disablePriorityChange)
+    val desperation: Sequence<InCombatSkill<Boolean>>
+        get() = methodSeq(Skill::desperation)
+    val vantage: Sequence<InCombatSkill<Boolean>>
+        get() = methodSeq(Skill::vantage)
+    val followUp: Sequence<InCombatSkill<Int>>
+        get() = methodSeq(Skill::followUp)
+    val cooldownBuff: Sequence<InCombatSkill<CooldownChange<Int>>>
+        get() = methodSeq(Skill::cooldownBuff)
+    val cooldownDebuff: Sequence<InCombatSkill<CooldownChange<Int>>>
+        get() = methodSeq(Skill::cooldownDebuff)
+    val triangleAdept: Sequence<InCombatSkill<Int>>
+        get() = methodSeq(Skill::triangleAdept)
+    val cancelAffinity: Sequence<InCombatSkill<Int>>
+        get() = methodSeq(Skill::triangleAdept)
 
+
+    // per attack
+    val percentageDamageReduce: Sequence<PerAttackSkill<Int>>
+        get() = methodSeq(Skill::percentageDamageReduce)
+    val flatDamageReduce: Sequence<PerAttackSkill<Int>>
+        get() = methodSeq(Skill::flatDamageReduce)
+    val damageIncrease: Sequence<PerAttackSkill<Int>>
+        get() = methodSeq(Skill::damageIncrease)
+
+    // listener
+    val damageReceivedListener: Sequence<PerAttackListener<Int>>
+        get() = methodSeq(Skill::damageReceivedListener)
 
     val postCombat: Sequence<CombatEndSkill>
-        get() = skills.asSequence().mapNotNull(Skill::combatEnd)
+        get() = methodSeq(Skill::combatEnd)
+}
 
-    val counterIgnoreRange: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::counterIgnoreRange)
-    val brave: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::brave)
-    val disablePriorityChange: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::disablePriorityChange)
-    val desperation: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::desperation)
-    val vantage: Sequence<InCombatSkill<Boolean>>
-        get() = skills.asSequence().mapNotNull(Skill::vantage)
-    val followUp: Sequence<InCombatSkill<Int>>
-        get() = skills.asSequence().mapNotNull(Skill::followUp)
-    val cooldownBuff: Sequence<InCombatSkill<CooldownChange<Int>>>
-        get() = skills.asSequence().mapNotNull(Skill::cooldownBuff)
-    val cooldownDebuff: Sequence<InCombatSkill<CooldownChange<Int>>>
-        get() = skills.asSequence().mapNotNull(Skill::cooldownDebuff)
-    val triangleAdept: Sequence<InCombatSkill<Int>>
-        get() = skills.asSequence().mapNotNull(Skill::triangleAdept)
-    val cancelAffinity: Sequence<InCombatSkill<Int>>
-        get() = skills.asSequence().mapNotNull(Skill::triangleAdept)
-    val neutralizeBonus: Sequence<CombatStartSkill<Stat?>>
-        get() = skills.asSequence().mapNotNull(Skill::neutralizeBonus)
-    val neutralizePenalty: Sequence<CombatStartSkill<Stat?>>
-        get() = skills.asSequence().mapNotNull(Skill::neutralizePenalty)
+class InCombatSkillWrapper(
+    private val self: InCombatStat,
+    private val foe: InCombatStat,
+    private val baseSkillSet: InCombatSkillSet
+) {
+    init {
+        check(baseSkillSet.self == self.heroUnit)
+        check(baseSkillSet.foe == foe.heroUnit)
+    }
+
+    val inCombatStat: InCombatStat
+        get() = self
+
+    private fun <T> Sequence<InCombatSkill<T>>.applyAll(): Sequence<T> {
+        return map { it.apply(baseSkillSet.battleState, self, foe, baseSkillSet.initAttack) }
+    }
+
+    private fun <T> Sequence<PerAttackSkill<T>>.applyAllPerAttack(specialTriggered: Boolean): Sequence<T> {
+        return map { it.apply(baseSkillSet.battleState, self, foe, specialTriggered) }
+    }
+
+    private fun <T> Sequence<PerAttackListener<T>>.applyAllPerAttack(value: T) {
+        return forEach { it.onReceive(baseSkillSet.battleState, self, foe, value) }
+    }
+
+    val additionalInCombatStat: Sequence<Stat>
+        get() = baseSkillSet.additionalInCombatStat.applyAll()
+    val adaptiveDamage: Sequence<Boolean>
+        get() = baseSkillSet.adaptiveDamage.applyAll()
+    val denyAdaptiveDamage: Sequence<Boolean>
+        get() = baseSkillSet.denyAdaptiveDamage.applyAll()
+    val staffAsNormal: Sequence<Boolean>
+        get() = baseSkillSet.staffAsNormal.applyAll()
+    val denyStaffAsNormal: Sequence<Boolean>
+        get() = baseSkillSet.denyStaffAsNormal.applyAll()
+    val raven: Sequence<Boolean>
+        get() = baseSkillSet.raven.applyAll()
+    val cancelAffinity: Sequence<Int>
+        get() = baseSkillSet.cancelAffinity.applyAll()
+    val triangleAdept: Sequence<Int>
+        get() = baseSkillSet.triangleAdept.applyAll()
+    val cooldownBuff: Sequence<CooldownChange<Int>>
+        get() = baseSkillSet.cooldownBuff.applyAll()
+    val cooldownDebuff: Sequence<CooldownChange<Int>>
+        get() = baseSkillSet.cooldownDebuff.applyAll()
+    val counterIgnoreRange: Sequence<Boolean>
+        get() = baseSkillSet.counterIgnoreRange.applyAll()
+    val brave: Sequence<Boolean>
+        get() = baseSkillSet.brave.applyAll()
+    val disablePriorityChange: Sequence<Boolean>
+        get() = baseSkillSet.disablePriorityChange.applyAll()
+    val desperation: Sequence<Boolean>
+        get() = baseSkillSet.desperation.applyAll()
+    val vantage: Sequence<Boolean>
+        get() = baseSkillSet.vantage.applyAll()
+    val followUp: Sequence<Int>
+        get() = baseSkillSet.followUp.applyAll()
+
+    fun getPercentageDamageReduce(specialTriggered: Boolean): Sequence<Int> =
+        baseSkillSet.percentageDamageReduce.applyAllPerAttack(specialTriggered)
+    fun getFlatDamageReduce(specialTriggered: Boolean): Sequence<Int> =
+        baseSkillSet.flatDamageReduce.applyAllPerAttack(specialTriggered)
+    fun getDamageIncrease(specialTriggered: Boolean): Sequence<Int> =
+        baseSkillSet.damageIncrease.applyAllPerAttack(specialTriggered)
+
+    fun onDamageReceived(damage: Int) = baseSkillSet.damageReceivedListener.applyAllPerAttack(damage)
+
+    fun postCombat(attacked: Boolean) = baseSkillSet.postCombat.forEach {
+        it.apply(
+            baseSkillSet.battleState,
+            self,
+            foe,
+            baseSkillSet.initAttack,
+            attacked
+        )
+    }
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill
@@ -179,23 +303,30 @@ interface Passive : Skill
 
 interface InCombatStat {
     val heroUnit: HeroUnit
+    val bonus: Stat
+    val penalty: Stat
     val inCombatStat: Stat
 }
 
 class BasicInCombatStat(
     override val heroUnit: HeroUnit,
-    override val inCombatStat: Stat
+    override val bonus: Stat,
+    override val penalty: Stat,
+    override var inCombatStat: Stat
 ) : InCombatStat
 
 class FullInCombatStat(
-    private val basicStat: BasicInCombatStat,
-    val skills: InCombatSkillSet,
+    val skills: InCombatSkillWrapper,
     val adaptiveDamage: Boolean,
     val reducedStaffDamage: Boolean
-) : InCombatStat by basicStat
+) : InCombatStat by skills.inCombatStat
 
 interface CombatSkill<T, U> {
     fun apply(battleState: BattleState, self: U, foe: U, initAttack: Boolean): T
+}
+
+interface PerAttackSkill<T> {
+    fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, specialTriggered: Boolean): T
 }
 
 interface CombatStartSkill<T> : CombatSkill<T, HeroUnit>
@@ -203,7 +334,11 @@ interface CombatStartSkill<T> : CombatSkill<T, HeroUnit>
 interface InCombatSkill<T> : CombatSkill<T, InCombatStat>
 
 interface CombatEndSkill {
-    fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, attack: Boolean, attacked: Boolean)
+    fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, attack: Boolean, attacked: Boolean)
+}
+
+interface PerAttackListener<T> {
+    fun onReceive(battleState: BattleState, self: InCombatStat, foe: InCombatStat, value: T)
 }
 
 interface MapSkillMethod<T> {

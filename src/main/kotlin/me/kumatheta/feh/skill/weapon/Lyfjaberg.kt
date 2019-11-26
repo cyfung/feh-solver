@@ -8,6 +8,7 @@ import me.kumatheta.feh.ConstantInCombatSkill
 import me.kumatheta.feh.DaggerC
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.InCombatStat
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
 
@@ -39,17 +40,17 @@ object Lyfjaberg : BasicWeapon(DaggerC, 14) {
     override val combatEnd: CombatEndSkill? = object : CombatEndSkill {
         override fun apply(
             battleState: BattleState,
-            self: HeroUnit,
-            foe: HeroUnit,
+            self: InCombatStat,
+            foe: InCombatStat,
             attack: Boolean,
             attacked: Boolean
         ) {
             if (attacked) {
-                battleState.unitsSeq(foe.team).filter { it.position.distanceTo(foe.position) <= 2 }.forEach {
+                battleState.unitsSeq(foe.heroUnit.team).filter { it.position.distanceTo(foe.heroUnit.position) <= 2 }.forEach {
                     it.applyDebuff(Stat(def = -7, res = -7))
                 }
-                if (self.combatSkillData[this@Lyfjaberg] == true) {
-                    self.endOfCombatEffects.takeNonLethalDamage(4)
+                if (self.heroUnit.combatSkillData[this@Lyfjaberg] == true) {
+                    self.heroUnit.endOfCombatEffects.takeNonLethalDamage(4)
                 }
             }
         }

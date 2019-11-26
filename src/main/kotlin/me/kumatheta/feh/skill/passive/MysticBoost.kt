@@ -4,6 +4,7 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatEndSkill
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.InCombatStat
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.inCombatSkillTrue
 
@@ -15,12 +16,12 @@ object MysticBoost3 : Passive {
     override val combatEnd: CombatEndSkill? = object : CombatEndSkill {
         override fun apply(
             battleState: BattleState,
-            self: HeroUnit,
-            foe: HeroUnit,
+            self: InCombatStat,
+            foe: InCombatStat,
             attack: Boolean,
             attacked: Boolean
         ) {
-            self.endOfCombatEffects.heal(6)
+            self.heroUnit.endOfCombatEffects.heal(6)
         }
     }
 }

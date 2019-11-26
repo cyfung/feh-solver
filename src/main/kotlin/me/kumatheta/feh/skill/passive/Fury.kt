@@ -3,6 +3,7 @@ package me.kumatheta.feh.skill.passive
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatEndSkill
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.InCombatStat
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Stat
 
@@ -12,12 +13,12 @@ object Fury3 : Passive {
     override val combatEnd: CombatEndSkill? = object : CombatEndSkill {
         override fun apply(
             battleState: BattleState,
-            self: HeroUnit,
-            foe: HeroUnit,
+            self: InCombatStat,
+            foe: InCombatStat,
             attack: Boolean,
             attacked: Boolean
         ) {
-            self.endOfCombatEffects.takeNonLethalDamage(6)
+            self.heroUnit.endOfCombatEffects.takeNonLethalDamage(6)
         }
     }
 }
