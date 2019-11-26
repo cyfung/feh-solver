@@ -713,7 +713,7 @@ class BattleState private constructor(
             damageDealer.inCombatStat.atk
         }
         val atk = if (colorAdvantage != 0) {
-            effAtk + Math.floorDiv(effAtk * colorAdvantage, 100)
+            effAtk + effAtk * colorAdvantage / 100
         } else {
             effAtk
         }

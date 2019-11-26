@@ -13,7 +13,7 @@ object RaudrbladePlus : BasicWeapon(MagicR, 14) {
 
     override val additionalInCombatStat: InCombatSkill<Stat>? = object : InCombatSkill<Stat> {
         override fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, initAttack: Boolean): Stat {
-            return Stat(atk = self.inCombatStat.totalExceptHp)
+            return Stat(atk = self.bonus.totalExceptHp)
         }
     }
 }

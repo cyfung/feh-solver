@@ -49,14 +49,14 @@ fun main() {
     ).map {
         FehMove(it)
     }
-    val tryMoves = board.tryMoves(testMoves)
+    val tryMoves = board.tryMoves(testMoves, true)
     println("${tryMoves.enemyDied}, ${tryMoves.playerDied}")
     repeat(10) {
         val duration = measureTime { mcts.run(1000) }
         println("duration $duration")
         val bestMoves = mcts.getBestMoves()
         println("best score: ${mcts.getBestScore()}")
-        val testState = board.tryMoves(bestMoves)
+        val testState = board.tryMoves(bestMoves, true)
         bestMoves.forEach {
             println(it)
         }
