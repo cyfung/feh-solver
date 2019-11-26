@@ -9,8 +9,9 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
-    private val rootNode: Node<T> = ThreadSafeNode(board.copy(), explorationConstant, Random)
+class MctsLowMemory<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
+    private val rootBoard = board.copy()
+    private val rootNode = ThreadSafeNodeLowMemory(rootBoard, explorationConstant, Random)
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
         thread.isDaemon = true
@@ -52,8 +53,9 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
 
     private fun selectAndPlayOut() {
         var node = rootNode
+        val board = rootBoard.copy()
         while (true) {
-            val newNode = node.selectAndPlayOut() ?: break
+            val newNode = node.selectAndPlayOut(board) ?: break
             node = newNode
         }
     }

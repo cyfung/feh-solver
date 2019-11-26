@@ -9,20 +9,22 @@ import me.kumatheta.mcts.Move
 class FehBoard private constructor(
     private val phraseLimit: Int,
     state: BattleState,
-    score: Double?
+    score: Double?,
+    private val totalPlayerHp: Int
 ) : Board<FehMove> {
     private val state = state.copy()
     private val enemyCount: Int
-            get() = state.enemyCount
+        get() = state.enemyCount
     private val playerCount: Int
         get() = state.playerCount
 
-    constructor(phraseLimit: Int, state: BattleState) :
-            this(
-                phraseLimit,
-                state,
-                null
-            )
+
+    constructor(phraseLimit: Int, state: BattleState) : this(
+        phraseLimit,
+        state,
+        null,
+        state.unitsSeq(Team.PLAYER).sumBy { it.stat.hp }
+    )
 
     override val moves: List<FehMove>
         get() {
@@ -38,7 +40,7 @@ class FehBoard private constructor(
         private set
 
     override fun copy(): Board<FehMove> {
-        return FehBoard(phraseLimit, state, score)
+        return FehBoard(phraseLimit, state, score, totalPlayerHp)
     }
 
     override fun applyMove(move: FehMove) {
@@ -55,8 +57,10 @@ class FehBoard private constructor(
         }
     }
 
-    private fun calculateScore() = (phraseLimit - state.phrase).toDouble() / phraseLimit * 0.3 +
-            state.enemyDied.toDouble() / enemyCount * 0.7 - state.playerDied.toDouble() / playerCount * 0.2
+    private fun calculateScore() =
+        ((phraseLimit - state.phrase).toDouble() / phraseLimit + state.enemyDied.toDouble()) / (enemyCount + 1) * 0.5 +
+                state.unitsSeq(Team.PLAYER).sumBy { it.stat.hp } / totalPlayerHp * 0.2 +
+                if (state.winningTeam == Team.PLAYER && state.playerDied == 0) 0.3 else 0.0
 
     private val stateCopy
         get() = state.copy()

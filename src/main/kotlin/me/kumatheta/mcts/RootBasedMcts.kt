@@ -5,12 +5,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
-    private val rootNode: Node<T> = ThreadSafeNode(board.copy(), explorationConstant, Random)
+class RootBasedMcts<T : Move>(board: Board<T>, explorationConstant: Double = 2 * sqrt(2.0), rootCount: Int) {
+    private val rootNodes = (1..rootCount).map {
+        SingleThreadNode(board.copy(), explorationConstant, Random)
+    }
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
         thread.isDaemon = true
@@ -18,15 +19,12 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
     }.asCoroutineDispatcher()
 
     fun run(times: Int) {
-        val countDown = AtomicInteger(times)
         runBlocking {
             supervisorScope {
-                (1..100).map {
+                rootNodes.forEach { rootNode ->
                     launch(dispatcher) {
-                        while (countDown.getAndAdd(-10) > 0) {
-                            repeat(10) {
-                                selectAndPlayOut()
-                            }
+                        repeat(times) {
+                            selectAndPlayOut(rootNode)
                         }
                     }
                 }
@@ -35,9 +33,10 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
     }
 
     val bestScore: Double
-        get() = rootNode.bestScore
+        get() = rootNodes.asSequence().map { it.bestScore }.max() ?: throw IllegalStateException()
 
     fun getBestMoves(): List<T> {
+        val rootNode = rootNodes.maxBy { it.bestScore }?: throw IllegalStateException()
         val bestRoute = generateSequence(rootNode.getBestChild()) {
             it.getBestChild()
         }.toList()
@@ -48,9 +47,9 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
     }
 
     val tries
-        get() = rootNode.tries
+        get() = rootNodes.asSequence().sumBy { it.tries }
 
-    private fun selectAndPlayOut() {
+    private fun selectAndPlayOut(rootNode: Node<T>) {
         var node = rootNode
         while (true) {
             val newNode = node.selectAndPlayOut() ?: break

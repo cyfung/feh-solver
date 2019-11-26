@@ -11,6 +11,7 @@ import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.readMap
 import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
+import me.kumatheta.mcts.MctsLowMemory
 import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -23,24 +24,15 @@ fun main() {
     val positionMap = readMap(Paths.get("test/feh - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("test/feh - spawn.csv"))
     val (playerMap, _) = readUnits(Paths.get("test/feh - players.csv"))
-//    val playerMap = spawnMap.asSequence().map {
-//        (it.key - 4) to it.value.heroModel
-//    }.toMap()
-
-
-    val heroModel = playerMap[1] ?: throw IllegalStateException()
-    val state =
-        BattleState(
-            BasicBattleMap(
-                positionMap,
-                spawnMap,
-                playerMap
-            )
+    val state = BattleState(
+        BasicBattleMap(
+            positionMap,
+            spawnMap,
+            playerMap
         )
-    val phraseLimit = 20
+    )
+    val phraseLimit = 14
     val board = FehBoard(phraseLimit, state)
-    val mcts = Mcts(board)
-
     val testMoves = listOf(
         MoveOnly(2, Position(5, 6)),
         MoveOnly(3, Position(4, 4)),
@@ -60,18 +52,17 @@ fun main() {
     ).map {
         FehMove(it)
     }
-    val testboard = board.copy()
-    testMoves.forEach { move ->
-        val exists = testboard.moves.any {
+    testMoves.take(3).forEach { move ->
+        val exists = board.moves.any {
             it == move
         }
         if (!exists) {
             throw IllegalStateException()
         }
-        testboard.applyMove(move)
+        board.applyMove(move)
     }
-    val tryMoves = board.tryMoves(testMoves, true)
-    println("${tryMoves.enemyDied}, ${tryMoves.playerDied} ${tryMoves.winningTeam}")
+
+    val mcts = MctsLowMemory(board)
     repeat(1000) {
         val duration = measureTime { mcts.run(10000) }
         println("duration $duration")
