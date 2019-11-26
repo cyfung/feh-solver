@@ -9,7 +9,8 @@ class HeroUnit(
     val id: Int,
     private val heroModel: HeroModel,
     val team: Team,
-    override var position: Position
+    override var position: Position,
+    cooldown: Int? = null
 ) : ChessPiece(), Hero by heroModel {
     private var engageCountDown = heroModel.engageDelay
     var engaged = heroModel.group == null && heroModel.engageDelay == null
@@ -60,7 +61,7 @@ class HeroUnit(
 
     var currentHp = stat.hp
         private set
-    var cooldown = heroModel.cooldownCount
+    var cooldown = cooldown ?: heroModel.cooldownCount
         private set
     val isDead
         get() = currentHp == 0

@@ -20,7 +20,7 @@ enum class SpawnTime {
     START
 }
 
-class Spawn(val heroModel: HeroModel, val spawnTime: SpawnTime)
+class Spawn(val heroModel: HeroModel, val cooldown: Int?, val spawnTime: SpawnTime)
 
 class PositionMap(
     val terrainMap: Map<Position, Terrain>,
@@ -46,16 +46,19 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
         }
         val name = valueIterator.next()
         val groupString = valueIterator.next()
-        val group = if (spawnTime == null) {
-            null
-        } else {
-            groupString.toIntOrNull()
-        }
         val engagedString = valueIterator.next()
-        val engageDelay = if (spawnTime == null) {
-            null
+        val cdString = valueIterator.next()
+        val group: Int?
+        val engageDelay: Int?
+        val cooldown: Int?
+        if (spawnTime == null) {
+            group = null
+            engageDelay = null
+            cooldown = null
         } else {
-            engagedString.toIntOrNull()
+            group = groupString.toIntOrNull()
+            engageDelay = engagedString.toIntOrNull()
+            cooldown = cdString.toIntOrNull()
         }
         val moveType = MoveType.valueOf(valueIterator.next())
         val weaponName = valueIterator.next()
@@ -95,7 +98,7 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
         if (spawnTime == null) {
             playerMap[id] = heroModel
         } else {
-            spawnMap[id] = Spawn(heroModel, spawnTime)
+            spawnMap[id] = Spawn(heroModel, cooldown, spawnTime)
         }
     }
     return Pair(playerMap.toMap(), spawnMap.toMap())
@@ -215,7 +218,13 @@ class BasicBattleMap(
             it.value.spawnTime == SpawnTime.START
         }.map {
             val position = idMap[it.key] ?: throw IllegalStateException()
-            HeroUnit(it.key, it.value.heroModel, Team.ENEMY, position)
+            HeroUnit(
+                id = it.key,
+                heroModel = it.value.heroModel,
+                team = Team.ENEMY,
+                position = position,
+                cooldown = it.value.cooldown
+            )
         } + obstacles.asSequence().map {
             Obstacle(it.value, it.key)
         } + playerMap.asSequence().map {

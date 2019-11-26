@@ -2,10 +2,10 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.MoveAndAssist
 import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.MoveOnly
 import me.kumatheta.feh.Position
-import me.kumatheta.feh.UnitAction
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.readMap
@@ -38,27 +38,47 @@ fun main() {
             )
 //                (1..4).associateWith { heroModel })
         )//mapOf(1 to Effie, 2 to Bartre, 3 to Fir)))
-    val phraseLimit = 14
+    val phraseLimit = 10
     val board = FehBoard(phraseLimit, state)
     val mcts = Mcts(board)
 
-    val testMoves = listOf<UnitAction>(
+    val testMoves = listOf(
         MoveOnly(2, Position(5, 6)),
         MoveOnly(3, Position(4, 4)),
         MoveOnly(1, Position(3, 5)),
         MoveOnly(4, Position(4, 5)),
-        MoveAndAttack(2, Position(5, 4), 8)
+        MoveAndAttack(2, Position(5, 4), 8),
+        MoveOnly(1, Position(3, 5)),
+        MoveAndAssist(4, Position(4, 5), 1),
+        MoveAndAttack(1, Position(4, 3), 6),
+        MoveOnly(3, Position(4,4)),
+        MoveAndAttack(3,Position(4,2), 7),
+        MoveAndAttack(2, Position(5,5), 5),
+        MoveAndAssist(4, Position(5,6), 2),
+        MoveAndAttack(2, Position(5,5), 5),
+        MoveOnly(1, Position(4,1)),
+        MoveAndAttack(2, Position(5,5),9)
     ).map {
         FehMove(it)
     }
+    val testboard = board.copy()
+    testMoves.forEach { move ->
+        val exists = testboard.moves.any {
+            it == move
+        }
+        if(!exists) {
+            throw IllegalStateException()
+        }
+        testboard.applyMove(move)
+    }
     val tryMoves = board.tryMoves(testMoves, true)
-    println("${tryMoves.enemyDied}, ${tryMoves.playerDied}")
-    repeat(10) {
+    println("${tryMoves.enemyDied}, ${tryMoves.playerDied} ${try}")
+    repeat(1000) {
         val duration = measureTime { mcts.run(1000) }
         println("duration $duration")
         val bestMoves = mcts.getBestMoves()
         println("best score: ${mcts.getBestScore()}")
-        val testState = board.tryMoves(bestMoves, true)
+        val testState = board.tryMoves(bestMoves)
         bestMoves.forEach {
             println(it)
         }
