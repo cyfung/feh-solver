@@ -1,6 +1,7 @@
 package me.kumatheta.mcts
 
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.ln
@@ -45,8 +46,8 @@ class Node<T : Move> private constructor(
     private val children = ConcurrentLinkedQueue<Node<T>>()
 
     private val isTerminalNode = moveQueue.isEmpty()
-    @Volatile
-    private var isPruned = false
+
+    private var isPruned = AtomicBoolean(false)
 
     private fun updateScore(newScore: Double) {
         scoreRef.getAndUpdate {
@@ -74,14 +75,15 @@ class Node<T : Move> private constructor(
 
     fun selectAndPlayOut(): Node<T>? {
         check(!isTerminalNode)
-        if (isPruned) {
+        if (isPruned.get()) {
+            updateScore(bestScore)
             return null
         }
         val move = moveQueue.poll()
         return if (move == null) {
             val tries = scoreRef.get().tries
             // select
-            val child = children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.isPruned }.maxBy {
+            val child = children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.isPruned.get() }.maxBy {
                 val score = it.scoreRef.get()
                 score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
             }
@@ -90,11 +92,12 @@ class Node<T : Move> private constructor(
                 updateScore(bestScore)
 
                 if (outstandingChildCount.get() == 0) {
-                    isPruned = true
-                    val bestChild = getBestChild()
-                    children.clear()
-                    if (bestChild != null) {
-                        children.add(bestChild)
+                    if (!isPruned.getAndSet(true)) {
+                        val bestChild = getBestChild()
+                        children.clear()
+                        if (bestChild != null) {
+                            children.add(bestChild)
+                        }
                     }
                 }
             }
