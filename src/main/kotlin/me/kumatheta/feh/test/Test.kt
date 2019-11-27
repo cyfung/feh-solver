@@ -2,7 +2,6 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.MoveAndAssist
 import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.MoveOnly
 import me.kumatheta.feh.Position
@@ -11,7 +10,6 @@ import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.readMap
 import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
-import me.kumatheta.mcts.MctsLowMemory
 import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -78,7 +76,7 @@ fun main() {
     }
     val mcts = Mcts(board)
     repeat(1000) {
-        val duration = measureTime { mcts.run(100000) }
+        val duration = measureTime { mcts.run(5) }
         println("duration $duration")
         val bestMoves = mcts.getBestMoves()
         println("best score: ${mcts.bestScore}")

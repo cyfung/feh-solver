@@ -1,3 +1,8 @@
 package me.kumatheta.mcts
 
-class Score(val totalScore: Double, val bestScore: Double, val tries: Int)
+class Score<T: Move>(
+    val totalScore: Double,
+    val tries: Int,
+    val bestScore: Double,
+    val moves: List<T>
+)

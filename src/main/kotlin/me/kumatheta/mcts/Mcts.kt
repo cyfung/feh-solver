@@ -8,6 +8,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlin.time.ExperimentalTime
+import kotlin.time.MonoClock
+import kotlin.time.measureTime
 
 class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
     private val rootNode: Node<T> = ThreadSafeNode(board.copy(), explorationConstant, Random)
@@ -17,13 +20,14 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
         thread
     }.asCoroutineDispatcher()
 
-    fun run(times: Int) {
-        val countDown = AtomicInteger(times)
+    @ExperimentalTime
+    fun run(second: Int) {
+        val clockMark = MonoClock.markNow()
         runBlocking {
             supervisorScope {
-                (1..100).map {
+                (1..20).map {
                     launch(dispatcher) {
-                        while (countDown.getAndAdd(-10) > 0) {
+                        while (clockMark.elapsedNow().inSeconds < second) {
                             repeat(10) {
                                 selectAndPlayOut()
                             }
@@ -38,7 +42,7 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
         get() = rootNode.bestScore
 
     fun getBestMoves(): List<T> {
-        return rootNode.getBestMoves()
+        return rootNode.bestMoves
     }
 
     val tries

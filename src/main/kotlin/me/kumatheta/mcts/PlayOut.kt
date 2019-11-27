@@ -2,15 +2,15 @@ package me.kumatheta.mcts
 
 import kotlin.random.Random
 
-fun <T : Move> Board<T>.playOut(random: Random): Pair<List<T>, Double> {
-    var score = this.score
-    if (score != null) {
-        return Pair(emptyList(), score)
+fun <T : Move> Board<T>.playOut(random: Random): Score<T> {
+    var temp = this.score
+    if (temp != null) {
+        throw IllegalArgumentException()
     }
     val test = copy()
     val moves = generateSequence {
-        score = test.score
-        if (score != null) {
+        temp = test.score
+        if (temp != null) {
             return@generateSequence null
         }
         val nextMoves = test.moves
@@ -21,5 +21,7 @@ fun <T : Move> Board<T>.playOut(random: Random): Pair<List<T>, Double> {
         test.applyMove(move)
         move
     }.toList()
-    return Pair(moves, score ?: throw IllegalStateException())
+    val score = temp
+    require(score != null)
+    return Score(score, 1, score, moves)
 }

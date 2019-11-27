@@ -1,20 +1,21 @@
 package me.kumatheta.mcts
 
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.ln
-import kotlin.math.max
 import kotlin.math.sqrt
 import kotlin.random.Random
 
 class ThreadSafeNode<T : Move> private constructor(
-    board: Board<T>,
+    private val board: Board<T>,
     private val explorationConstant: Double,
     private val random: Random,
     private val parent: ThreadSafeNode<T>?,
-    override val lastMove: T?,
-    movesAndScore: Pair<List<T>, Double>?
+    private val lastMove: T?,
+    private val scoreRef: AtomicReference<Score<T>>
 ) : Node<T> {
     constructor(board: Board<T>, explorationConstant: Double, random: Random) : this(
         board,
@@ -22,45 +23,47 @@ class ThreadSafeNode<T : Move> private constructor(
         random,
         null,
         null,
-        null
+        AtomicReference(Score(0.0, 0, Double.MIN_VALUE, emptyList()))
     )
 
     private val moveQueue: ConcurrentLinkedQueue<T> = ConcurrentLinkedQueue(board.moves.shuffled(random))
 
-    private val boardRef: AtomicReference<Board<T>?> = AtomicReference(
-        if (moveQueue.isEmpty()) {
-            null
-        } else {
-            board
-        }
-    )
-    @Volatile
-    override var playOutMove = movesAndScore?.first
-
-    private val scoreRef: AtomicReference<Score>
-
     init {
-        scoreRef = AtomicReference(
-            if (movesAndScore == null) {
-                Score(0.0, Double.MIN_VALUE, 0)
-            } else {
-                val score: Double = movesAndScore.second
-                Score(score, score, 1)
-            }
-        )
+        require(moveQueue.isNotEmpty())
     }
 
     private val outstandingChildCount = AtomicInteger(moveQueue.size)
 
-    private val children = ConcurrentLinkedQueue<ThreadSafeNode<T>>()
+    private val children = Collections.newSetFromMap(ConcurrentHashMap<ThreadSafeNode<T>, Boolean>())
 
-    private val isTerminalNode = moveQueue.isEmpty()
-
-    private fun updateScore(newScore: Double) {
-        scoreRef.getAndUpdate {
-            Score(it.totalScore + newScore, max(it.bestScore, newScore), it.tries + 1)
+    private fun updateScore(newScore: Double, moves: List<T>) {
+        var currentNode = this
+        val currentMoves = LinkedList<T>()
+        currentMoves.addAll(moves)
+        while (true) {
+            currentNode.scoreRef.getAndUpdate { oldScore ->
+                if (newScore > oldScore.bestScore) {
+                    Score(
+                        totalScore = oldScore.totalScore + newScore,
+                        tries = oldScore.tries + 1,
+                        bestScore = newScore,
+                        moves = currentMoves.toList()
+                    )
+                } else {
+                    Score(
+                        totalScore = oldScore.totalScore + newScore,
+                        tries = oldScore.tries + 1,
+                        bestScore = oldScore.bestScore,
+                        moves = oldScore.moves
+                    )
+                }
+            }
+            val parent = currentNode.parent ?: return
+            val lastMove = currentNode.lastMove
+            check(lastMove != null)
+            currentMoves.addFirst(lastMove)
+            currentNode = parent
         }
-        parent?.updateScore(newScore)
     }
 
     override val bestScore
@@ -69,8 +72,14 @@ class ThreadSafeNode<T : Move> private constructor(
     override val tries
         get() = scoreRef.get().tries
 
+    override val bestMoves: List<T>
+        get() {
+            check(lastMove == null)
+            return scoreRef.get().moves
+        }
+
     override fun getBestChild(): ThreadSafeNode<T>? {
-        val child = children.maxBy {
+        val child = children.asSequence().maxBy {
             it.bestScore
         }
         // return current play out instead of child's if it is better
@@ -81,42 +90,57 @@ class ThreadSafeNode<T : Move> private constructor(
     }
 
     override fun selectAndPlayOut(): ThreadSafeNode<T>? {
-        check(!isTerminalNode)
-        val board = boardRef.get() ?: return null
         val move = moveQueue.poll()
         return if (move == null) {
             val tries = scoreRef.get().tries
             val noOutstanding = outstandingChildCount.get() == 0
             // select
             val child =
-                children.asSequence().filterNot { it.isTerminalNode }.filterNot { it.boardRef.get() == null }.maxBy {
+                children.asSequence().maxBy {
                     val score = it.scoreRef.get()
                     score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
                 }
             if (child == null) {
                 // play out this node
-                if (noOutstanding) {
-                    if (boardRef.getAndSet(null) != null) {
-                        val bestChild = getBestChild()
-                        if (bestChild != null) {
-                            this.playOutMove = bestChild.getBestMoves()
-                        }
-                        children.clear()
-                    }
-                }
+//                println("empty")
             }
             child
         } else {
             // expand
             val copy = board.copy()
             copy.applyMove(move)
-            // play out
-            val movesAndScore = copy.playOut(random)
-            val child = ThreadSafeNode(copy, explorationConstant, random, this, move, movesAndScore)
-            updateScore(movesAndScore.second)
-            children.add(child)
-            outstandingChildCount.getAndDecrement()
+            val score = copy.score
+            if (score != null) {
+                updateScore(score, listOf(move))
+                onChildRemoved()
+            } else {
+                // play out
+                val childScore = copy.playOut(random)
+                val child = ThreadSafeNode(
+                    board = copy,
+                    explorationConstant = explorationConstant,
+                    random = random,
+                    parent = this,
+                    lastMove = move,
+                    scoreRef = AtomicReference(childScore)
+                )
+                updateScore(childScore.bestScore, (sequenceOf(move) + childScore.moves).toList())
+                children.add(child)
+            }
             null
         }
+    }
+
+    private fun onChildRemoved() {
+        val count = outstandingChildCount.decrementAndGet()
+        if (count == 0) {
+            parent?.removeChild(this)
+        }
+    }
+
+    private fun removeChild(child: ThreadSafeNode<T>) {
+        val removed = children.remove(child)
+        check(removed)
+        onChildRemoved()
     }
 }
