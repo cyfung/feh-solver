@@ -23,6 +23,7 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
     @ExperimentalTime
     fun run(second: Int) {
         val clockMark = MonoClock.markNow()
+        val count = AtomicInteger(0)
         runBlocking {
             supervisorScope {
                 (1..20).map {
@@ -31,11 +32,13 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
                             repeat(10) {
                                 selectAndPlayOut()
                             }
+                            count.getAndAdd(10)
                         }
                     }
                 }
             }
         }
+        println("run count: ${count.get()}")
     }
 
     val bestScore: Double
@@ -48,7 +51,7 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
     val tries
         get() = rootNode.tries
 
-    private fun selectAndPlayOut() {
+    private suspend fun selectAndPlayOut() {
         var node = rootNode
         while (true) {
             val newNode = node.selectAndPlayOut() ?: break

@@ -1,8 +1,9 @@
 package me.kumatheta.mcts
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.ln
@@ -15,7 +16,8 @@ class ThreadSafeNode<T : Move> private constructor(
     private val random: Random,
     private val parent: ThreadSafeNode<T>?,
     private val lastMove: T?,
-    private val scoreRef: AtomicReference<Score<T>>
+    private val scoreRef: AtomicReference<Score<T>>,
+    private val childIndex: Int
 ) : Node<T> {
     constructor(board: Board<T>, explorationConstant: Double, random: Random) : this(
         board,
@@ -23,18 +25,23 @@ class ThreadSafeNode<T : Move> private constructor(
         random,
         null,
         null,
-        AtomicReference(Score(0.0, 0, Double.MIN_VALUE, emptyList()))
+        AtomicReference(Score(0.0, 0, Double.MIN_VALUE, emptyList())),
+        -1
     )
 
-    private val moveQueue: ConcurrentLinkedQueue<T> = ConcurrentLinkedQueue(board.moves.shuffled(random))
+    private val children = ConcurrentHashMap<Int, Pair<T, CompletableDeferred<ThreadSafeNode<T>?>>>()
 
     init {
-        require(moveQueue.isNotEmpty())
+        board.moves.asIterable().shuffled().asSequence().forEachIndexed { index, t ->
+            children[index] = (t to CompletableDeferred())
+        }
+        require(children.isNotEmpty())
     }
 
-    private val outstandingChildCount = AtomicInteger(moveQueue.size)
 
-    private val children = Collections.newSetFromMap(ConcurrentHashMap<ThreadSafeNode<T>, Boolean>())
+    private val childInitTicket = AtomicInteger(children.size)
+
+    private val outstandingChildCount = AtomicInteger(children.size)
 
     private fun updateScore(newScore: Double, moves: List<T>) {
         var currentNode = this
@@ -42,7 +49,7 @@ class ThreadSafeNode<T : Move> private constructor(
         currentMoves.addAll(moves)
         while (true) {
             val parent = currentNode.parent
-            val movesCreator = if (parent == null){
+            val movesCreator = if (parent == null) {
                 {
                     currentMoves.toList()
                 }
@@ -86,38 +93,40 @@ class ThreadSafeNode<T : Move> private constructor(
             return scoreRef.get().moves ?: throw IllegalStateException()
         }
 
-    override fun getBestChild(): ThreadSafeNode<T>? {
-        val child = children.asSequence().maxBy {
-            it.bestScore
-        }
-        // return current play out instead of child's if it is better
-        if (child == null || child.bestScore < bestScore) {
-            return null
-        }
-        return child
-    }
-
-    override fun selectAndPlayOut(): ThreadSafeNode<T>? {
-        val move = moveQueue.poll()
-        return if (move == null) {
+    @ExperimentalCoroutinesApi
+    override suspend fun selectAndPlayOut(): ThreadSafeNode<T>? {
+        val index = childInitTicket.decrementAndGet()
+        return if (index < 0) {
             val tries = scoreRef.get().tries
             // select
-            val child =
-                children.asSequence().maxBy {
-                    getSortingScore(it, tries)
+            while (true) {
+                val child =
+                    children.values.asSequence().map { it.second }.mapNotNull {
+                        if (it.isCompleted) {
+                            it.getCompleted()
+                        } else {
+                            null
+                        }
+                    }.maxBy {
+                        getSortingScore(it, tries)
+                    }
+                if (child != null) {
+                    return child
                 }
-            if (child == null) {
-                // play out this node
-//                println("empty")
+                val firstDeferred = children.values.firstOrNull() ?: break
+                firstDeferred.second.await()
             }
-            child
+            return null
         } else {
+            val (move, deferred) = children[index] ?: throw IllegalStateException()
             // expand
             val copy = board.copy()
             copy.applyMove(move)
             val score = copy.score
             if (score != null) {
                 updateScore(score, listOf(move))
+                deferred.complete(null)
+                children.remove(index)
                 onChildRemoved()
             } else {
                 // play out
@@ -128,10 +137,11 @@ class ThreadSafeNode<T : Move> private constructor(
                     random = random,
                     parent = this,
                     lastMove = move,
-                    scoreRef = AtomicReference(Score(childScore, 1, childScore, null))
+                    scoreRef = AtomicReference(Score(childScore, 1, childScore, null)),
+                    childIndex = index
                 )
                 updateScore(childScore, (sequenceOf(move) + moves).toList())
-                children.add(child)
+                deferred.complete(child)
             }
             null
         }
@@ -149,9 +159,10 @@ class ThreadSafeNode<T : Move> private constructor(
         }
     }
 
+    @ExperimentalCoroutinesApi
     private fun removeChild(child: ThreadSafeNode<T>) {
-        val removed = children.remove(child)
-        check(removed)
+        val removed = children.remove(child.childIndex)
+        check(removed?.second?.getCompleted() == child)
         onChildRemoved()
     }
 }

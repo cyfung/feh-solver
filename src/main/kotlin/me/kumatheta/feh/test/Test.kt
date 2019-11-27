@@ -62,8 +62,6 @@ fun main() {
     ).map {
         FehMove(it)
     }
-    val testResult = board.tryMoves(testMoves)
-    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 
     testMoves.take(0).forEach { move ->
         val exists = board.moves.any {
