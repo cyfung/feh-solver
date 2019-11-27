@@ -55,8 +55,6 @@ class BattleState private constructor(
     val turn: Int
         get() = phrase / 2 + 1
 
-    private val unitIdMap = locationMap.values.filterIsInstance<HeroUnit>().associateBy { it.id }
-
     fun copy(): BattleState {
         val newLocationMap = mutableMapOf<Position, ChessPiece>()
         locationMap.mapValuesTo(newLocationMap) { it.value.copy() }
@@ -1269,6 +1267,8 @@ class BattleState private constructor(
             val testBattle = copy()
             val heroUnitId = heroUnit.id
             val foeId = foe.id
+            val testUnit = testBattle.getUnit(heroUnitId)
+            val testFoe = testBattle.getUnit(foeId)
             val moveAndAttack = MoveAndAttack(heroUnitId, movePosition.position, foeId)
             val (deadUnit, potentialDamage) = testBattle.moveAndFight(moveAndAttack)
             val winLoss = when (deadUnit?.team) {
@@ -1276,8 +1276,6 @@ class BattleState private constructor(
                 null -> WinLoss.DRAW
                 else -> WinLoss.WIN
             }
-            val testUnit = testBattle.getUnit(heroUnitId)
-            val testFoe = testBattle.getUnit(foeId)
             // warning - not sure if this is correct
             val debuffSuccess = if (heroUnit.debuffer) {
                 testFoe.debuff.def + testFoe.debuff.res + 2 <= foe.debuff.def + foe.debuff.res
@@ -1335,8 +1333,8 @@ class BattleState private constructor(
 
     fun getChessPiece(position: Position) = locationMap[position]
 
-    private fun getUnit(heroUnitId: Int) =
-        unitIdMap[heroUnitId] ?: throw IllegalStateException()
+    private fun getUnit(heroUnitId: Int): HeroUnit =
+        locationMap.values.asSequence().filterIsInstance<HeroUnit>().first { it.id == heroUnitId }
 
     private fun moveTargets(
         heroUnit: HeroUnit,

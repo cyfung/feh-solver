@@ -2,6 +2,8 @@ package me.kumatheta.mcts
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import me.kumatheta.feh.mcts.FehBoard
+import me.kumatheta.feh.mcts.FehMove
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -10,6 +12,7 @@ import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
 
+@ExperimentalCoroutinesApi
 class ThreadSafeNode<T : Move> private constructor(
     private val board: Board<T>,
     private val explorationConstant: Double,
@@ -81,19 +84,9 @@ class ThreadSafeNode<T : Move> private constructor(
         }
     }
 
-    override val bestScore
-        get() = scoreRef.get().bestScore
+    override val bestScore: Score<T>
+        get() = scoreRef.get()
 
-    override val tries
-        get() = scoreRef.get().tries
-
-    override val bestMoves: List<T>
-        get() {
-            check(lastMove == null)
-            return scoreRef.get().moves ?: throw IllegalStateException()
-        }
-
-    @ExperimentalCoroutinesApi
     override suspend fun selectAndPlayOut(): ThreadSafeNode<T>? {
         val index = childInitTicket.decrementAndGet()
         return if (index < 0) {
@@ -159,7 +152,6 @@ class ThreadSafeNode<T : Move> private constructor(
         }
     }
 
-    @ExperimentalCoroutinesApi
     private fun removeChild(child: ThreadSafeNode<T>) {
         val removed = children.remove(child.childIndex)
         check(removed?.second?.getCompleted() == child)

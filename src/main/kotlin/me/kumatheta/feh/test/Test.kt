@@ -10,6 +10,7 @@ import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.readMap
 import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
+import java.lang.IllegalStateException
 import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -79,8 +80,8 @@ fun main() {
     repeat(1000) {
         val duration = measureTime { mcts.run(5) }
         println("duration $duration")
-        val bestMoves = mcts.getBestMoves()
-        println("best score: ${mcts.bestScore}")
+        val bestScore = mcts.bestScore
+        val bestMoves = bestScore.moves ?: throw IllegalStateException()
         val testState = try {
             board.tryMoves(bestMoves)
         } catch (t: Throwable) {
@@ -89,8 +90,10 @@ fun main() {
         bestMoves.forEach {
             println(it)
         }
-        println("tries: ${mcts.tries - tries}, total tries: ${mcts.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
-        tries = mcts.tries
+        println("best score: ${bestScore.bestScore}")
+        println("calculated best score: ${board.calculateScore(testState)}")
+        println("tries: ${bestScore.tries - tries}, total tries: ${bestScore.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
+        tries = bestScore.tries
     }
 }
 

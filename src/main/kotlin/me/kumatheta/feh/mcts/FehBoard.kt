@@ -48,20 +48,20 @@ class FehBoard private constructor(
         val nextMove = move.unitAction
         val movementResult = state.playerMove(nextMove)
         if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
-            score = calculateScore()
+            score = calculateScore(state)
         } else if (movementResult.phraseChange) {
             state.enemyMoves()
             if (state.playerDied > 0 || state.winningTeam != null || phraseLimit < state.phrase) {
-                score = calculateScore()
+                score = calculateScore(state)
             }
         }
     }
 
-    private fun calculateScore() =
-        state.enemyDied.toDouble() / enemyCount * 0.5 +
-                0.1 - state.playerDied.toDouble() / playerCount * 0.1 +
-                if (state.winningTeam == Team.PLAYER && state.playerDied == 0) {
-                    0.1 + (phraseLimit - state.phrase).toDouble() / phraseLimit * 0.3
+    fun calculateScore(battleState: BattleState) =
+        battleState.enemyDied.toDouble() / enemyCount * 0.5 +
+                0.1 - battleState.playerDied.toDouble() / playerCount * 0.1 +
+                if (battleState.winningTeam == Team.PLAYER && battleState.playerDied == 0) {
+                    0.1 + (phraseLimit - battleState.phrase).toDouble() / phraseLimit * 0.3
                 } else {
                     0.0
                 }
@@ -77,10 +77,15 @@ class FehBoard private constructor(
                 println(unitAction)
             }
             val movementResult = testState.playerMove(unitAction)
-            if (movementResult.phraseChange) {
-                val enemyMoves = testState.enemyMoves()
-                if (printMoves) {
-                    enemyMoves.forEach(::println)
+            when {
+                movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER -> {
+                    // ignore
+                }
+                movementResult.phraseChange -> {
+                    val enemyMoves = testState.enemyMoves()
+                    if (printMoves) {
+                        enemyMoves.forEach(::println)
+                    }
                 }
             }
         }

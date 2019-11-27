@@ -41,15 +41,8 @@ class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
         println("run count: ${count.get()}")
     }
 
-    val bestScore: Double
+    val bestScore: Score<T>
         get() = rootNode.bestScore
-
-    fun getBestMoves(): List<T> {
-        return rootNode.bestMoves
-    }
-
-    val tries
-        get() = rootNode.tries
 
     private suspend fun selectAndPlayOut() {
         var node = rootNode
