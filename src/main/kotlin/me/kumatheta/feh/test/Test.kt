@@ -89,7 +89,7 @@ fun main() {
         bestMoves.forEach {
             println(it)
         }
-        println("tries: ${mcts.tries - tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
+        println("tries: ${mcts.tries - tries}, total tries: ${mcts.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
         tries = mcts.tries
     }
 }
