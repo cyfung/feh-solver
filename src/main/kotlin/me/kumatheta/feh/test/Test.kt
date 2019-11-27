@@ -50,31 +50,32 @@ fun main() {
 //    ).map {
 //        FehMove(it)
 //    }
-    val testMoves = listOf(
-        MoveOnly(2, Position(5, 6)),
-        MoveOnly(3, Position(4, 4)),
-        MoveOnly(1, Position(3, 5)),
-        MoveOnly(4, Position(4, 5)),
-        MoveAndAttack(2, Position(5, 4), 8),
-        MoveOnly(1, Position(5,6)),
-        MoveOnly(4, Position(5,5)),
-        MoveOnly(3, Position(4, 2))
-    ).map {
-        FehMove(it)
-    }
-    val testResult = board.tryMoves(testMoves)
-    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
+//    val testMoves = listOf(
+//        MoveOnly(2, Position(5, 6)),
+//        MoveOnly(3, Position(4, 4)),
+//        MoveOnly(1, Position(3, 5)),
+//        MoveOnly(4, Position(4, 5)),
+//        MoveAndAttack(2, Position(5, 4), 8),
+//        MoveOnly(1, Position(5,6)),
+//        MoveOnly(4, Position(5,5)),
+//        MoveOnly(3, Position(4, 2))
+//    ).map {
+//        FehMove(it)
+//    }
+//    val testResult = board.tryMoves(testMoves)
+//    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 
-    testMoves.take(0).forEach { move ->
-        val exists = board.moves.any {
-            it == move
-        }
-        if (!exists) {
-            throw IllegalStateException()
-        }
-        board.applyMove(move)
-    }
+//    testMoves.take(0).forEach { move ->
+////        val exists = board.moves.any {
+////            it == move
+////        }
+////        if (!exists) {
+////            throw IllegalStateException()
+////        }
+////        board.applyMove(move)
+////    }
     val mcts = Mcts(board)
+    var tries = 0
     repeat(1000) {
         val duration = measureTime { mcts.run(5) }
         println("duration $duration")
@@ -88,7 +89,8 @@ fun main() {
         bestMoves.forEach {
             println(it)
         }
-        println("tries: ${mcts.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
+        println("tries: ${mcts.tries - tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
+        tries = mcts.tries
     }
 }
 
