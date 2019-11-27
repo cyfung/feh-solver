@@ -93,12 +93,10 @@ class ThreadSafeNode<T : Move> private constructor(
         val move = moveQueue.poll()
         return if (move == null) {
             val tries = scoreRef.get().tries
-            val noOutstanding = outstandingChildCount.get() == 0
             // select
             val child =
                 children.asSequence().maxBy {
-                    val score = it.scoreRef.get()
-                    score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
+                    getSortingScore(it, tries)
                 }
             if (child == null) {
                 // play out this node
@@ -129,6 +127,11 @@ class ThreadSafeNode<T : Move> private constructor(
             }
             null
         }
+    }
+
+    private fun getSortingScore(it: ThreadSafeNode<T>, tries: Int): Double {
+        val score = it.scoreRef.get()
+        return score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
     }
 
     private fun onChildRemoved() {
