@@ -2,7 +2,7 @@ package me.kumatheta.mcts
 
 import kotlin.random.Random
 
-fun <T : Move> Board<T>.playOut(random: Random): Score<T> {
+fun <T : Move> Board<T>.playOut(random: Random): Pair<Double, List<T>> {
     var temp = this.score
     if (temp != null) {
         throw IllegalArgumentException()
@@ -23,5 +23,5 @@ fun <T : Move> Board<T>.playOut(random: Random): Score<T> {
     }.toList()
     val score = temp
     require(score != null)
-    return Score(score, 1, score, moves)
+    return score to moves
 }

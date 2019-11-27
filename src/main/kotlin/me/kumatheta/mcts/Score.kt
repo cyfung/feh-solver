@@ -4,5 +4,5 @@ class Score<T: Move>(
     val totalScore: Double,
     val tries: Int,
     val bestScore: Double,
-    val moves: List<T>
+    val moves: List<T>?
 )

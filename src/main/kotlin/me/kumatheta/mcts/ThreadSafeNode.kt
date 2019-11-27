@@ -41,13 +41,21 @@ class ThreadSafeNode<T : Move> private constructor(
         val currentMoves = LinkedList<T>()
         currentMoves.addAll(moves)
         while (true) {
+            val parent = currentNode.parent
+            val movesCreator = if (parent == null){
+                {
+                    currentMoves.toList()
+                }
+            } else {
+                { null }
+            }
             currentNode.scoreRef.getAndUpdate { oldScore ->
                 if (newScore > oldScore.bestScore) {
                     Score(
                         totalScore = oldScore.totalScore + newScore,
                         tries = oldScore.tries + 1,
                         bestScore = newScore,
-                        moves = currentMoves.toList()
+                        moves = movesCreator()
                     )
                 } else {
                     Score(
@@ -58,7 +66,7 @@ class ThreadSafeNode<T : Move> private constructor(
                     )
                 }
             }
-            val parent = currentNode.parent ?: return
+            if (parent == null) return
             val lastMove = currentNode.lastMove
             check(lastMove != null)
             currentMoves.addFirst(lastMove)
@@ -75,7 +83,7 @@ class ThreadSafeNode<T : Move> private constructor(
     override val bestMoves: List<T>
         get() {
             check(lastMove == null)
-            return scoreRef.get().moves
+            return scoreRef.get().moves ?: throw IllegalStateException()
         }
 
     override fun getBestChild(): ThreadSafeNode<T>? {
@@ -113,16 +121,16 @@ class ThreadSafeNode<T : Move> private constructor(
                 onChildRemoved()
             } else {
                 // play out
-                val childScore = copy.playOut(random)
+                val (childScore, moves) = copy.playOut(random)
                 val child = ThreadSafeNode(
                     board = copy,
                     explorationConstant = explorationConstant,
                     random = random,
                     parent = this,
                     lastMove = move,
-                    scoreRef = AtomicReference(childScore)
+                    scoreRef = AtomicReference(Score(childScore, 1, childScore, null))
                 )
-                updateScore(childScore.bestScore, (sequenceOf(move) + childScore.moves).toList())
+                updateScore(childScore, (sequenceOf(move) + moves).toList())
                 children.add(child)
             }
             null
