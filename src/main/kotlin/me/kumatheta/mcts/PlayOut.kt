@@ -2,7 +2,7 @@ package me.kumatheta.mcts
 
 import kotlin.random.Random
 
-fun <T : Move> Board<T>.playOut(random: Random): Pair<Double, List<T>> {
+fun <T : Move> Board<T>.playOut(random: Random): Pair<Long, List<T>> {
     var temp = this.score
     if (temp != null) {
         throw IllegalArgumentException()
@@ -15,9 +15,11 @@ fun <T : Move> Board<T>.playOut(random: Random): Pair<Double, List<T>> {
         }
         val nextMoves = test.moves
         if (nextMoves.isEmpty()) {
-            test.moves
+            throw IllegalStateException()
         }
-        val move = nextMoves.random(random = random)
+        val shuffled = nextMoves.shuffled(random = random)
+        val suggestedMoves = test.suggestedMoves(shuffled)
+        val move = suggestedMoves.firstOrNull() ?: shuffled.first()
         test.applyMove(move)
         move
     }.toList()

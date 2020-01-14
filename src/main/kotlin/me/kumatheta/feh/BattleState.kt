@@ -1461,16 +1461,16 @@ class BattleState private constructor(
                             obstacle = attackTargetPosition
                         )
                     }
-                } + MoveOnly(
-                    heroUnitId = heroUnit.id,
-                    moveTarget = move
-                ) + teammates.asSequence().filterValidAssistTarget(heroUnit, move).map { assistTarget ->
+                } + teammates.asSequence().filterValidAssistTarget(heroUnit, move).map { assistTarget ->
                     MoveAndAssist(
                         heroUnitId = heroUnit.id,
                         moveTarget = move,
                         assistTargetId = assistTarget.id
                     )
-                }
+                } + MoveOnly(
+                    heroUnitId = heroUnit.id,
+                    moveTarget = move
+                )
             }
         }
     }

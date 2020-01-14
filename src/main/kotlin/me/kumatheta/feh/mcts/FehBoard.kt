@@ -1,6 +1,7 @@
 package me.kumatheta.feh.mcts
 
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.Team
 import me.kumatheta.feh.UnitAction
 import me.kumatheta.mcts.Board
@@ -9,7 +10,7 @@ import me.kumatheta.mcts.Move
 class FehBoard private constructor(
     private val phraseLimit: Int,
     state: BattleState,
-    score: Double?,
+    score: Long?,
     private val totalPlayerHp: Int
 ) : Board<FehMove> {
     private val state = state.copy()
@@ -36,10 +37,10 @@ class FehBoard private constructor(
             }.toList()
         }
 
-    override var score: Double? = score
+    override var score: Long? = score
         private set
 
-    override fun copy(): Board<FehMove> {
+    override fun copy(): FehBoard {
         return FehBoard(phraseLimit, state, score, totalPlayerHp)
     }
 
@@ -58,13 +59,10 @@ class FehBoard private constructor(
     }
 
     fun calculateScore(battleState: BattleState) =
-        battleState.enemyDied.toDouble() / enemyCount * 0.5 +
-                0.1 - battleState.playerDied.toDouble() / playerCount * 0.1 +
-                if (battleState.winningTeam == Team.PLAYER && battleState.playerDied == 0) {
-                    0.1 + (phraseLimit - battleState.phrase).toDouble() / phraseLimit * 0.3
-                } else {
-                    0.0
-                }
+        battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
+                battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 +  + battleState.unitsSeq(
+            Team.ENEMY
+        ).sumBy { it.stat.hp - it.currentHp } * 2 + (phraseLimit - battleState.phrase) * 20
 
     private val stateCopy
         get() = state.copy()
@@ -90,6 +88,15 @@ class FehBoard private constructor(
             }
         }
         return testState
+    }
+
+    override fun suggestedMoves(nextMoves: List<FehMove>): Sequence<FehMove> {
+        val enemyCount = enemyCount
+        return nextMoves.asSequence().filter { it.unitAction is MoveAndAttack }.filter {
+            val copy = copy()
+            copy.applyMove(it)
+            copy.enemyCount < enemyCount
+        }
     }
 }
 

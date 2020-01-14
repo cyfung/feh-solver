@@ -2,8 +2,6 @@ package me.kumatheta.mcts
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import me.kumatheta.feh.mcts.FehBoard
-import me.kumatheta.feh.mcts.FehMove
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -15,20 +13,22 @@ import kotlin.random.Random
 @ExperimentalCoroutinesApi
 class ThreadSafeNode<T : Move> private constructor(
     private val board: Board<T>,
-    private val explorationConstant: Double,
+    private val explorationConstantC: Double,
+    private val explorationConstantD: Double,
     private val random: Random,
     private val parent: ThreadSafeNode<T>?,
     private val lastMove: T?,
     private val scoreRef: AtomicReference<Score<T>>,
     private val childIndex: Int
 ) : Node<T> {
-    constructor(board: Board<T>, explorationConstant: Double, random: Random) : this(
+    constructor(board: Board<T>, explorationConstantC: Double, explorationConstantD: Double, random: Random) : this(
         board,
-        explorationConstant,
+        explorationConstantC,
+        explorationConstantD,
         random,
         null,
         null,
-        AtomicReference(Score(0.0, 0, Double.MIN_VALUE, emptyList())),
+        AtomicReference(Score(0, 0, 0, emptyList(), 0)),
         -1
     )
 
@@ -46,7 +46,7 @@ class ThreadSafeNode<T : Move> private constructor(
 
     private val outstandingChildCount = AtomicInteger(children.size)
 
-    private fun updateScore(newScore: Double, moves: List<T>) {
+    private fun updateScore(newScore: Long, moves: List<T>) {
         var currentNode = this
         val currentMoves = LinkedList<T>()
         currentMoves.addAll(moves)
@@ -60,19 +60,27 @@ class ThreadSafeNode<T : Move> private constructor(
                 { null }
             }
             currentNode.scoreRef.getAndUpdate { oldScore ->
+                val totalScore = oldScore.totalScore + newScore
+                val scoreSquareSum = oldScore.scoreSquareSum + newScore * newScore
+                if (scoreSquareSum < oldScore.scoreSquareSum) {
+                    throw IllegalStateException()
+                }
+                val tries = oldScore.tries + 1
                 if (newScore > oldScore.bestScore) {
                     Score(
-                        totalScore = oldScore.totalScore + newScore,
-                        tries = oldScore.tries + 1,
+                        totalScore = totalScore,
+                        tries = tries,
                         bestScore = newScore,
-                        moves = movesCreator()
+                        moves = movesCreator(),
+                        scoreSquareSum = scoreSquareSum
                     )
                 } else {
                     Score(
-                        totalScore = oldScore.totalScore + newScore,
-                        tries = oldScore.tries + 1,
+                        totalScore = totalScore,
+                        tries = tries,
                         bestScore = oldScore.bestScore,
-                        moves = oldScore.moves
+                        moves = oldScore.moves,
+                        scoreSquareSum = scoreSquareSum
                     )
                 }
             }
@@ -126,11 +134,12 @@ class ThreadSafeNode<T : Move> private constructor(
                 val (childScore, moves) = copy.playOut(random)
                 val child = ThreadSafeNode(
                     board = copy,
-                    explorationConstant = explorationConstant,
+                    explorationConstantC = explorationConstantC,
+                    explorationConstantD = explorationConstantD,
                     random = random,
                     parent = this,
                     lastMove = move,
-                    scoreRef = AtomicReference(Score(childScore, 1, childScore, null)),
+                    scoreRef = AtomicReference(Score(childScore, 1, childScore, null, childScore * childScore)),
                     childIndex = index
                 )
                 updateScore(childScore, (sequenceOf(move) + moves).toList())
@@ -140,9 +149,13 @@ class ThreadSafeNode<T : Move> private constructor(
         }
     }
 
-    private fun getSortingScore(it: ThreadSafeNode<T>, tries: Int): Double {
-        val score = it.scoreRef.get()
-        return score.totalScore / score.tries + explorationConstant * sqrt(ln(tries.toDouble()) / score.tries.toDouble())
+    private fun getSortingScore(child: ThreadSafeNode<T>, tries: Int): Double {
+        val childScore = child.scoreRef.get()
+        val childTries = childScore.tries
+        val average = childScore.totalScore.toDouble() / childTries
+        return average +
+                explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble()) +
+                sqrt((childScore.scoreSquareSum - average * childScore.bestScore + explorationConstantD) / childTries)
     }
 
     private fun onChildRemoved() {

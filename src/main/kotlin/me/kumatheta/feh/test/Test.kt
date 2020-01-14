@@ -2,6 +2,7 @@ package me.kumatheta.feh.test
 
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.MoveAndAssist
 import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.MoveOnly
 import me.kumatheta.feh.Position
@@ -30,7 +31,7 @@ fun main() {
             playerMap
         )
     )
-    val phraseLimit = 14
+    val phraseLimit = 20
     val board = FehBoard(phraseLimit, state)
 //    val testMoves = listOf(
 //        MoveOnly(2, Position(5, 6)),
@@ -63,23 +64,24 @@ fun main() {
 //    ).map {
 //        FehMove(it)
 //    }
-//    val testResult = board.tryMoves(testMoves)
+//    val testResult = board.tryMoves(testMoves.take(4))
 //    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
-
+//
 //    testMoves.take(0).forEach { move ->
-////        val exists = board.moves.any {
-////            it == move
-////        }
-////        if (!exists) {
-////            throw IllegalStateException()
-////        }
-////        board.applyMove(move)
-////    }
-    val mcts = Mcts(board)
+//        val exists = board.moves.any {
+//            it == move
+//        }
+//        if (!exists) {
+//            throw IllegalStateException()
+//        }
+//        board.applyMove(move)
+//    }
+    val mcts = Mcts(board, 1.0, 500000000.0)
+
+//    val mcts = Mcts(board, 0.3, 500000000.0)
     var tries = 0
     repeat(1000) {
-        val duration = measureTime { mcts.run(5) }
-        println("duration $duration")
+        mcts.run(5)
         val bestScore = mcts.bestScore
         val bestMoves = bestScore.moves ?: throw IllegalStateException()
         val testState = try {

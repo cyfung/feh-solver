@@ -12,8 +12,8 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 import kotlin.time.measureTime
 
-class Mcts<T : Move>(board: Board<T>, explorationConstant: Double = sqrt(2.0)) {
-    private val rootNode: Node<T> = ThreadSafeNode(board.copy(), explorationConstant, Random)
+class Mcts<T : Move>(board: Board<T>, explorationConstantC: Double, explorationConstantD: Double) {
+    private val rootNode: Node<T> = ThreadSafeNode(board.copy(), explorationConstantC, explorationConstantD, Random)
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
         thread.isDaemon = true
