@@ -67,15 +67,15 @@ fun main() {
 //    val testResult = board.tryMoves(testMoves.take(4))
 //    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 //
-    testMoves.take(4).forEach { move ->
-        val exists = board.moves.any {
-            it == move
-        }
-        if (!exists) {
-            throw IllegalStateException()
-        }
-        board.applyMove(move)
-    }
+//    testMoves.take(4).forEach { move ->
+//        val exists = board.moves.any {
+//            it == move
+//        }
+//        if (!exists) {
+//            throw IllegalStateException()
+//        }
+//        board.applyMove(move)
+//    }
     val mcts = Mcts(board, 1.0, 500000000.0)
 
 //    val mcts = Mcts(board, 0.3, 500000000.0)

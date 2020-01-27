@@ -1,13 +1,9 @@
 package me.kumatheta.mcts
 
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.ln
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 class ThreadSafeNode<T : Move>(
@@ -17,8 +13,8 @@ class ThreadSafeNode<T : Move>(
     override val lastMove: T?,
     override val scoreRef: AtomicReference<Score<T>>,
     override val childIndex: Int,
-    private val childBuilder: (parent: Node<T>, childScore: Long, moves: List<T>)->Node<T>,
-    private val computeScore: (child: Node<T>, tries: Int)-> Double
+    private val childBuilder: (parent: Node<T>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>) -> Node<T>,
+    private val computeScore: (child: Node<T>, tries: Int) -> Double
 ) : Node<T> {
 
     private val children = ConcurrentHashMap<Int, Pair<T, CompletableDeferred<Node<T>?>>>()
@@ -38,7 +34,7 @@ class ThreadSafeNode<T : Move>(
     override val bestScore: Score<T>
         get() = scoreRef.get()
 
-    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>)->Unit): Node<T>? {
+    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T>? {
         val index = childInitTicket.decrementAndGet()
         return if (index < 0) {
             val tries = scoreRef.get().tries
@@ -75,7 +71,7 @@ class ThreadSafeNode<T : Move>(
             } else {
                 // play out
                 val (childScore, moves) = copy.playOut(random)
-                val child = childBuilder(this, childScore, moves)
+                val child = childBuilder(this, index, copy, move, childScore, moves)
                 updateScore(childScore, (sequenceOf(move) + moves).toList())
                 deferred.complete(child)
             }

@@ -30,14 +30,14 @@ class Mcts<T : Move>(
         computeScore = ::getSortingScore
     )
 
-    private fun buildChild(parent: Node<T>, childScore: Long, moves: List<T>): Node<T> {
+    private fun buildChild(parent: Node<T>, childIndex: Int, board: Board<T>, lastMove:T, childScore: Long, moves: List<T>): Node<T> {
         return ThreadSafeNode(
-            board = parent.board.copy(),
+            board = board,
             random = Random,
-            parent = null,
-            lastMove = null,
+            parent = parent,
+            lastMove = lastMove,
             scoreRef = AtomicReference(Score(childScore, 1, childScore, moves, childScore * childScore)),
-            childIndex = 0,
+            childIndex = childIndex,
             childBuilder = ::buildChild,
             computeScore = ::getSortingScore
         )
