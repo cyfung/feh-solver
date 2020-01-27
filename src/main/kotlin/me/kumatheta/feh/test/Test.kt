@@ -33,25 +33,25 @@ fun main() {
     )
     val phraseLimit = 20
     val board = FehBoard(phraseLimit, state)
-//    val testMoves = listOf(
-//        MoveOnly(2, Position(5, 6)),
-//        MoveOnly(3, Position(4, 4)),
-//        MoveOnly(1, Position(3, 5)),
-//        MoveOnly(4, Position(4, 5)),
-//        MoveAndAttack(2, Position(5, 4), 8),
-//        MoveOnly(1, Position(3, 5)),
-//        MoveAndAssist(4, Position(4, 5), 1),
-//        MoveAndAttack(1, Position(4, 3), 6),
-//        MoveOnly(3, Position(4, 4)),
-//        MoveAndAttack(3, Position(4, 2), 7),
-//        MoveAndAttack(2, Position(5, 5), 5),
-//        MoveAndAssist(4, Position(5, 6), 2),
-//        MoveAndAttack(2, Position(5, 5), 5),
-//        MoveOnly(1, Position(4, 1)),
-//        MoveAndAttack(2, Position(5, 5), 9)
-//    ).map {
-//        FehMove(it)
-//    }
+    val testMoves = listOf(
+        MoveOnly(2, Position(5, 6)),
+        MoveOnly(3, Position(4, 4)),
+        MoveOnly(1, Position(3, 5)),
+        MoveOnly(4, Position(4, 5)),
+        MoveAndAttack(2, Position(5, 4), 8),
+        MoveOnly(1, Position(3, 5)),
+        MoveAndAssist(4, Position(4, 5), 1),
+        MoveAndAttack(1, Position(4, 3), 6),
+        MoveOnly(3, Position(4, 4)),
+        MoveAndAttack(3, Position(4, 2), 7),
+        MoveAndAttack(2, Position(5, 5), 5),
+        MoveAndAssist(4, Position(5, 6), 2),
+        MoveAndAttack(2, Position(5, 5), 5),
+        MoveOnly(1, Position(4, 1)),
+        MoveAndAttack(2, Position(5, 5), 9)
+    ).map {
+        FehMove(it)
+    }
 //    val testMoves = listOf(
 //        MoveOnly(2, Position(5, 6)),
 //        MoveOnly(3, Position(4, 4)),
@@ -67,15 +67,15 @@ fun main() {
 //    val testResult = board.tryMoves(testMoves.take(4))
 //    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 //
-//    testMoves.take(0).forEach { move ->
-//        val exists = board.moves.any {
-//            it == move
-//        }
-//        if (!exists) {
-//            throw IllegalStateException()
-//        }
-//        board.applyMove(move)
-//    }
+    testMoves.take(4).forEach { move ->
+        val exists = board.moves.any {
+            it == move
+        }
+        if (!exists) {
+            throw IllegalStateException()
+        }
+        board.applyMove(move)
+    }
     val mcts = Mcts(board, 1.0, 500000000.0)
 
 //    val mcts = Mcts(board, 0.3, 500000000.0)
