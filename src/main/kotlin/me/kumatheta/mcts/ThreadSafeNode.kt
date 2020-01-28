@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 class ThreadSafeNode<T : Move>(
-    override val board: Board<T>,
+    private val board: Board<T>,
     private val random: Random,
     override val parent: Node<T>?,
     override val lastMove: T?,
@@ -31,9 +31,6 @@ class ThreadSafeNode<T : Move>(
 
     private val outstandingChildCount = AtomicInteger(children.size)
 
-    override val bestScore: Score<T>
-        get() = scoreRef.get()
-
     override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T>? {
         val index = childInitTicket.decrementAndGet()
         return if (index < 0) {
@@ -54,7 +51,10 @@ class ThreadSafeNode<T : Move>(
                     return child
                 }
                 val firstDeferred = children.values.firstOrNull() ?: break
-                firstDeferred.second.await()
+                return firstDeferred.second.await()
+            }
+            if (outstandingChildCount.get() <= 0) {
+                parent?.removeChild(this)
             }
             return null
         } else {
@@ -66,8 +66,7 @@ class ThreadSafeNode<T : Move>(
             if (score != null) {
                 updateScore(score, listOf(move))
                 deferred.complete(null)
-                children.remove(index)
-                onChildRemoved()
+                removeChild(index)
             } else {
                 // play out
                 val (childScore, moves) = copy.playOut(random)
@@ -79,15 +78,19 @@ class ThreadSafeNode<T : Move>(
         }
     }
 
-    private fun onChildRemoved() {
-        val count = outstandingChildCount.decrementAndGet()
-        if (count == 0) {
-            parent?.removeChild(this)
+    override fun removeChild(child: Node<T>) {
+        removeChild(child.childIndex)
+    }
+
+    private fun removeChild(childIndex: Int) {
+        val removed = children.remove(childIndex)
+        if (removed != null) {
+            val count = outstandingChildCount.decrementAndGet()
+            if (count <= 0) {
+                parent?.removeChild(this)
+            }
         }
     }
 
-    override fun removeChild(child: Node<T>) {
-        children.remove(child.childIndex)
-        onChildRemoved()
-    }
+
 }

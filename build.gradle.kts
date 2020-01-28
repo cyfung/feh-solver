@@ -15,6 +15,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2")
+    implementation("com.github.ben-manes.caffeine:caffeine:2.8.1")
 }
 
 tasks.withType<KotlinCompile> {

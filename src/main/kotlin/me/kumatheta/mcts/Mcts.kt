@@ -19,29 +19,38 @@ class Mcts<T : Move>(
     private val explorationConstantC: Double,
     private val explorationConstantD: Double
 ) {
-    private val rootNode: Node<T> = ThreadSafeNode(
+    private val recycleManager = RecycleManager(Random, ::getSortingScore)
+    private val rootNode: Node<T> = RecyclableNode(
+        recycleManager = recycleManager,
         board = board.copy(),
-        random = Random,
         parent = null,
         lastMove = null,
         scoreRef = AtomicReference(Score(0, 0, 0, null, 0)),
-        childIndex = 0,
-        childBuilder = ::buildChild,
-        computeScore = ::getSortingScore
+        childIndex = 0
     )
-
-    private fun buildChild(parent: Node<T>, childIndex: Int, board: Board<T>, lastMove:T, childScore: Long, moves: List<T>): Node<T> {
-        return ThreadSafeNode(
-            board = board,
-            random = Random,
-            parent = parent,
-            lastMove = lastMove,
-            scoreRef = AtomicReference(Score(childScore, 1, childScore, moves, childScore * childScore)),
-            childIndex = childIndex,
-            childBuilder = ::buildChild,
-            computeScore = ::getSortingScore
-        )
-    }
+//    private val rootNode: Node<T> = ThreadSafeNode(
+//        board = board.copy(),
+//        random = Random,
+//        parent = null,
+//        lastMove = null,
+//        scoreRef = AtomicReference(Score(0, 0, 0, null, 0)),
+//        childIndex = 0,
+//        childBuilder = ::buildChild,
+//        computeScore = ::getSortingScore
+//    )
+//
+//    private fun buildChild(parent: Node<T>, childIndex: Int, board: Board<T>, lastMove:T, childScore: Long, moves: List<T>): Node<T> {
+//        return ThreadSafeNode(
+//            board = board,
+//            random = Random,
+//            parent = parent,
+//            lastMove = lastMove,
+//            scoreRef = AtomicReference(Score(childScore, 1, childScore, moves, childScore * childScore)),
+//            childIndex = childIndex,
+//            childBuilder = ::buildChild,
+//            computeScore = ::getSortingScore
+//        )
+//    }
 
     private fun getSortingScore(child: Node<T>, tries: Int): Double {
         val childScore = child.scoreRef.get()
@@ -77,7 +86,7 @@ class Mcts<T : Move>(
                 }
             }
         }
-        println("run count: ${count.get()}")
+        println("run count: ${count.get()}, estimatedSize: ${recycleManager.estimatedSize}")
     }
 
     val bestScore: Score<T>

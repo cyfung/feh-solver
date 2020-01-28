@@ -3,8 +3,8 @@ package me.kumatheta.mcts
 import java.util.concurrent.atomic.AtomicReference
 
 interface Node<T : Move> {
-    val board: Board<T>
     val bestScore: Score<T>
+        get() = scoreRef.get()
     val parent: Node<T>?
     val lastMove: T?
     val scoreRef: AtomicReference<Score<T>>
