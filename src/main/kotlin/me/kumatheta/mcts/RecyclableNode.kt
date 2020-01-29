@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
-class RecycleManager<T : Move, S : Score>(
+class RecycleManager<T : Move, S : Score<T>>(
     private val random: Random,
     val scoreManager: ScoreManager<T, S>,
     cacheCount: Long
@@ -29,7 +29,7 @@ class RecycleManager<T : Move, S : Score>(
 
 }
 
-class RecyclableNode<T : Move, S : Score>(
+class RecyclableNode<T : Move, S : Score<T>>(
     private val recycleManager: RecycleManager<T, S>,
     private val board: Board<T>,
     override val parent: Node<T, S>?,
@@ -40,8 +40,10 @@ class RecyclableNode<T : Move, S : Score>(
     private val _scoreRef = scoreRef
     override val scoreRef: AtomicReference<S>
         get() = recycleManager.getDelegateNode(this).scoreRef
-    override val bestChild
-        get() = recycleManager.getDelegateNode(this).bestChild
+
+    override fun getBestChild(): Node<T, S>? {
+        return recycleManager.getDelegateNode(this).getBestChild()
+    }
 
     internal fun createActualNode(
         random: Random,

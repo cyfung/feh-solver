@@ -8,12 +8,12 @@ class ModifiedUCT<T : Move>(
     private val explorationConstantD: Double
 ) : ScoreManager<T, ModifiedUCT.ScoreWithSquareSum<T>> {
     class ScoreWithSquareSum<T : Move>(
-        val totalScore: Long,
+        override val totalScore: Long,
         override val tries: Int,
         override val bestScore: Long,
-        val moves: List<T>?,
+        override val moves: List<T>?,
         val scoreSquareSum: Long
-    ) : Score
+    ) : Score<T>
 
     override fun newChildScore(childScore: Long, moves: List<T>) =
         ScoreWithSquareSum(childScore, 1, childScore, moves, childScore * childScore)

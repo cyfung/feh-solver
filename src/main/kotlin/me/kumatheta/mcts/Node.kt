@@ -2,7 +2,7 @@ package me.kumatheta.mcts
 
 import java.util.concurrent.atomic.AtomicReference
 
-interface Node<T : Move, S : Score> {
+interface Node<T : Move, S : Score<T>> {
     val bestScore: S
         get() = scoreRef.get()
     val parent: Node<T, S>?
@@ -12,6 +12,6 @@ interface Node<T : Move, S : Score> {
 
     suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>?
     fun removeChild(child: Node<T, S>)
-    val bestChild: Node<T, S>?
+    fun getBestChild(): Node<T, S>?
 }
 

@@ -4,6 +4,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
+import java.lang.IllegalStateException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -12,7 +13,7 @@ import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
-class Mcts<T : Move, S : Score>(
+class Mcts<T : Move, S : Score<T>>(
     board: Board<T>,
     private val scoreManager: ScoreManager<T, S>,
     cacheCount: Long
@@ -57,8 +58,15 @@ class Mcts<T : Move, S : Score>(
     val bestScore: S
         get() = rootNode.bestScore
 
+    @Volatile
+    private var currentRootNode = rootNode
+
+    fun moveDown() {
+        currentRootNode = currentRootNode.getBestChild() ?: throw IllegalStateException("no more child")
+    }
+
     private suspend fun selectAndPlayOut() {
-        var node = rootNode
+        var node = currentRootNode
         while (true) {
             val newNode = node.selectAndPlayOut { newScore, moves ->
                 updateScore(node, newScore, moves)
@@ -73,13 +81,9 @@ class Mcts<T : Move, S : Score>(
         currentMoves.addAll(moves)
         while (true) {
             val parent = currentNode.parent
-            val movesCreator = if (parent == null) {
-                {
+            val movesCreator = {
                     currentMoves.toList()
                 }
-            } else {
-                { null }
-            }
             currentNode.scoreRef.getAndUpdate { oldScore ->
                 scoreManager.updateScore(oldScore, newScore, movesCreator)
             }

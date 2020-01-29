@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
-class ThreadSafeNode<T : Move, S : Score>(
+class ThreadSafeNode<T : Move, S : Score<T>>(
     private val board: Board<T>,
     private val random: Random,
     override val parent: Node<T, S>?,
@@ -26,51 +26,51 @@ class ThreadSafeNode<T : Move, S : Score>(
         require(children.isNotEmpty())
     }
 
-    override val bestChild: Node<T, S>?
-        get() {
-            if (childInitTicket.get() > 0) {
-                throw IllegalStateException("not fully initialized")
-            }
-            return children.values.asSequence().map { it.second }.mapNotNull {
-                if (it.isCompleted) {
-                    it.getCompleted()
-                } else {
-                    null
-                }
-            }.maxBy {
-                it.scoreRef.get().bestScore
-            }
-        }
-
     private val childInitTicket = AtomicInteger(children.size)
 
     private val outstandingChildCount = AtomicInteger(children.size)
+
+    override fun getBestChild(): Node<T, S>? {
+        return children.values.asSequence().map { it.second }.mapNotNull {
+            if (it.isCompleted) {
+                it.getCompleted()
+            } else {
+                null
+            }
+        }.maxBy {
+            val score = it.scoreRef.get()
+            score.totalScore.toDouble() / score.tries
+        }
+    }
 
     override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
         val index = childInitTicket.decrementAndGet()
         return if (index < 0) {
             val tries = scoreRef.get().tries
             // select
-            while (true) {
-                val child =
-                    children.values.asSequence().map { it.second }.mapNotNull {
-                        if (it.isCompleted) {
-                            it.getCompleted()
-                        } else {
-                            null
-                        }
-                    }.maxBy {
-                        scoreManager.computeScore(it.scoreRef.get(), tries)
+            val child =
+                children.values.asSequence().map { it.second }.mapNotNull {
+                    if (it.isCompleted) {
+                        it.getCompleted()
+                    } else {
+                        null
                     }
-                if (child != null) {
-                    return child
+                }.maxBy {
+                    scoreManager.computeScore(it.scoreRef.get(), tries)
                 }
-                val firstDeferred = children.values.firstOrNull() ?: break
-                return firstDeferred.second.await()
+            if (child != null) {
+                return child
             }
-            if (outstandingChildCount.get() <= 0) {
-                parent?.removeChild(this)
+            children.values.asSequence().map {
+                it.second
+            }.forEach {
+                val result = it.await()
+                if (result != null) {
+                    return result
+                }
             }
+//            val score = scoreRef.get()
+//            updateScore(score.bestScore, score.moves?: throw IllegalStateException("no moves??"))
             return null
         } else {
             val (move, deferred) = children[index] ?: throw IllegalStateException()
@@ -80,8 +80,8 @@ class ThreadSafeNode<T : Move, S : Score>(
             val score = copy.score
             if (score != null) {
                 updateScore(score, listOf(move))
-                deferred.complete(null)
                 removeChild(index)
+                deferred.complete(null)
             } else {
                 // play out
                 val (childScore, moves) = copy.playOut(random)

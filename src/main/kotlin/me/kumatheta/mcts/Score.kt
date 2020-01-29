@@ -1,11 +1,13 @@
 package me.kumatheta.mcts
 
-interface Score {
+interface Score<T> {
+    val totalScore: Long
     val tries: Int
     val bestScore: Long
+    val moves: List<T>?
 }
 
-interface ScoreManager<T: Move, S: Score> {
+interface ScoreManager<T: Move, S: Score<T>> {
     fun newChildScore(childScore: Long, moves: List<T>): S
     fun computeScore(childScore: S, tries: Int): Double
     fun newEmptyScore(): S
