@@ -1,44 +1,52 @@
 package me.kumatheta.mcts
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.RemovalCause
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
-class RecycleManager<T : Move>(
+class RecycleManager<T : Move, S : Score>(
     private val random: Random,
-    private val computeScore: (child: Node<T>, tries: Int) -> Double
+    val scoreManager: ScoreManager<T, S>,
+    cacheCount: Long
 ) {
     private val cache =
-        Caffeine.newBuilder().weakKeys().maximumSize(100_000)
-            .removalListener { key: RecyclableNode<T>?, value: Node<T>?, cause: RemovalCause -> println("removed: $key $cause") }
-            .build { recyclableNode: RecyclableNode<T> ->
-                recyclableNode.createActualNode(random, computeScore)
+        Caffeine.newBuilder().weakKeys().maximumSize(cacheCount)
+//            .removalListener { key: RecyclableNode<T>?, value: Node<T>?, cause: RemovalCause -> removalCount.incrementAndGet() }
+            .build { recyclableNode: RecyclableNode<T, S> ->
+                recyclableNode.createActualNode(random, scoreManager)
             }
+//    private val removalCount = AtomicInteger(0)
+//
+//    val removed
+//        get() = removalCount.get()
 
-    val estimatedSize = cache.estimatedSize()
+    val estimatedSize
+        get() = cache.estimatedSize()
 
-    fun getDelegateNode(recyclableNode: RecyclableNode<T>): Node<T> {
+    fun getDelegateNode(recyclableNode: RecyclableNode<T, S>): Node<T,S> {
         return cache.get(recyclableNode) ?: throw IllegalStateException()
     }
+
 }
 
-class RecyclableNode<T : Move>(
-    private val recycleManager: RecycleManager<T>,
+class RecyclableNode<T : Move, S : Score>(
+    private val recycleManager: RecycleManager<T, S>,
     private val board: Board<T>,
-    override val parent: Node<T>?,
+    override val parent: Node<T, S>?,
     override val lastMove: T?,
-    scoreRef: AtomicReference<Score<T>>,
+    scoreRef: AtomicReference<S>,
     override val childIndex: Int
-) : Node<T> {
+) : Node<T,S> {
     private val _scoreRef = scoreRef
-    override val scoreRef: AtomicReference<Score<T>>
+    override val scoreRef: AtomicReference<S>
         get() = recycleManager.getDelegateNode(this).scoreRef
+    override val bestChild
+        get() = recycleManager.getDelegateNode(this).bestChild
 
     internal fun createActualNode(
         random: Random,
-        computeScore: (child: Node<T>, tries: Int) -> Double
-    ): ThreadSafeNode<T> {
+        scoreManager: ScoreManager<T,S>
+    ): ThreadSafeNode<T,S> {
         return ThreadSafeNode(
             board = board,
             random = random,
@@ -46,34 +54,34 @@ class RecyclableNode<T : Move>(
             lastMove = lastMove,
             scoreRef = _scoreRef,
             childIndex = childIndex,
-            computeScore = computeScore,
+            scoreManager = scoreManager,
             childBuilder = ::buildChild
         )
     }
 
     private fun buildChild(
-        parent: Node<T>,
+        parent: Node<T,S>,
         childIndex: Int,
         board: Board<T>,
         lastMove: T,
         childScore: Long,
         moves: List<T>
-    ): Node<T> {
+    ): Node<T,S> {
         return RecyclableNode(
             recycleManager = recycleManager,
             board = board,
             parent = parent,
             lastMove = lastMove,
-            scoreRef = AtomicReference(Score(childScore, 1, childScore, moves, childScore * childScore)),
+            scoreRef = AtomicReference(recycleManager.scoreManager.newChildScore(childScore, moves)),
             childIndex = childIndex
         )
     }
 
-    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T>? {
+    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T,S>? {
         return recycleManager.getDelegateNode(this).selectAndPlayOut(updateScore)
     }
 
-    override fun removeChild(child: Node<T>) {
+    override fun removeChild(child: Node<T,S>) {
         recycleManager.getDelegateNode(this).removeChild(child)
     }
 }

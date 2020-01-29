@@ -6,18 +6,18 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
-class ThreadSafeNode<T : Move>(
+class ThreadSafeNode<T : Move, S : Score>(
     private val board: Board<T>,
     private val random: Random,
-    override val parent: Node<T>?,
+    override val parent: Node<T, S>?,
     override val lastMove: T?,
-    override val scoreRef: AtomicReference<Score<T>>,
+    override val scoreRef: AtomicReference<S>,
     override val childIndex: Int,
-    private val childBuilder: (parent: Node<T>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>) -> Node<T>,
-    private val computeScore: (child: Node<T>, tries: Int) -> Double
-) : Node<T> {
+    private val childBuilder: (parent: Node<T, S>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>) -> Node<T, S>,
+    private val scoreManager: ScoreManager<T, S>
+) : Node<T, S> {
 
-    private val children = ConcurrentHashMap<Int, Pair<T, CompletableDeferred<Node<T>?>>>()
+    private val children = ConcurrentHashMap<Int, Pair<T, CompletableDeferred<Node<T, S>?>>>()
 
     init {
         board.moves.asIterable().shuffled(random).asSequence().forEachIndexed { index, t ->
@@ -26,12 +26,27 @@ class ThreadSafeNode<T : Move>(
         require(children.isNotEmpty())
     }
 
+    override val bestChild: Node<T, S>?
+        get() {
+            if (childInitTicket.get() > 0) {
+                throw IllegalStateException("not fully initialized")
+            }
+            return children.values.asSequence().map { it.second }.mapNotNull {
+                if (it.isCompleted) {
+                    it.getCompleted()
+                } else {
+                    null
+                }
+            }.maxBy {
+                it.scoreRef.get().bestScore
+            }
+        }
 
     private val childInitTicket = AtomicInteger(children.size)
 
     private val outstandingChildCount = AtomicInteger(children.size)
 
-    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T>? {
+    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
         val index = childInitTicket.decrementAndGet()
         return if (index < 0) {
             val tries = scoreRef.get().tries
@@ -45,7 +60,7 @@ class ThreadSafeNode<T : Move>(
                             null
                         }
                     }.maxBy {
-                        computeScore(it, tries)
+                        scoreManager.computeScore(it.scoreRef.get(), tries)
                     }
                 if (child != null) {
                     return child
@@ -78,7 +93,7 @@ class ThreadSafeNode<T : Move>(
         }
     }
 
-    override fun removeChild(child: Node<T>) {
+    override fun removeChild(child: Node<T, S>) {
         removeChild(child.childIndex)
     }
 

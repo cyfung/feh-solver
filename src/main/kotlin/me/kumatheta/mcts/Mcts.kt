@@ -8,59 +8,24 @@ import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.ln
-import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
-class Mcts<T : Move>(
+class Mcts<T : Move, S : Score>(
     board: Board<T>,
-    private val explorationConstantC: Double,
-    private val explorationConstantD: Double
+    private val scoreManager: ScoreManager<T, S>,
+    cacheCount: Long
 ) {
-    private val recycleManager = RecycleManager(Random, ::getSortingScore)
-    private val rootNode: Node<T> = RecyclableNode(
+    private val recycleManager = RecycleManager(Random, scoreManager, cacheCount)
+    private val rootNode: Node<T, S> = RecyclableNode(
         recycleManager = recycleManager,
         board = board.copy(),
         parent = null,
         lastMove = null,
-        scoreRef = AtomicReference(Score(0, 0, 0, null, 0)),
+        scoreRef = AtomicReference(scoreManager.newEmptyScore()),
         childIndex = 0
     )
-//    private val rootNode: Node<T> = ThreadSafeNode(
-//        board = board.copy(),
-//        random = Random,
-//        parent = null,
-//        lastMove = null,
-//        scoreRef = AtomicReference(Score(0, 0, 0, null, 0)),
-//        childIndex = 0,
-//        childBuilder = ::buildChild,
-//        computeScore = ::getSortingScore
-//    )
-//
-//    private fun buildChild(parent: Node<T>, childIndex: Int, board: Board<T>, lastMove:T, childScore: Long, moves: List<T>): Node<T> {
-//        return ThreadSafeNode(
-//            board = board,
-//            random = Random,
-//            parent = parent,
-//            lastMove = lastMove,
-//            scoreRef = AtomicReference(Score(childScore, 1, childScore, moves, childScore * childScore)),
-//            childIndex = childIndex,
-//            childBuilder = ::buildChild,
-//            computeScore = ::getSortingScore
-//        )
-//    }
-
-    private fun getSortingScore(child: Node<T>, tries: Int): Double {
-        val childScore = child.scoreRef.get()
-        val childTries = childScore.tries
-        val average = childScore.totalScore.toDouble() / childTries
-        return average +
-                explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble()) +
-                sqrt((childScore.scoreSquareSum - average * childScore.bestScore + explorationConstantD) / childTries)
-    }
-
 
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
@@ -89,7 +54,7 @@ class Mcts<T : Move>(
         println("run count: ${count.get()}, estimatedSize: ${recycleManager.estimatedSize}")
     }
 
-    val bestScore: Score<T>
+    val bestScore: S
         get() = rootNode.bestScore
 
     private suspend fun selectAndPlayOut() {
@@ -102,8 +67,8 @@ class Mcts<T : Move>(
         }
     }
 
-    private fun updateScore(startingNode: Node<T>, newScore: Long, moves: List<T>) {
-        var currentNode: Node<T> = startingNode
+    private fun updateScore(startingNode: Node<T, S>, newScore: Long, moves: List<T>) {
+        var currentNode: Node<T, S> = startingNode
         val currentMoves = LinkedList<T>()
         currentMoves.addAll(moves)
         while (true) {
@@ -116,29 +81,7 @@ class Mcts<T : Move>(
                 { null }
             }
             currentNode.scoreRef.getAndUpdate { oldScore ->
-                val totalScore = oldScore.totalScore + newScore
-                val scoreSquareSum = oldScore.scoreSquareSum + newScore * newScore
-                if (scoreSquareSum < oldScore.scoreSquareSum) {
-                    throw IllegalStateException()
-                }
-                val tries = oldScore.tries + 1
-                if (newScore > oldScore.bestScore) {
-                    Score(
-                        totalScore = totalScore,
-                        tries = tries,
-                        bestScore = newScore,
-                        moves = movesCreator(),
-                        scoreSquareSum = scoreSquareSum
-                    )
-                } else {
-                    Score(
-                        totalScore = totalScore,
-                        tries = tries,
-                        bestScore = oldScore.bestScore,
-                        moves = oldScore.moves,
-                        scoreSquareSum = scoreSquareSum
-                    )
-                }
+                scoreManager.updateScore(oldScore, newScore, movesCreator)
             }
             if (parent == null) return
             val lastMove = currentNode.lastMove
