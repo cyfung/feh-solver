@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicReference
 interface Node<T : Move, S : Score<T>> {
     val bestScore: S
         get() = scoreRef.get()
-    val parent: Node<T, S>?
+    var parent: Node<T, S>?
     val lastMove: T?
     val scoreRef: AtomicReference<S>
     val childIndex: Int

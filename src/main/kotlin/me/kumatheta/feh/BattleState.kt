@@ -29,7 +29,8 @@ class BattleState private constructor(
     phrase: Int,
     playerDied: Int,
     enemyDied: Int,
-    winningTeam: Team?
+    winningTeam: Team?,
+    engaged: Boolean
 ) {
     val enemyCount
         get() = battleMap.enemyCount
@@ -52,6 +53,9 @@ class BattleState private constructor(
     var phrase = phrase
         private set
 
+    var engaged = engaged
+        private set
+
     val turn: Int
         get() = phrase / 2 + 1
 
@@ -64,7 +68,8 @@ class BattleState private constructor(
             phrase = phrase,
             playerDied = playerDied,
             enemyDied = enemyDied,
-            winningTeam = winningTeam
+            winningTeam = winningTeam,
+            engaged = engaged
         )
     }
 
@@ -77,7 +82,8 @@ class BattleState private constructor(
             phrase = phrase,
             playerDied = playerDied,
             enemyDied = enemyDied,
-            winningTeam = winningTeam
+            winningTeam = winningTeam,
+            engaged = engaged
         )
     }
 
@@ -87,7 +93,8 @@ class BattleState private constructor(
         phrase = 0,
         playerDied = 0,
         enemyDied = 0,
-        winningTeam = null
+        winningTeam = null,
+        engaged = false
     ) {
         startOfTurn(Team.PLAYER)
     }
@@ -514,6 +521,7 @@ class BattleState private constructor(
     }
 
     private fun setGroupEngaged(heroUnit: HeroUnit) {
+        engaged = true
         val group = heroUnit.group ?: return
         unitsSeq(heroUnit.team).filter {
             it.group == group
@@ -752,7 +760,7 @@ class BattleState private constructor(
         return MovementResult(false, deadTeam, phraseChange)
     }
 
-    private val isPlayerPhrase
+    val isPlayerPhrase
         get() = phrase % 2 == 0
 
     fun enemyMoves(): List<UnitAction> {

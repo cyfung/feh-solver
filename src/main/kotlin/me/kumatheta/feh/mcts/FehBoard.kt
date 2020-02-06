@@ -37,6 +37,7 @@ class FehBoard private constructor(
             }.toList()
         }
 
+    @Volatile
     override var score: Long? = score
         private set
 
@@ -54,6 +55,8 @@ class FehBoard private constructor(
             state.enemyMoves()
             if (state.playerDied > 0 || state.winningTeam != null || phraseLimit < state.phrase) {
                 score = calculateScore(state)
+            } else if (!state.engaged && state.phrase > 6) {
+                score = 0
             }
         }
     }

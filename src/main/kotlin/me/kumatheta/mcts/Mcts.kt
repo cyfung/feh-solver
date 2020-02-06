@@ -4,11 +4,11 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
-import java.lang.IllegalStateException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.IllegalStateException
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -19,7 +19,8 @@ class Mcts<T : Move, S : Score<T>>(
     cacheCount: Long
 ) {
     private val recycleManager = RecycleManager(Random, scoreManager, cacheCount)
-    private val rootNode: Node<T, S> = RecyclableNode(
+    @Volatile
+    private var rootNode: Node<T, S> = RecyclableNode(
         recycleManager = recycleManager,
         board = board.copy(),
         parent = null,
@@ -33,6 +34,11 @@ class Mcts<T : Move, S : Score<T>>(
         thread.isDaemon = true
         thread
     }.asCoroutineDispatcher()
+
+    val estimatedSize
+        get() = recycleManager.estimatedSize
+
+    fun cleanup() = recycleManager.cleanup()
 
     @ExperimentalTime
     fun run(second: Int) {
@@ -52,21 +58,25 @@ class Mcts<T : Move, S : Score<T>>(
                 }
             }
         }
-        println("run count: ${count.get()}, estimatedSize: ${recycleManager.estimatedSize}")
+        Runtime.getRuntime().gc()
+        cleanup()
+        println("run count: ${count.get()}")
     }
 
     val bestScore: S
         get() = rootNode.bestScore
 
-    @Volatile
-    private var currentRootNode = rootNode
-
-    fun moveDown() {
-        currentRootNode = currentRootNode.getBestChild() ?: throw IllegalStateException("no more child")
+    fun moveDown(): T {
+        val bestChild = rootNode.getBestChild() ?: throw IllegalStateException("no more child")
+        rootNode = bestChild
+        bestChild.parent = null
+        Runtime.getRuntime().gc()
+        cleanup()
+        return bestChild.lastMove ?: throw IllegalStateException("no move for child")
     }
 
     private suspend fun selectAndPlayOut() {
-        var node = currentRootNode
+        var node = rootNode
         while (true) {
             val newNode = node.selectAndPlayOut { newScore, moves ->
                 updateScore(node, newScore, moves)

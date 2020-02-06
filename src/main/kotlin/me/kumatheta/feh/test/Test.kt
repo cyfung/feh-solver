@@ -1,5 +1,6 @@
 package me.kumatheta.feh.test
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.mcts.FehBoard
@@ -7,8 +8,12 @@ import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.readMap
 import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
+import me.kumatheta.mcts.RecyclableNode
+import me.kumatheta.mcts.RecycleManager
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -76,8 +81,14 @@ fun main() {
     val mcts = Mcts(board, scoreManager, 200000)
 //    val mcts = Mcts(board, 0.3, 500000000.0)
     var tries = 0
+    val fixedMoves = mutableListOf<FehMove>()
     repeat(10000) {
         mcts.run(5)
+        if (mcts.estimatedSize > 180000) {
+            val move = mcts.moveDown()
+            board.applyMove(move)
+            fixedMoves.add(move)
+        }
         val bestScore = mcts.bestScore
         val bestMoves = bestScore.moves ?: throw IllegalStateException()
         val testState = try {
@@ -85,6 +96,11 @@ fun main() {
         } catch (t: Throwable) {
             throw t
         }
+        println("fixed:")
+        fixedMoves.forEach {
+            println(it)
+        }
+        println("changing:")
         bestMoves.forEach {
             println(it)
         }
@@ -95,7 +111,27 @@ fun main() {
         println("calculated best score: ${board.calculateScore(testState)}")
         println("tries: ${bestScore.tries - tries}, total tries: ${bestScore.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
         tries = bestScore.tries
+        println("estimatedSize: ${mcts.estimatedSize}")
     }
+}
+
+private fun testCreate(
+    testRecycleManager: RecycleManager<FehMove, VaryingUCT.MyScore<FehMove>>,
+    board: FehBoard,
+    scoreManager: VaryingUCT<FehMove>
+): RecyclableNode<FehMove, VaryingUCT.MyScore<FehMove>> {
+    val recyclableNode = RecyclableNode(
+        testRecycleManager,
+        board,
+        null,
+        null,
+        AtomicReference(scoreManager.newEmptyScore()),
+        0
+    )
+    testRecycleManager.getDelegateNode(
+        recyclableNode
+    )
+    return recyclableNode
 }
 
 

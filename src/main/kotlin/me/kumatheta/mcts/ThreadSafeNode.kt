@@ -9,7 +9,8 @@ import kotlin.random.Random
 class ThreadSafeNode<T : Move, S : Score<T>>(
     private val board: Board<T>,
     private val random: Random,
-    override val parent: Node<T, S>?,
+    @Volatile
+    override var parent: Node<T, S>?,
     override val lastMove: T?,
     override val scoreRef: AtomicReference<S>,
     override val childIndex: Int,
