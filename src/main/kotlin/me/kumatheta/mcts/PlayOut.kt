@@ -7,7 +7,7 @@ fun <T : Move> Board<T>.playOut(random: Random): Pair<Long, List<T>> {
     if (temp != null) {
         throw IllegalArgumentException()
     }
-    val test = copy()
+    var test = this
     val moves = generateSequence {
         temp = test.score
         if (temp != null) {
@@ -20,7 +20,7 @@ fun <T : Move> Board<T>.playOut(random: Random): Pair<Long, List<T>> {
         val shuffled = nextMoves.shuffled(random = random)
         val suggestedMoves = test.suggestedMoves(shuffled)
         val move = suggestedMoves.firstOrNull() ?: shuffled.first()
-        test.applyMove(move)
+        test = test.applyMove(move)
         move
     }.toList()
     val score = temp

@@ -9,16 +9,21 @@ import me.kumatheta.mcts.Move
 
 class FehBoard private constructor(
     private val phraseLimit: Int,
-    state: BattleState,
-    score: Long?,
+    private val state: BattleState,
+    override val score: Long?,
     private val totalPlayerHp: Int
 ) : Board<FehMove> {
-    private val state = state.copy()
-    private val enemyCount: Int
-        get() = state.enemyCount
-    private val playerCount: Int
-        get() = state.playerCount
-
+    private val enemyCount: Int = state.enemyCount
+    private val playerCount: Int = state.playerCount
+    override val moves: List<FehMove> by lazy {
+        if (score != null) {
+            emptyList()
+        } else {
+            state.getAllPlayerMovements().map {
+                FehMove(it)
+            }.toList()
+        }
+    }
 
     constructor(phraseLimit: Int, state: BattleState) : this(
         phraseLimit,
@@ -27,43 +32,32 @@ class FehBoard private constructor(
         state.unitsSeq(Team.PLAYER).sumBy { it.stat.hp }
     )
 
-    override val moves: List<FehMove>
-        get() {
-            if (score != null) {
-                return emptyList()
-            }
-            return state.getAllPlayerMovements().map {
-                FehMove(it)
-            }.toList()
-        }
 
-    @Volatile
-    override var score: Long? = score
-        private set
-
-    override fun copy(): FehBoard {
-        return FehBoard(phraseLimit, state, score, totalPlayerHp)
-    }
-
-    override fun applyMove(move: FehMove) {
+    override fun applyMove(move: FehMove): FehBoard {
         check(score == null)
+        val state = state.copy()
         val nextMove = move.unitAction
         val movementResult = state.playerMove(nextMove)
-        if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
-            score = calculateScore(state)
+        val score: Long? = if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
+            calculateScore(state)
         } else if (movementResult.phraseChange) {
             state.enemyMoves()
             if (state.playerDied > 0 || state.winningTeam != null || phraseLimit < state.phrase) {
-                score = calculateScore(state)
+                calculateScore(state)
             } else if (!state.engaged && state.phrase > 6) {
-                score = 0
+                0L
+            } else {
+                null
             }
+        } else {
+            null
         }
+        return FehBoard(phraseLimit, state, score, totalPlayerHp)
     }
 
     fun calculateScore(battleState: BattleState) =
         battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
-                battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 +  + battleState.unitsSeq(
+                battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
             Team.ENEMY
         ).sumBy { it.stat.hp - it.currentHp } * 2 + (phraseLimit - battleState.phrase) * 20
 
@@ -96,9 +90,7 @@ class FehBoard private constructor(
     override fun suggestedMoves(nextMoves: List<FehMove>): Sequence<FehMove> {
         val enemyCount = enemyCount
         return nextMoves.asSequence().filter { it.unitAction is MoveAndAttack }.filter {
-            val copy = copy()
-            copy.applyMove(it)
-            copy.enemyCount < enemyCount
+            applyMove(it).enemyCount < enemyCount
         }
     }
 }

@@ -32,7 +32,7 @@ fun main() {
         )
     )
     val phraseLimit = 20
-    val board = FehBoard(phraseLimit, state)
+    var board = FehBoard(phraseLimit, state)
 //    val testMoves = listOf(
 //        MoveOnly(2, Position(5, 6)),
 //        MoveOnly(3, Position(4, 4)),
@@ -86,7 +86,7 @@ fun main() {
         mcts.run(5)
         if (mcts.estimatedSize > 180000) {
             val move = mcts.moveDown()
-            board.applyMove(move)
+            board = board.applyMove(move)
             fixedMoves.add(move)
         }
         val bestScore = mcts.bestScore

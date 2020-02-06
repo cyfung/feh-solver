@@ -22,7 +22,7 @@ class Mcts<T : Move, S : Score<T>>(
     @Volatile
     private var rootNode: Node<T, S> = RecyclableNode(
         recycleManager = recycleManager,
-        board = board.copy(),
+        board = board,
         parent = null,
         lastMove = null,
         scoreRef = AtomicReference(scoreManager.newEmptyScore()),

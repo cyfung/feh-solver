@@ -76,8 +76,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
         } else {
             val (move, deferred) = children[index] ?: throw IllegalStateException()
             // expand
-            val copy = board.copy()
-            copy.applyMove(move)
+            val copy = board.applyMove(move)
             val score = copy.score
             if (score != null) {
                 updateScore(score, listOf(move))
