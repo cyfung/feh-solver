@@ -11,7 +11,10 @@ interface Node<T : Move, S : Score<T>> {
     val childIndex: Int
 
     suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>?
-    fun removeChild(child: Node<T, S>)
+    fun removeChild(index: Int)
     fun getBestChild(): Node<T, S>?
+    fun noMoreChild(): Boolean
+
+    fun onRemove()
 }
 

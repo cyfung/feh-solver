@@ -11,20 +11,13 @@ class RecycleManager<T : Move, S : Score<T>>(
     cacheCount: Long
 ) {
     private val cache =
-        Caffeine.newBuilder().maximumSize(cacheCount).weakKeys().weakValues()
-            .removalListener { key: RecyclableNode<T, S>?, value: Node<T, S>?, cause: RemovalCause ->
-                key?.delegate = null
-                if (key!=null && key.parent == null) {
-                    println("key: $key removed cause: $cause")
-                }
+        Caffeine.newBuilder().maximumSize(cacheCount)
+            .removalListener { _: RecyclableNode<T, S>?, value: Node<T, S>?, _: RemovalCause ->
+                value?.onRemove()
             }
             .build { recyclableNode: RecyclableNode<T, S> ->
                 recyclableNode.createActualNode(random, scoreManager)
             }
-//    private val removalCount = AtomicInteger(0)
-//
-//    val removed
-//        get() = removalCount.get()
 
     val estimatedSize
         get() = cache.estimatedSize()
@@ -35,6 +28,13 @@ class RecycleManager<T : Move, S : Score<T>>(
         return cache.get(recyclableNode) ?: throw IllegalStateException()
     }
 
+    fun getDelegateNodeIfPresent(recyclableNode: RecyclableNode<T, S>): Node<T, S>? {
+        return cache.getIfPresent(recyclableNode)
+    }
+
+    fun invalidate(recyclableNode: RecyclableNode<T, S>) {
+        cache.invalidate(recyclableNode)
+    }
 }
 
 class RecyclableNode<T : Move, S : Score<T>>(
@@ -43,8 +43,11 @@ class RecyclableNode<T : Move, S : Score<T>>(
     parent: Node<T, S>?,
     override val lastMove: T?,
     scoreRef: AtomicReference<S>,
-    override val childIndex: Int
+    override val childIndex: Int,
+    @Volatile
+    internal var isRoot: Boolean = false
 ) : Node<T, S> {
+
     @Volatile
     override var parent = parent
         set(value) {
@@ -59,14 +62,11 @@ class RecyclableNode<T : Move, S : Score<T>>(
         return recycleManager.getDelegateNode(this).getBestChild()
     }
 
-    @Volatile
-    internal var delegate: Node<T, S>? = null
-
     internal fun createActualNode(
         random: Random,
         scoreManager: ScoreManager<T, S>
     ): ThreadSafeNode<T, S> {
-        val threadSafeNode = ThreadSafeNode(
+        return ThreadSafeNode(
             board = board,
             random = random,
             parent = parent,
@@ -76,8 +76,6 @@ class RecyclableNode<T : Move, S : Score<T>>(
             scoreManager = scoreManager,
             childBuilder = ::buildChild
         )
-        delegate = threadSafeNode
-        return threadSafeNode
     }
 
     private fun buildChild(
@@ -102,7 +100,18 @@ class RecyclableNode<T : Move, S : Score<T>>(
         return recycleManager.getDelegateNode(this).selectAndPlayOut(updateScore)
     }
 
-    override fun removeChild(child: Node<T, S>) {
-        recycleManager.getDelegateNode(this).removeChild(child)
+    override fun removeChild(index: Int) {
+        recycleManager.getDelegateNodeIfPresent(this)?.removeChild(index)
+    }
+
+    override fun noMoreChild(): Boolean {
+        return recycleManager.getDelegateNode(this).noMoreChild()
+    }
+
+    override fun onRemove() {
+        if (isRoot) {
+            return
+        }
+        recycleManager.invalidate(this)
     }
 }

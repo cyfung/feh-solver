@@ -4,11 +4,11 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
+import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.IllegalStateException
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -20,13 +20,14 @@ class Mcts<T : Move, S : Score<T>>(
 ) {
     private val recycleManager = RecycleManager(Random, scoreManager, cacheCount)
     @Volatile
-    private var rootNode: Node<T, S> = RecyclableNode(
+    private var rootNode = RecyclableNode(
         recycleManager = recycleManager,
         board = board,
         parent = null,
         lastMove = null,
         scoreRef = AtomicReference(scoreManager.newEmptyScore()),
-        childIndex = 0
+        childIndex = 0,
+        isRoot = true
     )
 
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
@@ -38,10 +39,11 @@ class Mcts<T : Move, S : Score<T>>(
     val estimatedSize
         get() = recycleManager.estimatedSize
 
-    fun cleanup() = recycleManager.cleanup()
-
     @ExperimentalTime
     fun run(second: Int) {
+        if (rootNode.noMoreChild()) {
+            throw RuntimeException("no solution")
+        }
         val clockMark = MonoClock.markNow()
         val count = AtomicInteger(0)
         runBlocking {
@@ -58,8 +60,6 @@ class Mcts<T : Move, S : Score<T>>(
                 }
             }
         }
-        Runtime.getRuntime().gc()
-        cleanup()
         println("run count: ${count.get()}")
     }
 
@@ -67,16 +67,19 @@ class Mcts<T : Move, S : Score<T>>(
         get() = rootNode.bestScore
 
     fun moveDown(): T {
-        val bestChild = rootNode.getBestChild() ?: throw IllegalStateException("no more child")
+        val bestChild = rootNode.getBestChild() as RecyclableNode<T, S>? ?: throw IllegalStateException("no more child")
+        bestChild.isRoot = true
+        val oldRoot = rootNode
         rootNode = bestChild
         bestChild.parent = null
-        Runtime.getRuntime().gc()
-        cleanup()
+
+        oldRoot.isRoot = false
+        oldRoot.onRemove()
         return bestChild.lastMove ?: throw IllegalStateException("no move for child")
     }
 
     private suspend fun selectAndPlayOut() {
-        var node = rootNode
+        var node: Node<T,S> = rootNode
         while (true) {
             val newNode = node.selectAndPlayOut { newScore, moves ->
                 updateScore(node, newScore, moves)
@@ -92,8 +95,8 @@ class Mcts<T : Move, S : Score<T>>(
         while (true) {
             val parent = currentNode.parent
             val movesCreator = {
-                    currentMoves.toList()
-                }
+                currentMoves.toList()
+            }
             currentNode.scoreRef.getAndUpdate { oldScore ->
                 scoreManager.updateScore(oldScore, newScore, movesCreator)
             }

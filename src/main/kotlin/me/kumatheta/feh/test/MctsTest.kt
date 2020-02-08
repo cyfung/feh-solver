@@ -1,6 +1,5 @@
 package me.kumatheta.feh.test
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.mcts.FehBoard
@@ -13,8 +12,8 @@ import me.kumatheta.mcts.RecycleManager
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.random.Random
 import kotlin.time.ExperimentalTime
+import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main() {
@@ -32,7 +31,7 @@ fun main() {
         )
     )
     val phraseLimit = 20
-    var board = FehBoard(phraseLimit, state)
+    var board = FehBoard(phraseLimit, state, 3)
 //    val testMoves = listOf(
 //        MoveOnly(2, Position(5, 6)),
 //        MoveOnly(3, Position(4, 4)),
@@ -82,13 +81,17 @@ fun main() {
 //    val mcts = Mcts(board, 0.3, 500000000.0)
     var tries = 0
     val fixedMoves = mutableListOf<FehMove>()
+    val clockMark = MonoClock.markNow()
+    var lastFixMove = MonoClock.markNow()
     repeat(10000) {
         mcts.run(5)
-        if (mcts.estimatedSize > 180000) {
+        if (mcts.estimatedSize > 180000 || lastFixMove.elapsedNow().inMinutes > 20) {
             val move = mcts.moveDown()
             board = board.applyMove(move)
             fixedMoves.add(move)
+            lastFixMove = MonoClock.markNow()
         }
+        println("elapsed ${clockMark.elapsedNow()}")
         val bestScore = mcts.bestScore
         val bestMoves = bestScore.moves ?: throw IllegalStateException()
         val testState = try {
@@ -112,6 +115,11 @@ fun main() {
         println("tries: ${bestScore.tries - tries}, total tries: ${bestScore.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
         tries = bestScore.tries
         println("estimatedSize: ${mcts.estimatedSize}")
+        println("elapsed ${clockMark.elapsedNow()}")
+        println("memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000_000}")
+        if (testState.enemyCount == testState.enemyDied && testState.playerDied == 0) {
+            return
+        }
     }
 }
 

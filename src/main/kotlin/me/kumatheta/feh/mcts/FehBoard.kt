@@ -11,7 +11,8 @@ class FehBoard private constructor(
     private val phraseLimit: Int,
     private val state: BattleState,
     override val score: Long?,
-    private val totalPlayerHp: Int
+    private val totalPlayerHp: Int,
+    private val maxTurnBeforeEngage: Int
 ) : Board<FehMove> {
     private val enemyCount: Int = state.enemyCount
     private val playerCount: Int = state.playerCount
@@ -25,11 +26,12 @@ class FehBoard private constructor(
         }
     }
 
-    constructor(phraseLimit: Int, state: BattleState) : this(
+    constructor(phraseLimit: Int, state: BattleState, maxTurnBeforeEngage: Int) : this(
         phraseLimit,
         state,
         null,
-        state.unitsSeq(Team.PLAYER).sumBy { it.stat.hp }
+        state.unitsSeq(Team.PLAYER).sumBy { it.stat.hp },
+        maxTurnBeforeEngage
     )
 
 
@@ -44,7 +46,7 @@ class FehBoard private constructor(
             state.enemyMoves()
             if (state.playerDied > 0 || state.winningTeam != null || phraseLimit < state.phrase) {
                 calculateScore(state)
-            } else if (!state.engaged && state.phrase > 6) {
+            } else if (!state.engaged && state.phrase > maxTurnBeforeEngage * 2) {
                 0L
             } else {
                 null
@@ -52,7 +54,7 @@ class FehBoard private constructor(
         } else {
             null
         }
-        return FehBoard(phraseLimit, state, score, totalPlayerHp)
+        return FehBoard(phraseLimit, state, score, totalPlayerHp, maxTurnBeforeEngage)
     }
 
     fun calculateScore(battleState: BattleState) =

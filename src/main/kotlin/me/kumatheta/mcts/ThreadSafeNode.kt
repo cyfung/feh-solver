@@ -17,6 +17,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
     private val childBuilder: (parent: Node<T, S>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>) -> Node<T, S>,
     private val scoreManager: ScoreManager<T, S>
 ) : Node<T, S> {
+    override fun noMoreChild() = children.isEmpty()
 
     private val children = ConcurrentHashMap<Int, Pair<T, CompletableDeferred<Node<T, S>?>>>()
 
@@ -74,38 +75,52 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
 //            updateScore(score.bestScore, score.moves?: throw IllegalStateException("no moves??"))
             return null
         } else {
-            val (move, deferred) = children[index] ?: throw IllegalStateException()
+            // the children could be removed because this is a newly generated node
+            // and the child is removed from the call from an old child of the previous node
+            val (move, deferred) = children[index] ?: return null
             // expand
             val copy = board.applyMove(move)
             val score = copy.score
             if (score != null) {
                 updateScore(score, listOf(move))
                 removeChild(index)
-                deferred.complete(null)
+                require(deferred.isCompleted)
             } else {
                 // play out
                 val (childScore, moves) = copy.playOut(random)
                 val child = childBuilder(this, index, copy, move, childScore, moves)
                 updateScore(childScore, (sequenceOf(move) + moves).toList())
-                deferred.complete(child)
+                val completed = deferred.complete(child)
+                if (!completed) {
+                    child.onRemove()
+                }
             }
             null
         }
     }
 
-    override fun removeChild(child: Node<T, S>) {
-        removeChild(child.childIndex)
-    }
-
-    private fun removeChild(childIndex: Int) {
-        val removed = children.remove(childIndex)
+    override fun removeChild(index: Int) {
+        val removed = children.remove(index)
         if (removed != null) {
+            removed.second.complete(null)
+            val removedChild = removed.second.getCompleted()
             val count = outstandingChildCount.decrementAndGet()
             if (count <= 0) {
-                parent?.removeChild(this)
+                parent?.removeChild(this.childIndex)
             }
+            removedChild?.onRemove()
+        } else {
+            println("not exists")
         }
     }
 
 
+    override fun onRemove() {
+        children.values.asSequence().map { it.second }.mapNotNull {
+            it.complete(null)
+            it.getCompleted()
+        }.forEach {
+            it.onRemove()
+        }
+    }
 }
