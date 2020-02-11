@@ -3,12 +3,13 @@ package me.kumatheta.mcts
 import java.util.concurrent.atomic.AtomicReference
 
 interface Node<T : Move, S : Score<T>> {
-    val bestScore: S
+    val score: S
         get() = scoreRef.get()
     var parent: Node<T, S>?
     val lastMove: T?
     val scoreRef: AtomicReference<S>
     val childIndex: Int
+    var isRoot: Boolean
 
     suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>?
     fun removeChild(index: Int)

@@ -15,25 +15,22 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
     override val scoreRef: AtomicReference<S>,
     override val childIndex: Int,
     private val childBuilder: (parent: Node<T, S>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>) -> Node<T, S>,
-    private val scoreManager: ScoreManager<T, S>
+    private val scoreManager: ScoreManager<T, S>,
+    @Volatile
+    override var isRoot: Boolean
 ) : Node<T, S> {
-    override fun noMoreChild() = children.isEmpty()
+    override fun noMoreChild() = outstandingChildCount.get() <= 0
 
-    private val children = ConcurrentHashMap<Int, Pair<T, CompletableDeferred<Node<T, S>?>>>()
-
-    init {
-        board.moves.asIterable().shuffled(random).asSequence().forEachIndexed { index, t ->
-            children[index] = (t to CompletableDeferred())
-        }
-        require(children.isNotEmpty())
-    }
+    private val children = board.moves.asIterable().shuffled(random).asSequence().map {
+        AtomicReference<Pair<T, CompletableDeferred<Node<T, S>?>>?>(it to CompletableDeferred())
+    }.toList()
 
     private val childInitTicket = AtomicInteger(children.size)
 
     private val outstandingChildCount = AtomicInteger(children.size)
 
     override fun getBestChild(): Node<T, S>? {
-        return children.values.asSequence().map { it.second }.mapNotNull {
+        return children.asSequence().mapNotNull { it.get()?.second }.mapNotNull {
             if (it.isCompleted) {
                 it.getCompleted()
             } else {
@@ -51,7 +48,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
             val tries = scoreRef.get().tries
             // select
             val child =
-                children.values.asSequence().map { it.second }.mapNotNull {
+                children.asSequence().mapNotNull { it.get()?.second }.mapNotNull {
                     if (it.isCompleted) {
                         it.getCompleted()
                     } else {
@@ -63,8 +60,8 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
             if (child != null) {
                 return child
             }
-            children.values.asSequence().map {
-                it.second
+            children.asSequence().mapNotNull {
+                it.get()?.second
             }.forEach {
                 val result = it.await()
                 if (result != null) {
@@ -77,7 +74,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
         } else {
             // the children could be removed because this is a newly generated node
             // and the child is removed from the call from an old child of the previous node
-            val (move, deferred) = children[index] ?: return null
+            val (move, deferred) = children[index].get() ?: return null
             // expand
             val copy = board.applyMove(move)
             val score = copy.score
@@ -100,23 +97,25 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
     }
 
     override fun removeChild(index: Int) {
-        val removed = children.remove(index)
-        if (removed != null) {
-            removed.second.complete(null)
-            val removedChild = removed.second.getCompleted()
+        val ref = children[index]
+        val child = ref.get() ?: return
+        if (ref.compareAndSet(child, null)) {
+            child.second.complete(null)
+            val removedChild = child.second.getCompleted()
             val count = outstandingChildCount.decrementAndGet()
             if (count <= 0) {
                 parent?.removeChild(this.childIndex)
             }
             removedChild?.onRemove()
-        } else {
-            println("not exists")
         }
     }
 
 
     override fun onRemove() {
-        children.values.asSequence().map { it.second }.mapNotNull {
+        if(isRoot) {
+            return
+        }
+        children.asSequence().mapNotNull { it.get()?.second }.mapNotNull {
             it.complete(null)
             it.getCompleted()
         }.forEach {

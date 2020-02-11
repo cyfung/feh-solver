@@ -8,27 +8,17 @@ import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
 class Mcts<T : Move, S : Score<T>>(
     board: Board<T>,
-    private val scoreManager: ScoreManager<T, S>,
-    cacheCount: Long
+    private val scoreManager: ScoreManager<T, S>
 ) {
-    private val recycleManager = RecycleManager(Random, scoreManager, cacheCount)
+    private val nodeManager = CountableNodeManager(Random, scoreManager)
     @Volatile
-    private var rootNode = RecyclableNode(
-        recycleManager = recycleManager,
-        board = board,
-        parent = null,
-        lastMove = null,
-        scoreRef = AtomicReference(scoreManager.newEmptyScore()),
-        childIndex = 0,
-        isRoot = true
-    )
+    private var rootNode = nodeManager.createRootNode(board)
 
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
@@ -37,7 +27,7 @@ class Mcts<T : Move, S : Score<T>>(
     }.asCoroutineDispatcher()
 
     val estimatedSize
-        get() = recycleManager.estimatedSize
+        get() = nodeManager.estimatedSize
 
     @ExperimentalTime
     fun run(second: Int) {
@@ -64,10 +54,10 @@ class Mcts<T : Move, S : Score<T>>(
     }
 
     val bestScore: S
-        get() = rootNode.bestScore
+        get() = rootNode.score
 
     fun moveDown(): T {
-        val bestChild = rootNode.getBestChild() as RecyclableNode<T, S>? ?: throw IllegalStateException("no more child")
+        val bestChild = rootNode.getBestChild() ?: throw IllegalStateException("no more child")
         bestChild.isRoot = true
         val oldRoot = rootNode
         rootNode = bestChild

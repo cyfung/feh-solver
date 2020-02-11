@@ -77,7 +77,7 @@ fun main() {
 //    }
 //    val scoreManager = ModifiedUCT<FehMove>(0.3, 500000000.0)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.5)
-    val mcts = Mcts(board, scoreManager, 200000)
+    val mcts = Mcts(board, scoreManager)
 //    val mcts = Mcts(board, 0.3, 500000000.0)
     var tries = 0
     val fixedMoves = mutableListOf<FehMove>()
@@ -134,7 +134,8 @@ private fun testCreate(
         null,
         null,
         AtomicReference(scoreManager.newEmptyScore()),
-        0
+        0,
+        false
     )
     testRecycleManager.getDelegateNode(
         recyclableNode
