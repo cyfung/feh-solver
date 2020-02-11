@@ -28,10 +28,6 @@ class CountableNode2Manager<T : Move, S : Score<T>>(
         }
     }
 
-    fun getDelegateNodeIfPresent(countableNode2: CountableNode2<T, S>): Node<T, S>? {
-        return countableNode2.delegate.get()
-    }
-
     fun invalidate(countableNode2: CountableNode2<T, S>) {
         val delegate = countableNode2.delegate.get() ?: return
         if (countableNode2.delegate.compareAndSet(delegate, null)) {
@@ -58,7 +54,7 @@ class CountableNode2<T : Move, S : Score<T>>(
     private val board: Board<T>,
     parent: Node<T, S>?,
     override val lastMove: T?,
-    scoreRef: AtomicReference<S>,
+    override val scoreRef: AtomicReference<S>,
     override val childIndex: Int,
     @Volatile
     override var isRoot: Boolean
@@ -70,11 +66,8 @@ class CountableNode2<T : Move, S : Score<T>>(
     override var parent = parent
         set(value) {
             field = value
-            countableNode2Manager.getDelegateNode(this).parent = value
+            this.delegate.get()?.parent = value
         }
-    private val _scoreRef = scoreRef
-    override val scoreRef: AtomicReference<S>
-        get() = countableNode2Manager.getDelegateNode(this).scoreRef
 
     override fun getBestChild(): Node<T, S>? {
         return countableNode2Manager.getDelegateNode(this).getBestChild()
@@ -89,7 +82,7 @@ class CountableNode2<T : Move, S : Score<T>>(
             random = random,
             parent = parent,
             lastMove = lastMove,
-            scoreRef = _scoreRef,
+            scoreRef = scoreRef,
             childIndex = childIndex,
             scoreManager = scoreManager,
             childBuilder = ::buildChild,
@@ -121,7 +114,7 @@ class CountableNode2<T : Move, S : Score<T>>(
     }
 
     override fun removeChild(index: Int) {
-        countableNode2Manager.getDelegateNodeIfPresent(this)?.removeChild(index)
+        this.delegate.get()?.removeChild(index)
     }
 
     override fun noMoreChild(): Boolean {

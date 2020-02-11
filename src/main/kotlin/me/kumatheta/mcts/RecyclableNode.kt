@@ -45,7 +45,7 @@ class RecyclableNode<T : Move, S : Score<T>>(
     scoreRef: AtomicReference<S>,
     override val childIndex: Int,
     @Volatile
-    internal var isRoot: Boolean = false
+    override var isRoot: Boolean = false
 ) : Node<T, S> {
 
     @Volatile
@@ -74,7 +74,8 @@ class RecyclableNode<T : Move, S : Score<T>>(
             scoreRef = _scoreRef,
             childIndex = childIndex,
             scoreManager = scoreManager,
-            childBuilder = ::buildChild
+            childBuilder = ::buildChild,
+            isRoot = isRoot
         )
     }
 
