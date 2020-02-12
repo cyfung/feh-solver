@@ -88,8 +88,7 @@ class CountableNode2<T : Move, S : Score<T>>(
     override val lastMove: T?,
     override val scoreRef: AtomicReference<S>,
     override val childIndex: Int,
-    @Volatile
-    override var isRoot: Boolean
+    isRoot: Boolean
 ) : Node<T, S> {
 
     internal val delegate = AtomicReference<Node<T, S>?>(null)
@@ -99,6 +98,13 @@ class CountableNode2<T : Move, S : Score<T>>(
         set(value) {
             field = value
             this.delegate.get()?.parent = value
+        }
+
+    @Volatile
+    override var isRoot = isRoot
+        set(value) {
+            field = value
+            this.delegate.get()?.isRoot = value
         }
 
     override fun getBestChild(): Node<T, S>? {

@@ -1,7 +1,6 @@
 package me.kumatheta.mcts
 
 import kotlinx.coroutines.CompletableDeferred
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
@@ -112,7 +111,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
 
 
     override fun onRemove() {
-        if(isRoot) {
+        if (isRoot) {
             return
         }
         children.asSequence().mapNotNull { it.get()?.second }.mapNotNull {
