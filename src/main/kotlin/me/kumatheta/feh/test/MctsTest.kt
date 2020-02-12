@@ -85,7 +85,7 @@ fun main() {
     var lastFixMove = MonoClock.markNow()
     repeat(10000) {
         mcts.run(5)
-        if (mcts.estimatedSize > 280000 || lastFixMove.elapsedNow().inMinutes > 20) {
+        if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             val move = mcts.moveDown()
             board = board.applyMove(move)
             fixedMoves.add(move)
@@ -116,11 +116,11 @@ fun main() {
         tries = bestScore.tries
         println("estimatedSize: ${mcts.estimatedSize}")
         println("elapsed ${clockMark.elapsedNow()}")
-        if (clockMark.elapsedNow().inSeconds > 100) {
-            Runtime.getRuntime().gc()
-            println("memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000_000}")
-            return
-        }
+//        if (clockMark.elapsedNow().inSeconds > 100) {
+//            Runtime.getRuntime().gc()
+//            println("memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000_000}")
+//            return
+//        }
         println("memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000_000}")
         if (testState.enemyCount == testState.enemyDied && testState.playerDied == 0) {
             return

@@ -16,7 +16,7 @@ class Mcts<T : Move, S : Score<T>>(
     board: Board<T>,
     private val scoreManager: ScoreManager<T, S>
 ) {
-    private val nodeManager = CountableNodeManager(Random, scoreManager)
+    private val nodeManager = CountableNode2Manager(Random, scoreManager)
     @Volatile
     private var rootNode = nodeManager.createRootNode(board)
 
