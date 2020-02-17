@@ -200,7 +200,7 @@ class BasicBattleMap(
     private val spawnMap = spawnMap.toMap()
     private val playerMap = playerMap.toMap()
     override val size: Position = positionMap.size
-    private val terrainMap = positionMap.terrainMap.toMap()
+    override val terrainMap = positionMap.terrainMap.toMap()
     private val obstacles = positionMap.obstacles.toMap()
     private val idMap = positionMap.idMap.toMap()
 
@@ -209,10 +209,6 @@ class BasicBattleMap(
             positionMap.idMap.containsKey(it)
         }.firstOrNull()
         require(invalidId == null) { "invalid id $invalidId" }
-    }
-
-    override fun getTerrain(position: Position): Terrain {
-        return terrainMap[position] ?: throw IllegalArgumentException("position out of bound")
     }
 
     override fun toChessPieceMap(): Map<Position, ChessPiece> {
