@@ -17,7 +17,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
 ) : AbstractNode<T, S>(parent, lastMove, scoreRef) {
     override fun noMoreChild() = outstandingChildCount.get() <= 0
 
-    private val children = board.moves.asIterable().shuffled(random).asSequence().map {
+    private val children = board.suggestedOrder(board.moves.shuffled(random)).map {
         AtomicReference<Pair<T, CompletableDeferred<Node<T, S>?>>?>(it to CompletableDeferred())
     }.toList()
 

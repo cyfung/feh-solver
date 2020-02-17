@@ -6,7 +6,7 @@ interface Board<T : Move> {
     val moves: List<T>
     val score: Long?
     fun applyMove(move: T): Board<T>
-    fun suggestedMoves(nextMoves: List<T>): Sequence<T>
+    fun suggestedOrder(nextMoves: List<T>): Sequence<T>
 }
 
 interface Move

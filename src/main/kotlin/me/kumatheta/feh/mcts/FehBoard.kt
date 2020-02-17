@@ -89,11 +89,11 @@ class FehBoard private constructor(
         return testState
     }
 
-    override fun suggestedMoves(nextMoves: List<FehMove>): Sequence<FehMove> {
-        val enemyCount = enemyCount
-        return nextMoves.asSequence().filter { it.unitAction is MoveAndAttack }.filter {
-            applyMove(it).enemyCount < enemyCount
-        }
+    override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
+        return nextMoves.asSequence().sortedBy { if (it.unitAction is MoveAndAttack) 0 else 1 }
+//            .filter {
+//            applyMove(it).enemyCount < enemyCount
+//        }
     }
 }
 

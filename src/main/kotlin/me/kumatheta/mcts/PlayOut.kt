@@ -18,7 +18,7 @@ fun <T : Move> Board<T>.playOut(random: Random): Pair<Long, List<T>> {
             throw IllegalStateException()
         }
         val shuffled = nextMoves.shuffled(random = random)
-        val suggestedMoves = test.suggestedMoves(shuffled)
+        val suggestedMoves = test.suggestedOrder(shuffled)
         val move = suggestedMoves.firstOrNull() ?: shuffled.first()
         test = test.applyMove(move)
         move
