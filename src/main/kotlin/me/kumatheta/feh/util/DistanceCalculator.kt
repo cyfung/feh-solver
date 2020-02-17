@@ -8,11 +8,11 @@ import me.kumatheta.feh.Terrain
 
 fun FixedBattleMap.calculateDistance(
     moveType: MoveType,
-    startingPosition: Pair<Int, Sequence<MoveStep>>,
+    startingPositions: Pair<Int, Sequence<MoveStep>>,
     distanceReceiver: DistanceReceiver
 ) {
     val workingMap = sortedMapOf(
-        startingPosition
+        startingPositions
     )
 
     while (workingMap.isNotEmpty()) {
@@ -34,6 +34,8 @@ fun FixedBattleMap.calculateDistance(
     }
 }
 
+data class DistanceIndex(val moveType: MoveType, val position: Position, val isRanged: Boolean)
+
 class FixedBattleMap(delegate: BattleMap) : BattleMap {
     val maxPosition = Position(delegate.size.x - 1, delegate.size.y - 1)
     override val size: Position = delegate.size
@@ -48,27 +50,42 @@ class FixedBattleMap(delegate: BattleMap) : BattleMap {
     override val enemyCount: Int = delegate.enemyCount
     override val playerCount: Int = delegate.playerCount
 
-    val distanceMap: Map<Pair<MoveType, Position>, Map<Position, Int>?> by lazy {
-        (0 until size.x).flatMap { x -> (0 until size.y).map { y -> Position(x, y) } }.flatMap { position ->
-            MoveType.values().map { Pair(it, position) }
-        }.associateWith { (moveType, position) ->
-            val terrain = getTerrain(position) ?: return@associateWith null
-            val startingPosition = 0 to sequenceOf(
-                MoveStep(position, terrain, false, 0)
-            )
-            val resultMap = mutableMapOf<Position, Int>()
-            calculateDistance(moveType, startingPosition, object : DistanceReceiver {
-                override fun isOverMaxDistance(distance: Int): Boolean {
-                    return false
+    val distanceMap: Map<DistanceIndex, Map<Position, Int>> by lazy {
+        (0 until size.x).asSequence()
+            .flatMap { x -> (0 until size.y).asSequence().map { y -> Position(x, y) } }
+            .flatMap { position ->
+                MoveType.values().asSequence()
+                    .flatMap { sequenceOf(DistanceIndex(it, position, true), DistanceIndex(it, position, false)) }
+            }.associateWith { (moveType, position, isRanged) ->
+                val terrain = getTerrain(position)
+                val startingPositions = if (terrain.moveCost(moveType) != null) {
+                    0 to sequenceOf(
+                        MoveStep(position, terrain, false, 0)
+                    )
+                } else {
+                    val distanceTravel = if (isRanged) 2 else 1
+                    distanceTravel to attackTargetPositions(position, maxPosition, isRanged).mapNotNull {
+                        val attackTerrain = getTerrain(it)
+                        if (attackTerrain.moveCost(moveType) == null) {
+                            null
+                        } else {
+                            MoveStep(it, attackTerrain, false, distanceTravel)
+                        }
+                    }
                 }
+                val resultMap = mutableMapOf<Position, Int>()
+                calculateDistance(moveType, startingPositions, object : DistanceReceiver {
+                    override fun isOverMaxDistance(distance: Int): Boolean {
+                        return false
+                    }
 
-                override fun receive(moveStep: MoveStep): Boolean {
-                    return resultMap.putIfAbsent(moveStep.position, moveStep.distanceTravel) == null
-                }
+                    override fun receive(moveStep: MoveStep): Boolean {
+                        return resultMap.putIfAbsent(moveStep.position, moveStep.distanceTravel) == null
+                    }
 
-            })
-            resultMap.toMap()
-        }
+                })
+                resultMap.toMap()
+            }
     }
 
 }

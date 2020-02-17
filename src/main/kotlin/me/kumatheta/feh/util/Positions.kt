@@ -8,7 +8,14 @@ fun attackTargetPositions(
     standingPosition: Position,
     max: Position
 ): Sequence<Position> {
-    val isRanged = heroUnit.weaponType.isRanged
+    return attackTargetPositions(standingPosition, max, heroUnit.weaponType.isRanged)
+}
+
+fun attackTargetPositions(
+    standingPosition: Position,
+    max: Position,
+    isRanged: Boolean
+): Sequence<Position> {
     return if (isRanged) {
         standingPosition.surroundings(max).flatMap { position -> position.surroundings(max) }
     } else {

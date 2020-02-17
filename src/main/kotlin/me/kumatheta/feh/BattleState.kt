@@ -2,6 +2,7 @@ package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.assist.Pivot
 import me.kumatheta.feh.skill.special.Miracle
+import me.kumatheta.feh.util.DistanceIndex
 import me.kumatheta.feh.util.DistanceReceiver
 import me.kumatheta.feh.util.FixedBattleMap
 import me.kumatheta.feh.util.MoveStep
@@ -1212,24 +1213,14 @@ class BattleState private constructor(
 
     private fun distanceFrom(myTeam: Team): Map<HeroUnit, Map<Position, Int>> {
         return unitsSeq(myTeam).filterNot { it.isEmptyHanded }.associateWith {
-            battleMap.distanceMap[Pair(it.moveType, it.position)]
+            battleMap.distanceMap[DistanceIndex(it.moveType, it.position, it.weaponType.isRanged)]
                 ?: throw IllegalStateException("illegal position of unit")
         }
     }
 
-    private fun distanceFrom(heroUnit: HeroUnit, startingPosition: Position? = null): Map<Position, Int> {
-        val resultMap = mutableMapOf<Position, Int>()
-        calculateDistance(heroUnit, object : DistanceReceiver {
-            override fun isOverMaxDistance(distance: Int): Boolean {
-                return false
-            }
-
-            override fun receive(moveStep: MoveStep): Boolean {
-                return resultMap.putIfAbsent(moveStep.position, moveStep.distanceTravel) == null
-            }
-
-        }, startingPosition)
-        return resultMap.toMap()
+    private fun distanceFrom(heroUnit: HeroUnit, startingPosition: Position): Map<Position, Int> {
+        return battleMap.distanceMap[DistanceIndex(heroUnit.moveType, startingPosition, heroUnit.weaponType.isRanged)]
+            ?: throw IllegalStateException("illegal position of unit")
     }
 
     private fun Sequence<HeroUnit>.checkPreCombatAssist(
@@ -1375,32 +1366,11 @@ class BattleState private constructor(
 
     private fun calculateDistance(
         heroUnit: HeroUnit,
-        distanceReceiver: DistanceReceiver,
-        startingPosition: Position? = null
+        distanceReceiver: DistanceReceiver
     ) {
-        val startingPositions =
-            if (startingPosition == null) {
-                0 to sequenceOf(
-                    MoveStep(heroUnit.position, battleMap.getTerrain(heroUnit.position), false, 0)
-                )
-            } else {
-                val terrain = battleMap.getTerrain(startingPosition)
-                if (terrain.moveCost(heroUnit.moveType) != null) {
-                    0 to sequenceOf(
-                        MoveStep(startingPosition, terrain, false, 0)
-                    )
-                } else {
-                    val distanceTravel = if (heroUnit.weaponType.isRanged) 2 else 1
-                    distanceTravel to attackTargetPositions(heroUnit, startingPosition, maxPosition).mapNotNull {
-                        val attackTerrain = battleMap.getTerrain(heroUnit.position)
-                        if (attackTerrain.moveCost(heroUnit.moveType) == null) {
-                            null
-                        } else {
-                            MoveStep(it, attackTerrain, false, distanceTravel)
-                        }
-                    }
-                }
-            }
+        val startingPositions = 0 to sequenceOf(
+            MoveStep(heroUnit.position, battleMap.getTerrain(heroUnit.position), false, 0)
+        )
         battleMap.calculateDistance(
             heroUnit.moveType,
             startingPositions,
