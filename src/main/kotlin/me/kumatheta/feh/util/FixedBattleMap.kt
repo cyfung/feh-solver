@@ -106,7 +106,11 @@ class FixedBattleMap(delegate: BattleMap) :
                     startingPositions,
                     threatReceiver
                 )
-                threatReceiver.getResult().toList()
+                threatReceiver.getResult().flatMap { moveStep ->
+                    attackTargetPositions(moveStep.position, maxPosition, threatIndex.isRanged).map {
+                        moveStep.copy(position = it)
+                    }
+                }.distinct().toList()
             }
     }
 
