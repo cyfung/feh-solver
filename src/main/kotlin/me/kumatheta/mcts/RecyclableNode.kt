@@ -41,22 +41,17 @@ class RecyclableNode<T : Move, S : Score<T>>(
     private val recycleManager: RecycleManager<T, S>,
     private val board: Board<T>,
     parent: Node<T, S>?,
-    override val lastMove: T?,
+    lastMove: T?,
     scoreRef: AtomicReference<S>,
-    override val childIndex: Int,
-    @Volatile
-    override var isRoot: Boolean = false
-) : Node<T, S> {
+    override val childIndex: Int
+) : AbstractNode<T, S>(parent, lastMove, scoreRef) {
 
-    @Volatile
-    override var parent = parent
+    override var parent
+        get() = super.parent
         set(value) {
-            field = value
+            super.parent = parent
             recycleManager.getDelegateNode(this).parent = value
         }
-    private val _scoreRef = scoreRef
-    override val scoreRef: AtomicReference<S>
-        get() = recycleManager.getDelegateNode(this).scoreRef
 
     override fun getBestChild(): Node<T, S>? {
         return recycleManager.getDelegateNode(this).getBestChild()
@@ -71,11 +66,10 @@ class RecyclableNode<T : Move, S : Score<T>>(
             random = random,
             parent = parent,
             lastMove = lastMove,
-            scoreRef = _scoreRef,
+            scoreRef = scoreRef,
             childIndex = childIndex,
             scoreManager = scoreManager,
-            childBuilder = ::buildChild,
-            isRoot = isRoot
+            childBuilder = ::buildChild
         )
     }
 
@@ -110,9 +104,13 @@ class RecyclableNode<T : Move, S : Score<T>>(
     }
 
     override fun onRemove() {
-        if (isRoot) {
+        if (isFixed) {
             return
         }
         recycleManager.invalidate(this)
+    }
+
+    override fun removeAllChildren() {
+        TODO("Not yet implemented")
     }
 }

@@ -17,9 +17,6 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main() {
-//    val solver = BattleSolver(TestMap, 10)
-//    solver.solve()
-
     val positionMap = readMap(Paths.get("test/feh - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("test/feh - spawn.csv"))
     val (playerMap, _) = readUnits(Paths.get("test/feh - players.csv"))
@@ -31,7 +28,7 @@ fun main() {
         )
     )
     val phraseLimit = 20
-    var board = FehBoard(phraseLimit, state, 3)
+    val board = FehBoard(phraseLimit, state, 3)
 //    val testMoves = listOf(
 //        MoveOnly(2, Position(5, 6)),
 //        MoveOnly(3, Position(4, 4)),
@@ -76,7 +73,7 @@ fun main() {
 //        board.applyMove(move)
 //    }
 //    val scoreManager = ModifiedUCT<FehMove>(0.3, 500000000.0)
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.7)
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.5)
     val mcts = Mcts(board, scoreManager)
 //    val mcts = Mcts(board, 0.3, 500000000.0)
     var tries = 0
@@ -86,14 +83,12 @@ fun main() {
     repeat(10000) {
         mcts.run(5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
-            val move = mcts.moveDown()
-            board = board.applyMove(move)
-            fixedMoves.add(move)
+            mcts.moveDown()
             lastFixMove = MonoClock.markNow()
         }
         println("elapsed ${clockMark.elapsedNow()}")
-        val bestScore = mcts.bestScore
-        val bestMoves = bestScore.moves ?: throw IllegalStateException()
+        val score = mcts.score
+        val bestMoves = score.moves ?: throw IllegalStateException()
         val testState = try {
             board.tryMoves(bestMoves)
         } catch (t: Throwable) {
@@ -107,13 +102,13 @@ fun main() {
         bestMoves.forEach {
             println(it)
         }
-        println("best score: ${bestScore.bestScore}")
-        scoreManager.high = bestScore.bestScore
-        scoreManager.average = bestScore.totalScore / bestScore.tries
+        println("best score: ${score.bestScore}")
+        scoreManager.high = score.bestScore
+        scoreManager.average = score.totalScore / score.tries
         println("average = ${scoreManager.average}")
         println("calculated best score: ${board.calculateScore(testState)}")
-        println("tries: ${bestScore.tries - tries}, total tries: ${bestScore.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
-        tries = bestScore.tries
+        println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
+        tries = score.tries
         println("estimatedSize: ${mcts.estimatedSize}")
         println("elapsed ${clockMark.elapsedNow()}")
 //        if (clockMark.elapsedNow().inSeconds > 100) {
@@ -139,8 +134,7 @@ private fun testCreate(
         null,
         null,
         AtomicReference(scoreManager.newEmptyScore()),
-        0,
-        false
+        0
     )
     testRecycleManager.getDelegateNode(
         recyclableNode

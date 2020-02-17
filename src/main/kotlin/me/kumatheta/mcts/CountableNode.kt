@@ -5,84 +5,129 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
 class CountableNodeManager<T : Move, S : Score<T>>(
-    val random: Random,
-    val scoreManager: ScoreManager<T, S>
+    private val random: Random,
+    private val scoreManager: ScoreManager<T, S>
 ) : NodeManager<T, S> {
-    override fun createRootNode(board: Board<T>): Node<T, S> {
-        nodeCount.incrementAndGet()
-        return CountableNode(
-            manager = this,
-            board = board,
-            parent = null,
-            lastMove = null,
-            scoreRef = AtomicReference(scoreManager.newEmptyScore()),
-            childIndex = 0,
-            isRoot = true
-        )
+    private val sizeRef = AtomicInteger(0)
+    override val estimatedSize
+        get() = sizeRef.get()
+
+    fun getDelegateNode(countableNode: CountableNode<T, S>): Node<T, S> {
+        while (true) {
+            val delegate = countableNode.delegate.get()
+            if (delegate != null) {
+                return delegate
+            }
+            val node = ThreadSafeNode(
+                board = countableNode.board,
+                random = random,
+                parent = countableNode.parent,
+                lastMove = countableNode.lastMove,
+                scoreRef = countableNode.scoreRef,
+                childIndex = countableNode.childIndex,
+                scoreManager = scoreManager,
+                childBuilder = ::buildChild
+            )
+            if (countableNode.delegate.compareAndSet(null, node)) {
+                return node
+            } else {
+                node.onRemove()
+            }
+        }
     }
 
-    val nodeCount = AtomicInteger(0)
-
-    override val estimatedSize: Int
-        get() = nodeCount.get()
-
-    fun buildChild(
+    private fun buildChild(
         parent: Node<T, S>,
         childIndex: Int,
         board: Board<T>,
         lastMove: T,
         childScore: Long,
         moves: List<T>
-    ): CountableNode<T, S> {
-        nodeCount.incrementAndGet()
+    ): Node<T, S> {
+        sizeRef.incrementAndGet()
         return CountableNode(
-            manager = this,
+            countableNodeManager = this,
             board = board,
             parent = parent,
             lastMove = lastMove,
             scoreRef = AtomicReference(scoreManager.newChildScore(childScore, moves)),
             childIndex = childIndex,
-            isRoot = false
+            isFixed = false
+        )
+    }
+
+
+
+    fun invalidate(countableNode: CountableNode<T, S>) {
+        sizeRef.decrementAndGet()
+        countableNode.removeAllChildren()
+    }
+
+    override fun createRootNode(board: Board<T>): Node<T, S> {
+        sizeRef.incrementAndGet()
+        return CountableNode(
+            countableNodeManager = this,
+            board = board,
+            parent = null,
+            lastMove = null,
+            scoreRef = AtomicReference(scoreManager.newEmptyScore()),
+            childIndex = 0,
+            isFixed = true
         )
     }
 }
 
-class CountableNode<T : Move, S : Score<T>> private constructor(
-    private val manager: CountableNodeManager<T, S>,
-    private val delegate: ThreadSafeNode<T, S>
-) : Node<T, S> by delegate {
+class CountableNode<T : Move, S : Score<T>>(
+    private val countableNodeManager: CountableNodeManager<T, S>,
+    val board: Board<T>,
+    parent: Node<T, S>?,
+    lastMove: T?,
+    scoreRef: AtomicReference<S>,
+    override val childIndex: Int,
+    isFixed: Boolean
+) : AbstractNode<T, S>(parent, lastMove, scoreRef) {
+    internal val delegate = AtomicReference<Node<T, S>?>(null)
 
-    constructor(
-        manager: CountableNodeManager<T, S>,
-        board: Board<T>,
-        parent: Node<T, S>?,
-        lastMove: T?,
-        scoreRef: AtomicReference<S>,
-        childIndex: Int,
-        isRoot: Boolean
-    ) : this(
-        manager, ThreadSafeNode(
-            board = board,
-            random = manager.random,
-            parent = parent,
-            lastMove = lastMove,
-            scoreRef = scoreRef,
-            childIndex = childIndex,
-            scoreManager = manager.scoreManager,
-            childBuilder = manager::buildChild,
-            isRoot = isRoot
-        )
-    )
+    override var parent: Node<T, S>?
+        get() {
+            return super.parent
+        }
+        set(value) {
+            super.parent = value
+            this.delegate.get()?.parent = value
+        }
+
+    @Volatile
+    private var _isFixed = isFixed
+
+    override fun getBestChild(): Node<T, S>? {
+        return countableNodeManager.getDelegateNode(this).getBestChild()
+    }
+
+    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
+        return countableNodeManager.getDelegateNode(this).selectAndPlayOut(updateScore)
+    }
+
+    override fun removeChild(index: Int) {
+        this.delegate.get()?.removeChild(index)
+    }
+
+    override fun noMoreChild(): Boolean {
+        return countableNodeManager.getDelegateNode(this).noMoreChild()
+    }
 
     override fun onRemove() {
-        if (isRoot) {
+        if (isFixed) {
             return
         }
-        delegate.onRemove()
-        manager.nodeCount.decrementAndGet()
+        countableNodeManager.invalidate(this)
+    }
+
+    override fun removeAllChildren() {
+        val delegate = delegate.get() ?: return
+        if (this.delegate.compareAndSet(delegate, null)) {
+            delegate.onRemove()
+        }
     }
 
 }
-
-
-

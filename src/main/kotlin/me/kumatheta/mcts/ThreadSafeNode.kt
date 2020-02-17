@@ -8,16 +8,13 @@ import kotlin.random.Random
 class ThreadSafeNode<T : Move, S : Score<T>>(
     private val board: Board<T>,
     private val random: Random,
-    @Volatile
-    override var parent: Node<T, S>?,
-    override val lastMove: T?,
-    override val scoreRef: AtomicReference<S>,
+    parent: Node<T, S>?,
+    lastMove: T?,
+    scoreRef: AtomicReference<S>,
     override val childIndex: Int,
     private val childBuilder: (parent: Node<T, S>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>) -> Node<T, S>,
-    private val scoreManager: ScoreManager<T, S>,
-    @Volatile
-    override var isRoot: Boolean
-) : Node<T, S> {
+    private val scoreManager: ScoreManager<T, S>
+) : AbstractNode<T, S>(parent, lastMove, scoreRef) {
     override fun noMoreChild() = outstandingChildCount.get() <= 0
 
     private val children = board.moves.asIterable().shuffled(random).asSequence().map {
@@ -111,9 +108,13 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
 
 
     override fun onRemove() {
-        if (isRoot) {
+        if (isFixed) {
             return
         }
+        removeAllChildren()
+    }
+
+    override fun removeAllChildren() {
         children.asSequence().mapNotNull { it.get()?.second }.mapNotNull {
             it.complete(null)
             it.getCompleted()
@@ -121,4 +122,5 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
             it.onRemove()
         }
     }
+
 }

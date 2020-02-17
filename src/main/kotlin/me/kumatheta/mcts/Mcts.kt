@@ -4,10 +4,10 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
-import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -16,9 +16,11 @@ class Mcts<T : Move, S : Score<T>>(
     board: Board<T>,
     private val scoreManager: ScoreManager<T, S>
 ) {
-    private val nodeManager = CountableNode2Manager(Random, scoreManager)
-    @Volatile
-    private var rootNode = nodeManager.createRootNode(board)
+    private val nodeManager = CountableNodeManager(Random, scoreManager)
+
+    private val rootRef = AtomicReference(nodeManager.createRootNode(board))
+
+    private val scoreRef = rootRef.get().scoreRef
 
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
@@ -31,6 +33,7 @@ class Mcts<T : Move, S : Score<T>>(
 
     @ExperimentalTime
     fun run(second: Int) {
+        val rootNode = rootRef.get()
         if (rootNode.noMoreChild()) {
             throw RuntimeException("no solution")
         }
@@ -53,23 +56,20 @@ class Mcts<T : Move, S : Score<T>>(
         println("run count: ${count.get()}")
     }
 
-    val bestScore: S
-        get() = rootNode.score
+    val score: S
+        get() = scoreRef.get()
 
-    fun moveDown(): T {
-        val bestChild = rootNode.getBestChild() ?: throw IllegalStateException("no more child")
-        bestChild.isRoot = true
-        val oldRoot = rootNode
-        rootNode = bestChild
-        bestChild.parent = null
-
-        oldRoot.isRoot = false
-        oldRoot.onRemove()
-        return bestChild.lastMove ?: throw IllegalStateException("no move for child")
+    fun moveDown() {
+        val newRoot = rootRef.updateAndGet { rootNode ->
+            rootNode.getBestChild() ?: throw IllegalStateException("no more child")
+        }
+        val oldRoot = newRoot.parent ?: throw IllegalStateException()
+        newRoot.parent = oldRoot.fakeNode
+        oldRoot.removeAllChildren()
     }
 
     private suspend fun selectAndPlayOut() {
-        var node: Node<T,S> = rootNode
+        var node: Node<T, S> = rootRef.get()
         while (true) {
             val newNode = node.selectAndPlayOut { newScore, moves ->
                 updateScore(node, newScore, moves)
@@ -90,7 +90,9 @@ class Mcts<T : Move, S : Score<T>>(
             currentNode.scoreRef.getAndUpdate { oldScore ->
                 scoreManager.updateScore(oldScore, newScore, movesCreator)
             }
-            if (parent == null) return
+            if (parent == null) {
+                return
+            }
             val lastMove = currentNode.lastMove
             check(lastMove != null)
             currentMoves.addFirst(lastMove)
