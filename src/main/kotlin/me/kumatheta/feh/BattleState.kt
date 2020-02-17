@@ -6,6 +6,7 @@ import me.kumatheta.feh.util.DistanceIndex
 import me.kumatheta.feh.util.DistanceReceiver
 import me.kumatheta.feh.util.FixedBattleMap
 import me.kumatheta.feh.util.MoveStep
+import me.kumatheta.feh.util.ThreatIndex
 import me.kumatheta.feh.util.attackPositionOrder
 import me.kumatheta.feh.util.attackTargetOrder
 import me.kumatheta.feh.util.attackTargetPositions
@@ -1327,15 +1328,23 @@ class BattleState private constructor(
         } else {
             val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
             val travelPower = heroUnit.travelPower
-            val threatReceiver = if (pass) {
-                ThreatWithPass(travelPower, obstacles, heroUnit.team)
+            if (pass) {
+                val threatReceiver = ThreatWithPass(travelPower, obstacles, heroUnit.team)
+                calculateDistance(heroUnit, threatReceiver)
+                threatReceiver.movablePositions.flatMap {
+                    attackTargetPositions(heroUnit, it, maxPosition)
+                }.distinct()
             } else {
-                ThreatWithoutPass(travelPower, obstacles)
+                val threatIndex = ThreatIndex(
+                    heroUnit.moveType,
+                    heroUnit.position,
+                    heroUnit.weaponType.isRanged,
+                    obstacles.values.asSequence().filterIsInstance<Obstacle>().map { it.position }.toSet()
+                )
+                val list =
+                    battleMap.threatMap[threatIndex] ?: throw IllegalStateException("failed threatIndex $threatIndex")
+                list.asSequence().filter { it.distanceTravel <= travelPower }.map { it.position }
             }
-            calculateDistance(heroUnit, threatReceiver)
-            threatReceiver.movablePositions.flatMap {
-                attackTargetPositions(heroUnit, it, maxPosition)
-            }.distinct()
         }
     }
 
@@ -1513,20 +1522,6 @@ class DistanceReceiverRealMovement(
         }
     }
 
-}
-
-private interface ThreatMoves {
-    val movablePositions: Sequence<Position>
-}
-
-private abstract class ThreatReceiver(private val movementRange: Int) : DistanceReceiver, ThreatMoves {
-    protected val resultMap = mutableMapOf<Position, Pair<Boolean, MoveStep>>()
-    final override val movablePositions
-        get() = resultMap.asSequence().filter { it.value.first }.map { it.key }
-
-    override fun isOverMaxDistance(distance: Int): Boolean {
-        return distance > movementRange
-    }
 }
 
 private class ThreatWithoutPass(
