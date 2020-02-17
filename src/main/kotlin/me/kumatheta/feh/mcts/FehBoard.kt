@@ -44,9 +44,9 @@ class FehBoard private constructor(
             calculateScore(state)
         } else if (movementResult.phraseChange) {
             state.enemyMoves()
-            if (state.playerDied > 0 || state.winningTeam != null || phraseLimit < state.phrase) {
+            if (state.playerDied > 0 || state.winningTeam != null || phraseLimit < state.phase) {
                 calculateScore(state)
-            } else if (!state.engaged && state.phrase > maxTurnBeforeEngage * 2) {
+            } else if (!state.engaged && state.phase > maxTurnBeforeEngage * 2) {
                 0L
             } else {
                 null
@@ -61,7 +61,7 @@ class FehBoard private constructor(
         battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
                 battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
             Team.ENEMY
-        ).sumBy { it.stat.hp - it.currentHp } * 2 + (phraseLimit - battleState.phrase) * 20
+        ).sumBy { it.stat.hp - it.currentHp } * 2 + (phraseLimit - battleState.phase) * 20
 
     private val stateCopy
         get() = state.copy()

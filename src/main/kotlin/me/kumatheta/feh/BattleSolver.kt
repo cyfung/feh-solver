@@ -25,7 +25,7 @@ class BattleSolver(private val battleMap: BattleMap, private val phraseLimit: In
                 }
                 val newState = battleState.copy()
                 executeMove(newState, nextMove, steps)
-                if (newState.phrase > phraseLimit) {
+                if (newState.phase > phraseLimit) {
                     lastPlayerMovement = rollback(steps) ?: throw IllegalStateException()
                     continue@mainLoop
                 }

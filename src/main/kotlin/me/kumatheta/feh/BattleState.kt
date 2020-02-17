@@ -26,7 +26,7 @@ private val protectiveAssistPositionOrder = compareBy<Triple<HeroUnit, MoveStep,
 class BattleState private constructor(
     private val battleMap: BattleMap,
     private val locationMap: MutableMap<Position, ChessPiece>,
-    phrase: Int,
+    phase: Int,
     playerDied: Int,
     enemyDied: Int,
     winningTeam: Team?,
@@ -50,14 +50,14 @@ class BattleState private constructor(
 
     val maxPosition = Position(battleMap.size.x - 1, battleMap.size.y - 1)
 
-    var phrase = phrase
+    var phase = phase
         private set
 
     var engaged = engaged
         private set
 
     val turn: Int
-        get() = phrase / 2 + 1
+        get() = phase / 2 + 1
 
     fun copy(): BattleState {
         val newLocationMap = mutableMapOf<Position, ChessPiece>()
@@ -65,7 +65,7 @@ class BattleState private constructor(
         return BattleState(
             battleMap = battleMap,
             locationMap = newLocationMap,
-            phrase = phrase,
+            phase = phase,
             playerDied = playerDied,
             enemyDied = enemyDied,
             winningTeam = winningTeam,
@@ -79,7 +79,7 @@ class BattleState private constructor(
         return BattleState(
             battleMap = battleMap,
             locationMap = newLocationMap,
-            phrase = phrase,
+            phase = phase,
             playerDied = playerDied,
             enemyDied = enemyDied,
             winningTeam = winningTeam,
@@ -90,7 +90,7 @@ class BattleState private constructor(
     constructor(battleMap: BattleMap) : this(
         battleMap = battleMap,
         locationMap = battleMap.toChessPieceMap().toMutableMap(),
-        phrase = 0,
+        phase = 0,
         playerDied = 0,
         enemyDied = 0,
         winningTeam = null,
@@ -155,7 +155,7 @@ class BattleState private constructor(
     }
 
     private fun turnEnd() {
-        val nextTeam = if (++phrase % 2 == 0) {
+        val nextTeam = if (++phase % 2 == 0) {
             Team.PLAYER
         } else {
             Team.ENEMY
@@ -761,7 +761,7 @@ class BattleState private constructor(
     }
 
     val isPlayerPhrase
-        get() = phrase % 2 == 0
+        get() = phase % 2 == 0
 
     fun enemyMoves(): List<UnitAction> {
         require(!isPlayerPhrase)

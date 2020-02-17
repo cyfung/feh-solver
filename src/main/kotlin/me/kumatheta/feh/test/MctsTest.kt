@@ -76,7 +76,7 @@ fun main() {
 //        board.applyMove(move)
 //    }
 //    val scoreManager = ModifiedUCT<FehMove>(0.3, 500000000.0)
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.5)
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.7)
     val mcts = Mcts(board, scoreManager)
 //    val mcts = Mcts(board, 0.3, 500000000.0)
     var tries = 0
