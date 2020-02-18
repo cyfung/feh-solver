@@ -44,9 +44,10 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
             val tries = scoreRef.get().tries
             // select
             val child =
-                children.asSequence().mapNotNull { it.get()?.second }.mapNotNull {
-                    if (it.isCompleted) {
-                        it.getCompleted()
+                children.asSequence().mapNotNull {
+                    val completableDeferred = it.get()?.second ?: return@mapNotNull null
+                    if (completableDeferred.isCompleted) {
+                        completableDeferred.getCompleted()
                     } else {
                         null
                     }
@@ -56,10 +57,8 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
             if (child != null) {
                 return child
             }
-            children.asSequence().mapNotNull {
-                it.get()?.second
-            }.forEach {
-                val result = it.await()
+            children.asSequence().forEach {
+                val result = it.get()?.second?.await()
                 if (result != null) {
                     return result
                 }

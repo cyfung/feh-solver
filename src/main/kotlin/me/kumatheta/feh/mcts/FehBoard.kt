@@ -14,8 +14,6 @@ class FehBoard private constructor(
     private val totalPlayerHp: Int,
     private val maxTurnBeforeEngage: Int
 ) : Board<FehMove> {
-    private val enemyCount: Int = state.enemyCount
-    private val playerCount: Int = state.playerCount
     override val moves: List<FehMove> by lazy {
         if (score != null) {
             emptyList()
@@ -90,10 +88,13 @@ class FehBoard private constructor(
     }
 
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
-        return nextMoves.asSequence().sortedBy { if (it.unitAction is MoveAndAttack) 0 else 1 }
-//            .filter {
-//            applyMove(it).enemyCount < enemyCount
-//        }
+        return nextMoves.asSequence().sortedBy {
+            if (it.unitAction is MoveAndAttack) {
+                0
+            } else {
+                1
+            }
+        }
     }
 }
 
