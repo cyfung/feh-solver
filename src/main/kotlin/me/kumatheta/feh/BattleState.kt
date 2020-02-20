@@ -350,14 +350,14 @@ class BattleState private constructor(
             acc + stat
         }
 
-        if (battleMap.getTerrain(attacker.position) == Terrain.DEFENSE_TILE) {
+        if (battleMap.getTerrain(attacker.position).isDefenseTile) {
             attackerInCombatStat.inCombatStat = attackerInCombatStat.inCombatStat.copy(
                 def = attackerInCombatStat.inCombatStat.def * 13 / 10,
                 res = attackerInCombatStat.inCombatStat.res * 13 / 10
             )
         }
 
-        if (battleMap.getTerrain(defender.position) == Terrain.DEFENSE_TILE) {
+        if (battleMap.getTerrain(defender.position).isDefenseTile) {
             defenderInCombatStat.inCombatStat = defenderInCombatStat.inCombatStat.copy(
                 def = defenderInCombatStat.inCombatStat.def * 13 / 10,
                 res = defenderInCombatStat.inCombatStat.res * 13 / 10

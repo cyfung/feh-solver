@@ -1,47 +1,49 @@
 package me.kumatheta.feh
 
-enum class Terrain {
-    WALL,
-    DEFENSE_TILE,
-    FLIER_ONLY,
-    FOREST,
-    TRENCH,
-    REGULAR;
+class Terrain(private val type: Type, val isDefenseTile: Boolean) {
+
+    enum class Type {
+        WALL,
+        FLIER_ONLY,
+        FOREST,
+        TRENCH,
+        REGULAR;
+    }
 
     fun moveCost(moveType: MoveType): Int? {
-        return when (this) {
-            WALL -> null
-            DEFENSE_TILE, REGULAR -> 1
-            FOREST -> when (moveType) {
+        return when (type) {
+            Type.WALL -> null
+            Type.REGULAR -> 1
+            Type.FOREST -> when (moveType) {
                 MoveType.INFANTRY -> 2
                 MoveType.CAVALRY -> null
                 else -> 1
             }
-            FLIER_ONLY -> if (moveType == MoveType.FLYING) 1 else null
-            TRENCH -> if (moveType == MoveType.CAVALRY) 3 else 1
+            Type.FLIER_ONLY -> if (moveType == MoveType.FLYING) 1 else null
+            Type.TRENCH -> if (moveType == MoveType.CAVALRY) 3 else 1
         }
     }
 
     fun priority(moveType: MoveType): Int {
-        if (this == WALL || this == DEFENSE_TILE) {
+        if (type == Type.WALL) {
             return -1
         }
         return when (moveType) {
-            MoveType.FLYING -> when (this) {
-                FLIER_ONLY -> 0
-                FOREST -> 1
+            MoveType.FLYING -> when (type) {
+                Type.FLIER_ONLY -> 0
+                Type.FOREST -> 1
                 else -> 2
             }
-            MoveType.ARMORED -> when (this) {
-                FOREST -> 0
+            MoveType.ARMORED -> when (type) {
+                Type.FOREST -> 0
                 else -> 1
             }
-            MoveType.CAVALRY -> when (this) {
-                TRENCH -> 0
+            MoveType.CAVALRY -> when (type) {
+                Type.TRENCH -> 0
                 else -> 1
             }
-            MoveType.INFANTRY -> when (this) {
-                FOREST -> 0
+            MoveType.INFANTRY -> when (type) {
+                Type.FOREST -> 0
                 else -> 1
             }
         }

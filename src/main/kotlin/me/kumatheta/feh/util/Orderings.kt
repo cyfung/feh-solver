@@ -69,7 +69,7 @@ val attackerOrder = compareByDescending<CombatResult>(
 
 fun attackPositionOrder(heroUnit: HeroUnit, enemyThreat: Map<Position, Int>) = compareBy<MoveStep>(
     {
-        if (it.terrain == Terrain.DEFENSE_TILE) 0 else 1
+        if (it.terrain.isDefenseTile) 0 else 1
     },
     {
         enemyThreat[it.position] ?: 0
@@ -117,7 +117,7 @@ fun moveTargetOrder(
     return compareBy({
         distanceToTarget[it.position] ?: throw IllegalStateException()
     }, {
-        if (it.terrain == Terrain.DEFENSE_TILE) {
+        if (it.terrain.isDefenseTile) {
             0
         } else {
             1
