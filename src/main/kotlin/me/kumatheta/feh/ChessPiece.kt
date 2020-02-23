@@ -12,6 +12,8 @@ class HeroUnit(
     override var position: Position,
     cooldown: Int? = null
 ) : ChessPiece(), Hero by heroModel {
+    val weapon
+        get() = heroModel.weapon
     private var engageCountDown = heroModel.engageDelay
     var engaged = heroModel.group == null && heroModel.engageDelay == null
         private set

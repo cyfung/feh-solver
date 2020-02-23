@@ -1,6 +1,6 @@
 package me.kumatheta.feh
 
-class Terrain(private val type: Type, val isDefenseTile: Boolean) {
+class Terrain(val type: Type, val isDefenseTile: Boolean) {
 
     enum class Type {
         WALL,

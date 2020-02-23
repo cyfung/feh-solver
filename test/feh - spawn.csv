@@ -1,7 +1,7 @@
 id,spawn time,name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
 5,START,Titania,1,,0,CAVALRY,DraconicPoleaxEff,ReciprocalAid,Luna,63,47,37,28,33,SwiftSparrow2,Guard3,SpdTactics3
-6,START,Blue Bow,1,,1,INFANTRY,SlayingBowB,,Moonbow,59,47,32,32,17,TriangleAdept3,PoisonStrike3,PanicPloy3
-7,START,Red Flier,1,,4,FLYING,RaudrbladePlus,,Iceberg,46,48,44,20,38,Fury3,Aerobatics3,AtkTactics3
-8,START,Sword Dragon,1,,3,FLYING,ArmorsmasherPlus,,Bonfire,57,52,30,39,21,IoteShield,DullClose3,DefTactics3
+6,START,Fighter - Blue Bow,1,,1,INFANTRY,SlayingBowB,,Moonbow,59,47,32,32,17,TriangleAdept3,PoisonStrike3,PanicPloy3
+7,START,Pegasus Knight - Red Tome,1,,4,FLYING,RaudrbladePlus,,Iceberg,46,48,44,20,38,Fury3,Aerobatics3,AtkTactics3
+8,START,Wyvern Knight - Sword,1,,3,FLYING,ArmorsmasherPlus,,Bonfire,57,52,30,39,21,IoteShield,DullClose3,DefTactics3
 9,START,Mist,1,,1,INFANTRY,SlowPlus,PhysicsPlus,Miracle,63,42,31,22,40,Res3,SabotageAtk3,SpurDefRes2
-10,START,Blue Cavalier,1,,3,CAVALRY,ThoronPlus,,DraconicAura,45,51,28,18,37,DeathBlow3,DefFeint3,ResPloy3
+10,START,Knight - Blue Tome,1,,3,CAVALRY,ThoronPlus,,DraconicAura,45,51,28,18,37,DeathBlow3,DefFeint3,ResPloy3
