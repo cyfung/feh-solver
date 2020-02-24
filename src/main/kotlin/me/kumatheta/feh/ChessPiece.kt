@@ -38,7 +38,7 @@ class HeroUnit(
             MoveType.FLYING -> 2
         }
 
-    var available = false
+    var available = true
         private set
     var buff = Stat.ZERO
         private set
@@ -152,7 +152,7 @@ class HeroUnit(
         debuff = Stat.ZERO
     }
 
-    fun endOfTurn() {
+    fun actionEnded() {
         clearPenalty()
         available = false
     }
@@ -161,9 +161,12 @@ class HeroUnit(
         available = true
     }
 
+    fun endOfTurn() {
+        available = true
+    }
+
     fun startOfTurn() {
         clearBonus()
-        available = true
         if (!engaged && engageCoolDownStarted) {
             val engageCountDown = engageCountDown
             require(engageCountDown != null)

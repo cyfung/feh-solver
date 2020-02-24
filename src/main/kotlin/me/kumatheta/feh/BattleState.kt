@@ -124,7 +124,7 @@ class BattleState private constructor(
         move(heroUnit, unitAction.moveTarget)
         return when (unitAction) {
             is MoveOnly -> {
-                heroUnit.endOfTurn()
+                heroUnit.actionEnded()
                 null
             }
             is MoveAndAttack -> {
@@ -136,7 +136,7 @@ class BattleState private constructor(
                 if (--obstacle.health == 0) {
                     locationMap.remove(unitAction.obstacle)
                 }
-                heroUnit.endOfTurn()
+                heroUnit.actionEnded()
                 null
             }
             is MoveAndAssist -> {
@@ -149,7 +149,7 @@ class BattleState private constructor(
                 target.skillSet.assistRelated.forEach {
                     it.apply(this, target, heroUnit, assist, false)
                 }
-                heroUnit.endOfTurn()
+                heroUnit.actionEnded()
                 null
             }
         }
@@ -167,6 +167,9 @@ class BattleState private constructor(
             Team.PLAYER
         } else {
             Team.ENEMY
+        }
+        unitsSeq(nextTeam.foe).forEach {
+            it.endOfTurn()
         }
         startOfTurn(nextTeam)
     }
@@ -510,7 +513,7 @@ class BattleState private constructor(
             }
         }.firstOrNull()
 
-        attacker.endOfTurn()
+        attacker.actionEnded()
 
         potentialDamage.attackerInCombat.skills.postCombat(attackerAttacked)
         potentialDamage.defenderInCombat.skills.postCombat(defenderAttacked)
@@ -938,7 +941,7 @@ class BattleState private constructor(
 
             // no action, cleanup
             availableUnits.asSequence().forEach {
-                it.endOfTurn()
+                it.actionEnded()
             }
             null
         }.toList()
