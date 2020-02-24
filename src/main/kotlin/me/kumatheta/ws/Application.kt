@@ -98,44 +98,28 @@ fun Application.module(testing: Boolean = false) {
     )
     val setupInfo = buildSetupInfo(positionMap, battleMap, state)
     val json = Json(JsonConfiguration.Stable)
-    val boardRef = AtomicReference<FehBoard?>(null)
-    val mctsRef = AtomicReference<Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>(null)
+    val mctsRef =
+        AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>(null)
     val jobRef = AtomicReference<Job?>(null)
 
     routing {
         get("/start") {
-            if (mctsRef.get() != null) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@get
-            }
-            val phraseLimit = 20
-            val board = FehBoard(phraseLimit, state, 3)
-            val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.5)
-            val mcts = Mcts(board, scoreManager)
-            if (!mctsRef.compareAndSet(null, mcts)) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@get
-            }
-            check(boardRef.compareAndSet(null, board))
-            val job = GlobalScope.launch {
-                runMcts(mcts, board, scoreManager)
-            }
-            check(jobRef.compareAndSet(null, job))
-            job.invokeOnCompletion {
-                check(boardRef.compareAndSet(board,null))
-                check(mctsRef.compareAndSet(mcts, null))
-                check(jobRef.compareAndSet(job, null))
-            }
-
+            val (board, mcts) = getMcts(state, mctsRef, jobRef)
             call.respondText(json.stringify(SetupInfo.serializer(), setupInfo))
         }
         get("/moveset") {
-            val mcts = mctsRef.get()
-            val board = boardRef.get()
-            if (mcts == null || board == null) {
+            val isCompleted = jobRef.get() == null
+            val triple = if (isCompleted) {
+                // last get
+                mctsRef.getAndSet(null)
+            } else {
+                mctsRef.get()
+            }
+            if (triple == null) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
+            val (board, mcts) = triple
             val score = resetScoreWithRetry(mcts)
             val moves = score.moves
             if (moves == null) {
@@ -158,6 +142,34 @@ fun Application.module(testing: Boolean = false) {
             call.respondText(json.stringify(MoveSet.serializer(), MoveSet(updates, score.bestScore, score.tries)))
         }
     }
+}
+
+@ExperimentalTime
+private suspend fun getMcts(
+    state: BattleState,
+    mctsRef: AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>,
+    jobRef: AtomicReference<Job?>
+): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
+    val phraseLimit = 20
+    val board = FehBoard(phraseLimit, state, 3)
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.5)
+    val mcts = Mcts(board, scoreManager)
+    val next = Pair(board, mcts)
+    do {
+        val prev = mctsRef.get()
+        if (prev != null) {
+            return prev
+        }
+    } while (!mctsRef.compareAndSet(null, next))
+
+    val job = GlobalScope.launch {
+        runMcts(mcts, board, scoreManager)
+    }
+    check(jobRef.compareAndSet(null, job))
+    job.invokeOnCompletion {
+        check(jobRef.compareAndSet(job, null))
+    }
+    return next
 }
 
 private fun getUpdated(
@@ -188,11 +200,11 @@ private fun UnitAction.toMsgAction(): Action {
 }
 
 private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>>): VaryingUCT.MyScore<FehMove> {
-    val score = mcts.resetScore()
+    val score = mcts.resetRecentScore()
     val moves = score.moves
     if (moves == null) {
         delay(500)
-        return mcts.resetScore()
+        return mcts.resetRecentScore()
     }
     return score
 }

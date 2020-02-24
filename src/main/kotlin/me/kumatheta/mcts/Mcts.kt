@@ -22,6 +22,8 @@ class Mcts<T : Move, S : Score<T>>(
 
     private val scoreRef = rootRef.get().scoreRef
 
+    private val recentScoreRef = AtomicReference(scoreManager.newEmptyScore())
+
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
         thread.isDaemon = true
@@ -41,7 +43,7 @@ class Mcts<T : Move, S : Score<T>>(
         val count = AtomicInteger(0)
         runBlocking {
             supervisorScope {
-                (1..2).map {
+                repeat(6) {
                     launch(dispatcher) {
                         while (clockMark.elapsedNow().inSeconds < second) {
                             repeat(10) {
@@ -59,8 +61,8 @@ class Mcts<T : Move, S : Score<T>>(
     val score: S
         get() = scoreRef.get()
 
-    fun resetScore() : S {
-        return scoreRef.getAndSet(scoreManager.newEmptyScore())
+    fun resetRecentScore() : S {
+        return recentScoreRef.getAndSet(scoreManager.newEmptyScore())
     }
 
     fun moveDown() {
@@ -95,6 +97,9 @@ class Mcts<T : Move, S : Score<T>>(
                 scoreManager.updateScore(oldScore, newScore, movesCreator)
             }
             if (parent == null) {
+                recentScoreRef.getAndUpdate { oldScore ->
+                    scoreManager.updateScore(oldScore, newScore, movesCreator)
+                }
                 return
             }
             val lastMove = currentNode.lastMove
