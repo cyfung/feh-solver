@@ -41,7 +41,7 @@ class Mcts<T : Move, S : Score<T>>(
         val count = AtomicInteger(0)
         runBlocking {
             supervisorScope {
-                (1..20).map {
+                (1..2).map {
                     launch(dispatcher) {
                         while (clockMark.elapsedNow().inSeconds < second) {
                             repeat(10) {
@@ -58,6 +58,10 @@ class Mcts<T : Move, S : Score<T>>(
 
     val score: S
         get() = scoreRef.get()
+
+    fun resetScore() : S {
+        return scoreRef.getAndSet(scoreManager.newEmptyScore())
+    }
 
     fun moveDown() {
         val newRoot = rootRef.updateAndGet { rootNode ->

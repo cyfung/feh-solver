@@ -82,6 +82,8 @@ fun main() {
     val fixedMoves = mutableListOf<FehMove>()
     val clockMark = MonoClock.markNow()
     var lastFixMove = MonoClock.markNow()
+
+
     repeat(10000) {
         mcts.run(5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
@@ -119,9 +121,9 @@ fun main() {
 //            return
 //        }
         println("memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000_000}")
-        if (testState.enemyCount == testState.enemyDied && testState.playerDied == 0) {
-            return
-        }
+//        if (testState.enemyCount == testState.enemyDied && testState.playerDied == 0) {
+//            return
+//        }
     }
 }
 

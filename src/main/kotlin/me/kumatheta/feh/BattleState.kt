@@ -774,6 +774,12 @@ class BattleState private constructor(
         get() = phase % 2 == 0
 
     fun enemyMoves(): List<UnitAction> {
+        return enemyMoves {
+            it
+        }
+    }
+
+    fun <T : Any> enemyMoves(f: (UnitAction) -> T): List<T> {
         require(!isPlayerPhrase)
         check(winningTeam == null)
         val myTeam = Team.ENEMY
@@ -841,7 +847,7 @@ class BattleState private constructor(
 
             if (preCombatAssist != null) {
                 executeMove(preCombatAssist)
-                return@generateSequence preCombatAssist
+                return@generateSequence f(preCombatAssist)
             }
 
             // attack
@@ -855,7 +861,7 @@ class BattleState private constructor(
                 if (deadTeam == foeTeam || foeOriginalPosition != attack.foe.position) {
                     obstacles = locationMap.toMap()
                 }
-                return@generateSequence attack.action
+                return@generateSequence f(attack.action)
             }
 
             // post combat assist
@@ -880,7 +886,7 @@ class BattleState private constructor(
 
             if (postCombatAssist != null) {
                 executeMove(postCombatAssist)
-                return@generateSequence postCombatAssist
+                return@generateSequence f(postCombatAssist)
             }
 
             // aggressive movement assist
@@ -890,7 +896,7 @@ class BattleState private constructor(
 
             if (aggressiveAssist != null) {
                 executeMove(aggressiveAssist)
-                return@generateSequence aggressiveAssist
+                return@generateSequence f(aggressiveAssist)
             }
 
             // movement assist
@@ -913,7 +919,7 @@ class BattleState private constructor(
                 getProtectiveMovementAssist(assistSortedAllies, possibleMoves, lazyFoeMeleeMoves, foeThreat)
             if (movementAssist != null) {
                 executeMove(movementAssist)
-                return@generateSequence movementAssist
+                return@generateSequence f(movementAssist)
             }
 
             // movement
@@ -927,7 +933,7 @@ class BattleState private constructor(
             )
             if (move != null) {
                 executeMove(move)
-                return@generateSequence move
+                return@generateSequence f(move)
             }
 
             // no action, cleanup

@@ -61,7 +61,7 @@ class FehBoard private constructor(
             Team.ENEMY
         ).sumBy { it.stat.hp - it.currentHp } * 2 + (phraseLimit - battleState.phase) * 20
 
-    private val stateCopy
+    val stateCopy
         get() = state.copy()
 
     fun tryMoves(moves: List<FehMove>, printMoves: Boolean = false): BattleState {
@@ -95,6 +95,26 @@ class FehBoard private constructor(
                 1
             }
         }
+    }
+
+    fun tryAndGetDetails(moves: List<FehMove>): List<Pair<UnitAction?, BattleState>> {
+        val currentState = stateCopy
+        return moves.asSequence().flatMap {
+            val unitAction = it.unitAction
+            val movementResult = currentState.playerMove(unitAction)
+            val seq = sequenceOf(Pair<UnitAction?, BattleState>(unitAction, currentState.copy()))
+            when {
+                movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER -> {
+                    seq
+                }
+                movementResult.phraseChange -> {
+                    seq + currentState.enemyMoves { enemyAction ->
+                        Pair<UnitAction?, BattleState>(enemyAction, currentState.copy())
+                    }.asSequence() + Pair<UnitAction?, BattleState>(null, currentState.copy())
+                }
+                else -> seq
+            }
+        }.toList()
     }
 }
 
