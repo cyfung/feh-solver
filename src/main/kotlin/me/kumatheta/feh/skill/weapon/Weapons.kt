@@ -44,10 +44,6 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp=2, atk=1))
 ).toSkillMap()
 
-
-private fun String.normalize() =
-    toLowerCase().replace(" ", "")
-
 private fun WeaponType.basic(might: Int): BasicWeapon {
     return BasicWeapon(this, might)
 }
