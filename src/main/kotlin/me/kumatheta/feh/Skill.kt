@@ -299,7 +299,13 @@ abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
 }
 
 abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
-    abstract fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, defenderDefRes: Int): Int
+    abstract fun getDamage(
+        battleState: BattleState,
+        self: InCombatStat,
+        foe: InCombatStat,
+        defenderDefRes: Int,
+        atk: Int
+    ): Int
 }
 
 abstract class DefenseSpecial(coolDownCount: Int) : Special(coolDownCount) {

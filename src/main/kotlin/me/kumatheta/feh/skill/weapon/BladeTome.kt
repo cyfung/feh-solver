@@ -14,7 +14,6 @@ class BladeTome(weaponType: WeaponType, might: Int) : BasicWeapon(weaponType, mi
     }
 }
 
-
 fun WeaponType.bladeTome(might: Int): BladeTome {
     return BladeTome(this, might)
 }

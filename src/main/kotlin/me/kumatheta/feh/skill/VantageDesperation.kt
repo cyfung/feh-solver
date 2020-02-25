@@ -1,8 +1,8 @@
-package me.kumatheta.feh.skill.passive
+package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.Passive
 
-fun vantage(percentage: Int): InCombatSkill<Boolean> = {
+fun belowThreshold(percentage: Int): InCombatSkill<Boolean> = {
     it.self.heroUnit.hpThreshold(percentage) <= 0
 }

@@ -227,7 +227,7 @@ private suspend fun runMcts(
     var lastFixMove = MonoClock.markNow()
 
     repeat(10000) {
-        mcts.run(5)
+        mcts.run(5, parallelCount=5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
             lastFixMove = MonoClock.markNow()

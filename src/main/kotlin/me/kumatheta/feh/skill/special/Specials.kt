@@ -1,5 +1,6 @@
 package me.kumatheta.feh.skill.special
 
+import me.kumatheta.feh.skill.passive.GentleDream
 import me.kumatheta.feh.skill.toSkillMap
 
 val ALL_SPECIALS = sequenceOf(
@@ -22,5 +23,6 @@ val ALL_SPECIALS = sequenceOf(
     },
     "Dragon Fang" to SelfStatBased(4) {
         it.atk / 2
-    }
+    },
+    "Glimmer" to DamageAmplify(2, 50)
 ).toSkillMap()

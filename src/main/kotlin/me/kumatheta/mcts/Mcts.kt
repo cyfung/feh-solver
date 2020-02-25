@@ -34,7 +34,7 @@ class Mcts<T : Move, S : Score<T>>(
         get() = nodeManager.estimatedSize
 
     @ExperimentalTime
-    fun run(second: Int) {
+    fun run(second: Int, parallelCount: Int = 20) {
         val rootNode = rootRef.get()
         if (rootNode.noMoreChild()) {
             throw RuntimeException("no solution")
@@ -43,7 +43,7 @@ class Mcts<T : Move, S : Score<T>>(
         val count = AtomicInteger(0)
         runBlocking {
             supervisorScope {
-                repeat(20) {
+                repeat(parallelCount) {
                     launch(dispatcher) {
                         while (clockMark.elapsedNow().inSeconds < second) {
                             repeat(10) {

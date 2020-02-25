@@ -6,6 +6,7 @@ import me.kumatheta.feh.BowB
 import me.kumatheta.feh.BowC
 import me.kumatheta.feh.Lance
 import me.kumatheta.feh.MagicB
+import me.kumatheta.feh.MagicG
 import me.kumatheta.feh.MagicR
 import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Staff
@@ -39,11 +40,15 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Draconic Poleax Eff" to DraconicPoleaxEff,
     "Lyfjaberg" to Lyfjaberg,
     "Leiptr" to Leiptr,
-    "Dire Thunder" to DireThunder,
+    "Dire Thunder" to MagicB.brave(9),
     "Grima's Truth" to GrimaTruth,
+    "Flower of Joy" to FlowerOfJoy,
+    "Gleipnir" to Gleipnir,
 
+    "Brave Sword+" to Sword.brave(8),
     "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp=2, atk=1)),
-    "Guard Bow+" to BowC.serpent(12)
+    "Guard Bow+" to BowC.serpent(12),
+    "Gronnraven+" to MagicG.raven(11)
 ).toSkillMap()
 
 private fun WeaponType.basic(might: Int): BasicWeapon {

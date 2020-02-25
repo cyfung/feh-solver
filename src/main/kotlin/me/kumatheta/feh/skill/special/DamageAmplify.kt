@@ -3,12 +3,8 @@ package me.kumatheta.feh.skill.special
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.DamagingSpecial
 import me.kumatheta.feh.InCombatStat
-import me.kumatheta.feh.Stat
 
-class SelfStatBased(
-    coolDownCount: Int,
-    private val damageGetter: (Stat) -> Int
-) : DamagingSpecial(coolDownCount) {
+class DamageAmplify(coolDownCount: Int, private val percentage: Int) : DamagingSpecial(coolDownCount) {
     override fun getDamage(
         battleState: BattleState,
         self: InCombatStat,
@@ -16,6 +12,6 @@ class SelfStatBased(
         defenderDefRes: Int,
         atk: Int
     ): Int {
-        return damageGetter(self.inCombatStat)
+        return (atk - defenderDefRes) * percentage / 100
     }
 }

@@ -10,7 +10,7 @@ inline fun ploy(
     crossinline f: (self: HeroUnit, foe: HeroUnit) -> Unit
 ): MapSkillMethod<Unit> = { battleState: BattleState, self: HeroUnit ->
     battleState.unitsSeq(self.team.foe).filter {
-        it.position.x == self.position.x || it.position.y == self.position.y
+        self.inCardinalDirection(it)
     }.forEach {
         f(self, it)
     }

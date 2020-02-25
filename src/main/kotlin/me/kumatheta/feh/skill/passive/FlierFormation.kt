@@ -9,13 +9,10 @@ import me.kumatheta.feh.util.surroundings
 import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.skill.nearbyAllies
 
-object Aerobatics3 : Passive {
+object FlierFormation3 : Passive {
     override val teleport: MapSkillMethod<Sequence<Position>>? = { battleState, self ->
         self.nearbyAllies(battleState, 2).filter {
-            when (it.moveType) {
-                MoveType.INFANTRY, MoveType.CAVALRY, MoveType.ARMORED -> true
-                else -> false
-            }
+            it.moveType == MoveType.FLYING
         }.flatMap {
             it.position.surroundings(battleState.maxPosition)
         }

@@ -25,6 +25,11 @@ class HeroUnit(
     var endOfCombatEffects = EndOfCombatEffect()
         private set
 
+    private val positiveStatus = mutableSetOf<PositiveStatus>()
+    fun addPositiveStatus(status: PositiveStatus) {
+        positiveStatus.add(status)
+    }
+
     private val negativeStatus = mutableSetOf<NegativeStatus>()
     val currentStatTotal: Int
         get() {
@@ -47,6 +52,8 @@ class HeroUnit(
 
     val withPanic: Boolean
         get() = negativeStatus.contains(NegativeStatus.PANIC)
+    val withMoveOrder: Boolean
+        get() = positiveStatus.contains(PositiveStatus.MOVEMENT_ORDER)
 
     val visibleStat: Stat
         get() = stat + debuff + if (withPanic) {
@@ -77,6 +84,7 @@ class HeroUnit(
         newUnit.debuff = debuff
         newUnit.currentHp = currentHp
         newUnit.cooldown = cooldown
+        newUnit.positiveStatus.addAll(positiveStatus)
         newUnit.negativeStatus.addAll(negativeStatus)
         newUnit.engaged = engaged
         newUnit.engageCountDown = engageCountDown
@@ -180,6 +188,7 @@ class HeroUnit(
 
     private fun clearBonus() {
         buff = Stat.ZERO
+        positiveStatus.clear()
     }
 
     override fun toString(): String {
@@ -241,6 +250,10 @@ class HeroUnit(
 
 enum class NegativeStatus {
     PANIC
+}
+
+enum class PositiveStatus {
+    MOVEMENT_ORDER
 }
 
 class Obstacle(var health: Int, override val position: Position) : ChessPiece() {

@@ -5,7 +5,7 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.Stat
 
-abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
+class Rally(private val bonus: Stat) : BuffRelatedAssist() {
     final override fun apply(
         self: HeroUnit,
         target: HeroUnit,
@@ -41,6 +41,24 @@ abstract class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         )?.first
     }
 
-
+    final override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        val allyThreat = lazyAllyThreat.value
+        return targets.asSequence().filter {
+            allyThreat.contains(it)
+        }.map {
+            it to it.stat.rallyGain(bonus)
+        }.filter {
+            it.second >= 2
+        }.minWith(
+            targetComparator(distanceToClosestFoe)
+        )?.first
+    }
 }
 

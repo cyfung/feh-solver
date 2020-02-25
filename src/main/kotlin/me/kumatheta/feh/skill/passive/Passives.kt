@@ -1,5 +1,6 @@
 package me.kumatheta.feh.skill.passive
 
+import me.kumatheta.feh.BowC
 import me.kumatheta.feh.CombatStartSkill
 import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.MapSkillMethod
@@ -8,8 +9,13 @@ import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.airOrder3
+import me.kumatheta.feh.skill.belowThreshold
 import me.kumatheta.feh.skill.blow
 import me.kumatheta.feh.skill.bond
+import me.kumatheta.feh.skill.breaker
+import me.kumatheta.feh.skill.hone
+import me.kumatheta.feh.skill.opening
 import me.kumatheta.feh.skill.ploy
 import me.kumatheta.feh.skill.resBasedPloy3
 import me.kumatheta.feh.skill.stance
@@ -29,6 +35,7 @@ val ALL_PASSIVES = sequenceOf(
 
     "Death Blow 3" to blow(Stat(atk = 6)).toInCombatStatPassive(),
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)).toInCombatStatPassive(),
+    "Sturdy Blow 2" to blow(Stat(atk = 4, def = 4)).toInCombatStatPassive(),
     "Mirror Strike 2" to blow(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
 
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
@@ -48,13 +55,19 @@ val ALL_PASSIVES = sequenceOf(
     "Quick Riposte 3" to quickRiposte(70).toFollowUpPassive(),
     "Quick Riposte 2" to quickRiposte(80).toFollowUpPassive(),
     "Quick Riposte 1" to quickRiposte(90).toFollowUpPassive(),
-    "Vantage 3" to vantage(75).toVantagePassive(),
+    "Bow Breaker 3" to breaker(BowC, 50).toFollowUpPassive(),
+    "Vantage 3" to belowThreshold(75).toVantagePassive(),
+    "Desperation 3" to belowThreshold(75).toVantagePassive(),
 
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
     "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
+    "Fortify Res 4" to hone(Stat(res = 7)).toStartOfTurnPassive(),
 
 
     "Res 3" to Stat(res = 3).toExtraStatPassive(),
+    "B Duel Flying 3" to Stat(hp = 5).toExtraStatPassive(),
+    "Atk/Spd 2" to Stat(atk = 2, spd = 2).toExtraStatPassive(),
+    "Spur Atk/Spd 2" to Spur(Stat(atk = 2, spd = 2)).toSupportInCombatBuffPassive(),
     "Spur Def/Res 2" to Spur(Stat(def = 3, res = 3)).toSupportInCombatBuffPassive(),
     "Spur Spd 1" to Spur(Stat(spd = 2)).toSupportInCombatBuffPassive(),
 
@@ -71,7 +84,12 @@ val ALL_PASSIVES = sequenceOf(
     "Sparkling Boost" to SparklingBoost,
     "Shield Pulse 3" to ShieldPulse3,
     "Drive Atk 2" to DriveAtk2,
-    "Goad Cavalry" to GoadCavalry
+    "Goad Cavalry" to GoadCavalry,
+    "Flier Formation 3" to FlierFormation3,
+    "Air Orders 3" to airOrder3.toStartOfTurnPassive(),
+    "Atk Opening 3" to opening(Stat(atk = 6)) {
+        it.visibleStat.atk
+    }.toStartOfTurnPassive()
 
 ).toSkillMap()
 
@@ -82,6 +100,15 @@ class VantagePassive(vantage: InCombatSkill<Boolean>) : Passive {
 fun InCombatSkill<Boolean>.toVantagePassive(): VantagePassive {
     return VantagePassive(this)
 }
+
+class DesperationPassive(desperation: InCombatSkill<Boolean>) : Passive {
+    override val desperation: InCombatSkill<Boolean>? = desperation
+}
+
+fun InCombatSkill<Boolean>.toDesperationPassive(): DesperationPassive {
+    return DesperationPassive(this)
+}
+
 
 class FollowUpPassive(followUp: InCombatSkill<Int>) : Passive {
     override val followUp: InCombatSkill<Int>? = followUp

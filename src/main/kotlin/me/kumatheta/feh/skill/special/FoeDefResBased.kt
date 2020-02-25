@@ -8,9 +8,14 @@ class FoeDefResBased(
     coolDownCount: Int,
     private val multiplier: Int,
     private val divider: Int
-) :
-    DamagingSpecial(coolDownCount) {
-    override fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, defenderDefRes: Int): Int {
+) : DamagingSpecial(coolDownCount) {
+    override fun getDamage(
+        battleState: BattleState,
+        self: InCombatStat,
+        foe: InCombatStat,
+        defenderDefRes: Int,
+        atk: Int
+    ): Int {
         return defenderDefRes * multiplier / divider
     }
 }

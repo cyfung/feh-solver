@@ -1,5 +1,6 @@
 package me.kumatheta.feh
 
+import me.kumatheta.feh.skill.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.assist.Pivot
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.util.DistanceIndex
@@ -746,7 +747,7 @@ class BattleState private constructor(
             effAtk
         }
 
-        val bonusDamage = damagingSpecial?.getDamage(this, damageDealer, damageReceiver, defenderDefRes) ?: 0
+        val bonusDamage = damagingSpecial?.getDamage(this, damageDealer, damageReceiver, defenderDefRes, atk) ?: 0
 
         var damage = max(atk + bonusDamage - defenderDefRes, 0)
         if (damageDealer.reducedStaffDamage) {
@@ -1374,7 +1375,12 @@ class BattleState private constructor(
         val travelPower = heroUnit.travelPower
         val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass)
         calculateDistance(heroUnit, distanceReceiver)
-        heroUnit.skillSet.teleport.asSequence().flatMap {
+        val teleportSkills = heroUnit.skillSet.teleport.asSequence()
+        if (heroUnit.withMoveOrder) {
+            teleportSkills + MOVE_ORDER_EFFECT
+        } else {
+            teleportSkills
+        }.flatMap {
             it(this, heroUnit)
         }.filter {
             locationMap[it] == null && battleMap.getTerrain(it).moveCost(heroUnit.moveType) != null
@@ -1383,6 +1389,7 @@ class BattleState private constructor(
         }.forEach {
             distanceReceiver.receive(it)
         }
+
         return distanceReceiver.result
     }
 
