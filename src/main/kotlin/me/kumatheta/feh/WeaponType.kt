@@ -32,4 +32,9 @@ object MagicB : Magic(Color.BLUE)
 object MagicG : Magic(Color.GREEN)
 object MagicC : Magic(Color.COLORLESS)
 
+object DragonR : Dragon(Color.RED)
+object DragonB : Dragon(Color.BLUE)
+object DragonG : Dragon(Color.GREEN)
+object DragonC : Dragon(Color.COLORLESS)
+
 

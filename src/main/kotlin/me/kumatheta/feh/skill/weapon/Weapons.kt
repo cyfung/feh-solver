@@ -40,8 +40,10 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Lyfjaberg" to Lyfjaberg,
     "Leiptr" to Leiptr,
     "Dire Thunder" to DireThunder,
+    "Grima's Truth" to GrimaTruth,
 
-    "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp=2, atk=1))
+    "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp=2, atk=1)),
+    "Guard Bow+" to BowC.serpent(12)
 ).toSkillMap()
 
 private fun WeaponType.basic(might: Int): BasicWeapon {

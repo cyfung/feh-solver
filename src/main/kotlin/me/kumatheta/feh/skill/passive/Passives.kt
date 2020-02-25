@@ -29,8 +29,10 @@ val ALL_PASSIVES = sequenceOf(
 
     "Death Blow 3" to blow(Stat(atk = 6)).toInCombatStatPassive(),
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)).toInCombatStatPassive(),
+    "Mirror Strike 2" to blow(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
 
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
+    "Steady Posture 2" to stance(Stat(spd = 4, def = 4)).toInCombatStatPassive(),
 
     "Spd Tactics 3" to tactics(Stat(spd = 6)).toStartOfTurnPassive(),
     "Def Tactics 3" to tactics(Stat(def = 6)).toStartOfTurnPassive(),
@@ -62,6 +64,7 @@ val ALL_PASSIVES = sequenceOf(
     "Fury 3" to Fury3,
     "Aerobatics 3" to Aerobatics3,
     "Dull Close 3" to DullClose3,
+    "Dull Range 3" to DullRange3,
     "Iote's Shield" to IoteShield,
     "Def Feint 3" to DefFeint3,
     "Mystic Boost 3" to MysticBoost3,

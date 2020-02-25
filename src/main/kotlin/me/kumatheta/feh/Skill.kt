@@ -213,7 +213,7 @@ class InCombatSkillWrapper(
         check(baseSkillSet.combatStatus.foe == foe.heroUnit)
     }
 
-    val combatStatus =
+    private val combatStatus =
         CombatStatus(baseSkillSet.combatStatus.battleState, self, foe, baseSkillSet.combatStatus.initAttack)
 
     val inCombatStat: InCombatStat
@@ -277,13 +277,7 @@ class InCombatSkillWrapper(
     fun damageReduced(reduced: Int) = baseSkillSet.damageReducedListener.applyAllPerAttack(reduced)
 
     fun postCombat(attacked: Boolean) = baseSkillSet.postCombat.forEach {
-        it.apply(
-            baseSkillSet.combatStatus.battleState,
-            self,
-            foe,
-            baseSkillSet.combatStatus.initAttack,
-            attacked
-        )
+        it(combatStatus, attacked)
     }
 }
 
@@ -354,10 +348,7 @@ typealias InCombatSkill<T> = CombatSkill<T, InCombatStat>
 
 typealias PerAttackSkill<T> = (CombatStatus<InCombatStat>, specialTriggered: Boolean) -> T
 
-
-interface CombatEndSkill {
-    fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, attack: Boolean, attacked: Boolean)
-}
+typealias CombatEndSkill = (CombatStatus<InCombatStat>, attacked: Boolean) -> Unit
 
 typealias PerAttackListener<T> = (CombatStatus<InCombatStat>, value: T) -> Unit
 
@@ -376,6 +367,9 @@ fun <T, U> combatSkill(value: T): CombatSkill<T, U> {
         value
     }
 }
+
+fun <T> inCombatSkill(value: T): InCombatSkill<T> = combatSkill(value)
+fun <T> combatStartSkill(value: T): CombatStartSkill<T> = combatSkill(value)
 
 val combatStartSkillTrue: CombatStartSkill<Boolean> = combatSkill(true)
 

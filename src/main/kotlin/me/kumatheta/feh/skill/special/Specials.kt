@@ -19,5 +19,8 @@ val ALL_SPECIALS = sequenceOf(
     },
     "Draconic Aura" to SelfStatBased(3) {
         it.atk * 3 / 10
+    },
+    "Dragon Fang" to SelfStatBased(4) {
+        it.atk / 2
     }
 ).toSkillMap()
