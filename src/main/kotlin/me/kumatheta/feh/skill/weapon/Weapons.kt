@@ -9,6 +9,7 @@ import me.kumatheta.feh.MagicB
 import me.kumatheta.feh.MagicR
 import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Staff
+import me.kumatheta.feh.Stat
 import me.kumatheta.feh.Sword
 import me.kumatheta.feh.WeaponType
 import me.kumatheta.feh.skill.SkillMap
@@ -31,14 +32,16 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Assault" to Staff.basic(10),
     "Slaying Bow+ B" to BowB.slaying(12),
     "Thoron+" to MagicB.basic(13),
-    "Raudrblade+" to MagicR.blade(13),
+    "Raudrblade+" to MagicR.bladeTome(13),
 
     "Slow+" to SlowPlus,
 
     "Draconic Poleax Eff" to DraconicPoleaxEff,
     "Lyfjaberg" to Lyfjaberg,
     "Leiptr" to Leiptr,
-    "Dire Thunder" to DireThunder
+    "Dire Thunder" to DireThunder,
+
+    "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp=2, atk=1))
 ).toSkillMap()
 
 

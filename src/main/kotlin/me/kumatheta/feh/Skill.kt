@@ -127,12 +127,13 @@ class SkillSet(skills: Sequence<Skill>) {
 
 
 class InCombatSkillSet(
-    val battleState: BattleState,
-    val self: HeroUnit,
-    val foe: HeroUnit,
-    val initAttack: Boolean,
+    battleState: BattleState,
+    self: HeroUnit,
+    foe: HeroUnit,
+    initAttack: Boolean,
     skills: Sequence<Skill>
 ) {
+    val combatStatus = CombatStatus(battleState, self, foe, initAttack)
     private val skills = skills.toList()
 
     private fun <T : Any> methodSeq(transform: (Skill) -> T?): Sequence<T> {
@@ -140,7 +141,7 @@ class InCombatSkillSet(
     }
 
     private fun <T> Sequence<CombatStartSkill<T>>.applyAll(): Sequence<T> {
-        return map { it.apply(battleState, self, foe, initAttack) }
+        return map { it.invoke(combatStatus) }
     }
 
     val neutralizeBonus: Sequence<Stat?>
@@ -208,23 +209,26 @@ class InCombatSkillWrapper(
     private val baseSkillSet: InCombatSkillSet
 ) {
     init {
-        check(baseSkillSet.self == self.heroUnit)
-        check(baseSkillSet.foe == foe.heroUnit)
+        check(baseSkillSet.combatStatus.self == self.heroUnit)
+        check(baseSkillSet.combatStatus.foe == foe.heroUnit)
     }
+
+    val combatStatus =
+        CombatStatus(baseSkillSet.combatStatus.battleState, self, foe, baseSkillSet.combatStatus.initAttack)
 
     val inCombatStat: InCombatStat
         get() = self
 
     private fun <T> Sequence<InCombatSkill<T>>.applyAll(): Sequence<T> {
-        return map { it.apply(baseSkillSet.battleState, self, foe, baseSkillSet.initAttack) }
+        return map { it(combatStatus) }
     }
 
     private fun <T> Sequence<PerAttackSkill<T>>.applyAllPerAttack(specialTriggered: Boolean): Sequence<T> {
-        return map { it.apply(baseSkillSet.battleState, self, foe, specialTriggered) }
+        return map { it(combatStatus, specialTriggered) }
     }
 
     private fun <T> Sequence<PerAttackListener<T>>.applyAllPerAttack(value: T) {
-        return forEach { it.onReceive(baseSkillSet.battleState, self, foe, value) }
+        return forEach { it(combatStatus, value) }
     }
 
     val additionalInCombatStat: Sequence<Stat>
@@ -262,8 +266,10 @@ class InCombatSkillWrapper(
 
     fun getPercentageDamageReduce(specialTriggered: Boolean): Sequence<Int> =
         baseSkillSet.percentageDamageReduce.applyAllPerAttack(specialTriggered)
+
     fun getFlatDamageReduce(specialTriggered: Boolean): Sequence<Int> =
         baseSkillSet.flatDamageReduce.applyAllPerAttack(specialTriggered)
+
     fun getDamageIncrease(specialTriggered: Boolean): Sequence<Int> =
         baseSkillSet.damageIncrease.applyAllPerAttack(specialTriggered)
 
@@ -272,10 +278,10 @@ class InCombatSkillWrapper(
 
     fun postCombat(attacked: Boolean) = baseSkillSet.postCombat.forEach {
         it.apply(
-            baseSkillSet.battleState,
+            baseSkillSet.combatStatus.battleState,
             self,
             foe,
-            baseSkillSet.initAttack,
+            baseSkillSet.combatStatus.initAttack,
             attacked
         )
     }
@@ -333,25 +339,27 @@ class FullInCombatStat(
     val reducedStaffDamage: Boolean
 ) : InCombatStat by skills.inCombatStat
 
-interface CombatSkill<T, U> {
-    fun apply(battleState: BattleState, self: U, foe: U, initAttack: Boolean): T
-}
+data class CombatStatus<T>(
+    val battleState: BattleState,
+    val self: T,
+    val foe: T,
+    val initAttack: Boolean
+)
 
-interface PerAttackSkill<T> {
-    fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, specialTriggered: Boolean): T
-}
+typealias CombatSkill<T, U> = (CombatStatus<U>) -> T
 
-interface CombatStartSkill<T> : CombatSkill<T, HeroUnit>
+typealias CombatStartSkill<T> = CombatSkill<T, HeroUnit>
 
-interface InCombatSkill<T> : CombatSkill<T, InCombatStat>
+typealias InCombatSkill<T> = CombatSkill<T, InCombatStat>
+
+typealias PerAttackSkill<T> = (CombatStatus<InCombatStat>, specialTriggered: Boolean) -> T
+
 
 interface CombatEndSkill {
     fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, attack: Boolean, attacked: Boolean)
 }
 
-interface PerAttackListener<T> {
-    fun onReceive(battleState: BattleState, self: InCombatStat, foe: InCombatStat, value: T)
-}
+typealias PerAttackListener<T> = (CombatStatus<InCombatStat>, value: T) -> Unit
 
 interface MapSkillMethod<T> {
     fun apply(battleState: BattleState, self: HeroUnit): T
@@ -365,18 +373,12 @@ interface AssistRelated {
     fun apply(battleState: BattleState, self: HeroUnit, ally: HeroUnit, assist: Assist, useAssist: Boolean)
 }
 
-class ConstantCombatStartSkill<T>(private val value: T) : CombatStartSkill<T> {
-    override fun apply(battleState: BattleState, self: HeroUnit, foe: HeroUnit, initAttack: Boolean): T {
-        return value
+fun <T, U> combatSkill(value: T): CombatSkill<T, U> {
+    return {
+        value
     }
 }
 
-class ConstantInCombatSkill<T>(private val value: T) : InCombatSkill<T> {
-    override fun apply(battleState: BattleState, self: InCombatStat, foe: InCombatStat, initAttack: Boolean): T {
-        return value
-    }
-}
+val combatStartSkillTrue: CombatStartSkill<Boolean> = combatSkill(true)
 
-val combatStartSkillTrue = ConstantCombatStartSkill(true)
-
-val inCombatSkillTrue = ConstantInCombatSkill(true)
+val inCombatSkillTrue: InCombatSkill<Boolean> = combatSkill(true)

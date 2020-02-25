@@ -267,17 +267,19 @@ class BattleState private constructor(
         attackerTeam: List<HeroUnit>,
         defenderTeam: List<HeroUnit>
     ): Sequence<Skill> {
-        return attacker.skillSet.skills.asSequence() + attackerTeam.asSequence().filterNot { it == attacker }
+        val attackerTeamSkills = attackerTeam.asSequence().filterNot { it == attacker }
             .map { heroUnit ->
                 heroUnit.skillSet.supportInCombatBuff.asSequence().map {
                     it.apply(this, heroUnit, attacker)
                 }
-            }.flatMap { it }.filterNotNull() + defenderTeam.asSequence().map { heroUnit ->
+            }.flatMap { it }.filterNotNull()
+        val defenderTeamSkills = defenderTeam.asSequence().map { heroUnit ->
             heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
                 it.apply(this, heroUnit, attacker)
             }
-        }.flatMap { it }.filterNotNull() + defender.skillSet.foeEffect.asSequence().map {
-            it.apply(this, attacker, defender, true)
+        }.flatMap { it }.filterNotNull()
+        return attacker.skillSet.skills.asSequence() + attackerTeamSkills + defenderTeamSkills + defender.skillSet.foeEffect.asSequence().map {
+            it(CombatStatus(this, attacker, defender, true))
         }.filterNotNull()
     }
 
@@ -287,17 +289,19 @@ class BattleState private constructor(
         attackerTeam: List<HeroUnit>,
         defenderTeam: List<HeroUnit>
     ): Sequence<Skill> {
-        return defender.skillSet.skills.asSequence() + defenderTeam.asSequence().filterNot { it == defender }
+        val defenderTeamSkills = defenderTeam.asSequence().filterNot { it == defender }
             .map { heroUnit ->
                 heroUnit.skillSet.supportInCombatBuff.asSequence().map {
                     it.apply(this, heroUnit, defender)
                 }
-            }.flatMap { it }.filterNotNull() + attackerTeam.asSequence().map { heroUnit ->
+            }.flatMap { it }.filterNotNull()
+        val attackerTeamSkills = attackerTeam.asSequence().map { heroUnit ->
             heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
                 it.apply(this, heroUnit, defender)
             }
-        }.flatMap { it }.filterNotNull() + attacker.skillSet.foeEffect.asSequence().map {
-            it.apply(this, defender, attacker, false)
+        }.flatMap { it }.filterNotNull()
+        return defender.skillSet.skills.asSequence() + defenderTeamSkills + attackerTeamSkills + attacker.skillSet.foeEffect.asSequence().map {
+            it(CombatStatus(this, defender, attacker, false))
         }.filterNotNull()
     }
 

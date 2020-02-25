@@ -1,30 +1,32 @@
 package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.CombatStartSkill
+import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.MapSkillMethod
 import me.kumatheta.feh.MapSkillWithTarget
 import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.BlowOrStance
 import me.kumatheta.feh.skill.Ploy
 import me.kumatheta.feh.skill.Tactics
+import me.kumatheta.feh.skill.blowOrStance
+import me.kumatheta.feh.skill.bond
 import me.kumatheta.feh.skill.toSkillMap
 
 val ALL_PASSIVES = sequenceOf(
     "Close Counter" to CounterIgnoreRange,
     "Distant Counter" to CounterIgnoreRange,
 
-    "Atk/Def Bond 1" to Bond(Stat(atk = 3, def = 3)).toInCombatStatPassive(),
-    "Atk/Def Bond 2" to Bond(Stat(atk = 4, def = 4)).toInCombatStatPassive(),
-    "Atk/Def Bond 3" to Bond(Stat(atk = 5, def = 5)).toInCombatStatPassive(),
-    "Atk/Res Bond 1" to Bond(Stat(atk = 3, res = 3)).toInCombatStatPassive(),
-    "Atk/Res Bond 2" to Bond(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
-    "Atk/Res Bond 3" to Bond(Stat(atk = 5, res = 5)).toInCombatStatPassive(),
+    "Atk/Def Bond 1" to bond(Stat(atk = 3, def = 3)).toInCombatStatPassive(),
+    "Atk/Def Bond 2" to bond(Stat(atk = 4, def = 4)).toInCombatStatPassive(),
+    "Atk/Def Bond 3" to bond(Stat(atk = 5, def = 5)).toInCombatStatPassive(),
+    "Atk/Res Bond 1" to bond(Stat(atk = 3, res = 3)).toInCombatStatPassive(),
+    "Atk/Res Bond 2" to bond(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
+    "Atk/Res Bond 3" to bond(Stat(atk = 5, res = 5)).toInCombatStatPassive(),
 
-    "Death Blow 3" to BlowOrStance(Stat(atk = 6), Stat.ZERO).toInCombatStatPassive(),
-    "Swift Sparrow 2" to BlowOrStance(Stat(atk = 4, spd = 4), Stat.ZERO).toInCombatStatPassive(),
+    "Death Blow 3" to blowOrStance(Stat(atk = 6), Stat.ZERO).toInCombatStatPassive(),
+    "Swift Sparrow 2" to blowOrStance(Stat(atk = 4, spd = 4), Stat.ZERO).toInCombatStatPassive(),
 
     "Spd Tactics 3" to Tactics(Stat(spd = 6)).toStartOfTurnPassive(),
     "Def Tactics 3" to Tactics(Stat(def = 6)).toStartOfTurnPassive(),
@@ -39,6 +41,12 @@ val ALL_PASSIVES = sequenceOf(
     }) {
         it.applyDebuff(Stat(res = -5))
     }.toStartOfTurnPassive(),
+
+    "Quick Riposte 3" to quickRiposte(70).toFollowUpPassive(),
+    "Quick Riposte 2" to quickRiposte(80).toFollowUpPassive(),
+    "Quick Riposte 1" to quickRiposte(90).toFollowUpPassive(),
+    "Vantage 3" to vantage(75).toVantagePassive(),
+
 
     "Res 3" to Stat(res = 3).toExtraStatPassive(),
     "Spur Def/Res 2" to Spur(Stat(def = 3, res = 3)).toSupportInCombatBuffPassive(),
@@ -57,12 +65,26 @@ val ALL_PASSIVES = sequenceOf(
     "Sparkling Boost" to SparklingBoost,
     "Shield Pulse 3" to ShieldPulse3,
     "Drive Atk 2" to DriveAtk2,
-    "Quick Riposte 3" to QuickRiposte3,
-    "Vantage 3" to Vantage3,
     "Goad Cavalry" to GoadCavalry,
     "Hone Atk 3" to HoneAtk3
 
 ).toSkillMap()
+
+class VantagePassive(vantage: InCombatSkill<Boolean>) : Passive {
+    override val vantage: InCombatSkill<Boolean>? = vantage
+}
+
+fun InCombatSkill<Boolean>.toVantagePassive(): VantagePassive {
+    return VantagePassive(this)
+}
+
+class FollowUpPassive(followUp: InCombatSkill<Int>) : Passive {
+    override val followUp: InCombatSkill<Int>? = followUp
+}
+
+fun InCombatSkill<Int>.toFollowUpPassive(): FollowUpPassive {
+    return FollowUpPassive(this)
+}
 
 class SupportInCombatBuffPassive(supportInCombatBuff: MapSkillWithTarget<Skill?>): Passive {
     override val supportInCombatBuff: MapSkillWithTarget<Skill?>? = supportInCombatBuff
