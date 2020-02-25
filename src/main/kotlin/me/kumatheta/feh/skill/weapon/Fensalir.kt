@@ -7,15 +7,9 @@ import me.kumatheta.feh.Lance
 import me.kumatheta.feh.MapSkillMethod
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.foe
+import me.kumatheta.feh.skill.threaten
 
 object Fensalir : BasicWeapon(Lance, 16) {
     override val startOfTurn: MapSkillMethod<Unit>?
-        get() = object : MapSkillMethod<Unit> {
-            override fun apply(battleState: BattleState, self: HeroUnit) {
-                val position = self.position
-                battleState.unitsSeq(self.team.foe).filter { it.position.distanceTo(position) <= 2 }.forEach {
-                    it.applyDebuff(Stat(atk = -4))
-                }
-            }
-        }
+        get() = threaten(Stat(atk = -4))
 }

@@ -361,9 +361,7 @@ interface CombatEndSkill {
 
 typealias PerAttackListener<T> = (CombatStatus<InCombatStat>, value: T) -> Unit
 
-interface MapSkillMethod<T> {
-    fun apply(battleState: BattleState, self: HeroUnit): T
-}
+typealias MapSkillMethod<T> = (battleState: BattleState, self: HeroUnit) -> T
 
 interface MapSkillWithTarget<T> {
     fun apply(battleState: BattleState, self: HeroUnit, target: HeroUnit): T

@@ -7,11 +7,9 @@ import me.kumatheta.feh.Passive
 import me.kumatheta.feh.PerAttackSkill
 
 object ShieldPulse3 : Passive {
-    override val startOfTurn: MapSkillMethod<Unit>? = object : MapSkillMethod<Unit> {
-        override fun apply(battleState: BattleState, self: HeroUnit) {
-            if (battleState.turn == 1) {
-                self.reduceCooldown(2)
-            }
+    override val startOfTurn: MapSkillMethod<Unit>? = { battleState: BattleState, self: HeroUnit ->
+        if (battleState.turn == 1) {
+            self.reduceCooldown(2)
         }
     }
 

@@ -192,7 +192,7 @@ class BattleState private constructor(
         units.forEach(HeroUnit::startOfTurn)
         units.forEach { heroUnit ->
             heroUnit.skillSet.startOfTurn.forEach {
-                it.apply(this, heroUnit)
+                it(this, heroUnit)
             }
         }
         return units
@@ -1339,7 +1339,7 @@ class BattleState private constructor(
         return if (heroUnit.isEmptyHanded) {
             emptySequence()
         } else {
-            val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
+            val pass = heroUnit.skillSet.pass.any { it(this, heroUnit) }
             val travelPower = heroUnit.travelPower
             if (pass) {
                 val threatReceiver = ThreatWithPass(travelPower, obstacles, heroUnit.team)
@@ -1370,12 +1370,12 @@ class BattleState private constructor(
         heroUnit: HeroUnit,
         obstacles: Map<Position, ChessPiece> = locationMap
     ): Sequence<MoveStep> {
-        val pass = heroUnit.skillSet.pass.any { it.apply(this, heroUnit) }
+        val pass = heroUnit.skillSet.pass.any { it(this, heroUnit) }
         val travelPower = heroUnit.travelPower
         val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass)
         calculateDistance(heroUnit, distanceReceiver)
         heroUnit.skillSet.teleport.asSequence().flatMap {
-            it.apply(this, heroUnit)
+            it(this, heroUnit)
         }.filter {
             locationMap[it] == null && battleMap.getTerrain(it).moveCost(heroUnit.moveType) != null
         }.map {

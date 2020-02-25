@@ -12,3 +12,6 @@ fun blowOrStance(blow: Stat, stance: Stat): CombatStartSkill<Stat> {
         }
     }
 }
+
+fun blow(stat: Stat) = blowOrStance(stat, Stat.ZERO)
+fun stance(stat: Stat) = blowOrStance(Stat.ZERO, stat)

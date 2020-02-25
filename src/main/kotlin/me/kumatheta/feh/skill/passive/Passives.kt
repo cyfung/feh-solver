@@ -8,10 +8,12 @@ import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.Ploy
-import me.kumatheta.feh.skill.Tactics
-import me.kumatheta.feh.skill.blowOrStance
+import me.kumatheta.feh.skill.blow
 import me.kumatheta.feh.skill.bond
+import me.kumatheta.feh.skill.ploy
+import me.kumatheta.feh.skill.resBasedPloy3
+import me.kumatheta.feh.skill.stance
+import me.kumatheta.feh.skill.tactics
 import me.kumatheta.feh.skill.toSkillMap
 
 val ALL_PASSIVES = sequenceOf(
@@ -25,27 +27,29 @@ val ALL_PASSIVES = sequenceOf(
     "Atk/Res Bond 2" to bond(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
     "Atk/Res Bond 3" to bond(Stat(atk = 5, res = 5)).toInCombatStatPassive(),
 
-    "Death Blow 3" to blowOrStance(Stat(atk = 6), Stat.ZERO).toInCombatStatPassive(),
-    "Swift Sparrow 2" to blowOrStance(Stat(atk = 4, spd = 4), Stat.ZERO).toInCombatStatPassive(),
+    "Death Blow 3" to blow(Stat(atk = 6)).toInCombatStatPassive(),
+    "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)).toInCombatStatPassive(),
 
-    "Spd Tactics 3" to Tactics(Stat(spd = 6)).toStartOfTurnPassive(),
-    "Def Tactics 3" to Tactics(Stat(def = 6)).toStartOfTurnPassive(),
-    "Atk Tactics 3" to Tactics(Stat(atk = 6)).toStartOfTurnPassive(),
-    "Panic Ploy 3" to Ploy({ self, foe ->
-        foe.currentHp < self.currentHp
-    }) {
-        it.addNegativeStatus(NegativeStatus.PANIC)
+    "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
+
+    "Spd Tactics 3" to tactics(Stat(spd = 6)).toStartOfTurnPassive(),
+    "Def Tactics 3" to tactics(Stat(def = 6)).toStartOfTurnPassive(),
+    "Atk Tactics 3" to tactics(Stat(atk = 6)).toStartOfTurnPassive(),
+    "Panic Ploy 3" to ploy { self, foe ->
+        if (foe.currentHp < self.currentHp) {
+            foe.addNegativeStatus(NegativeStatus.PANIC)
+        }
     }.toStartOfTurnPassive(),
-    "Res Ploy 3" to Ploy({ self, foe ->
-        foe.stat.res < self.stat.res
-    }) {
-        it.applyDebuff(Stat(res = -5))
-    }.toStartOfTurnPassive(),
+    "Res Ploy 3" to resBasedPloy3(Stat(res = -5)).toStartOfTurnPassive(),
+    "Atk Ploy 3" to resBasedPloy3(Stat(atk = -5)).toStartOfTurnPassive(),
 
     "Quick Riposte 3" to quickRiposte(70).toFollowUpPassive(),
     "Quick Riposte 2" to quickRiposte(80).toFollowUpPassive(),
     "Quick Riposte 1" to quickRiposte(90).toFollowUpPassive(),
     "Vantage 3" to vantage(75).toVantagePassive(),
+
+    "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
+    "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
 
 
     "Res 3" to Stat(res = 3).toExtraStatPassive(),
@@ -58,15 +62,13 @@ val ALL_PASSIVES = sequenceOf(
     "Fury 3" to Fury3,
     "Aerobatics 3" to Aerobatics3,
     "Dull Close 3" to DullClose3,
-    "Sabotage Atk 3" to SabotageAtk3,
     "Iote's Shield" to IoteShield,
     "Def Feint 3" to DefFeint3,
     "Mystic Boost 3" to MysticBoost3,
     "Sparkling Boost" to SparklingBoost,
     "Shield Pulse 3" to ShieldPulse3,
     "Drive Atk 2" to DriveAtk2,
-    "Goad Cavalry" to GoadCavalry,
-    "Hone Atk 3" to HoneAtk3
+    "Goad Cavalry" to GoadCavalry
 
 ).toSkillMap()
 
@@ -86,7 +88,7 @@ fun InCombatSkill<Int>.toFollowUpPassive(): FollowUpPassive {
     return FollowUpPassive(this)
 }
 
-class SupportInCombatBuffPassive(supportInCombatBuff: MapSkillWithTarget<Skill?>): Passive {
+class SupportInCombatBuffPassive(supportInCombatBuff: MapSkillWithTarget<Skill?>) : Passive {
     override val supportInCombatBuff: MapSkillWithTarget<Skill?>? = supportInCombatBuff
 }
 
@@ -94,8 +96,8 @@ fun MapSkillWithTarget<Skill?>.toSupportInCombatBuffPassive(): SupportInCombatBu
     return SupportInCombatBuffPassive(this)
 }
 
-class StartOfTurnPassive(mapSkillMethod: MapSkillMethod<Unit>) : Passive {
-    override val startOfTurn: MapSkillMethod<Unit>? = mapSkillMethod
+class StartOfTurnPassive(startOfTurn: MapSkillMethod<Unit>) : Passive {
+    override val startOfTurn: MapSkillMethod<Unit>? = startOfTurn
 }
 
 fun MapSkillMethod<Unit>.toStartOfTurnPassive(): StartOfTurnPassive {

@@ -3,17 +3,23 @@ package me.kumatheta.feh.skill
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.MapSkillMethod
+import me.kumatheta.feh.Stat
 import me.kumatheta.feh.foe
 
-class Ploy(
-    private val condition: (self: HeroUnit, foe: HeroUnit) -> Boolean,
-    private val action: (HeroUnit) -> Unit
-) : MapSkillMethod<Unit> {
-    override fun apply(battleState: BattleState, self: HeroUnit) {
-        battleState.unitsSeq(self.team.foe).filter {
-            it.position.x == self.position.x || it.position.y == self.position.y
-        }.filter {
-            condition(self, it)
-        }.forEach(action)
+inline fun ploy(
+    crossinline f: (self: HeroUnit, foe: HeroUnit) -> Unit
+): MapSkillMethod<Unit> = { battleState: BattleState, self: HeroUnit ->
+    battleState.unitsSeq(self.team.foe).filter {
+        it.position.x == self.position.x || it.position.y == self.position.y
+    }.forEach {
+        f(self, it)
+    }
+}
+
+fun resBasedPloy3(stat: Stat): MapSkillMethod<Unit> {
+    return ploy { self, foe ->
+        if (foe.stat.res < self.stat.res) {
+            foe.applyDebuff(stat)
+        }
     }
 }
