@@ -5,7 +5,7 @@ import me.kumatheta.feh.Stat
 
 fun rangeDefStat(stat: Stat): CombatStartSkill<Stat> {
     return {
-        if (!it.initAttack || it.foe.weaponType.isRanged) {
+        if (!it.initAttack && it.foe.weaponType.isRanged) {
             stat
         } else {
             Stat.ZERO

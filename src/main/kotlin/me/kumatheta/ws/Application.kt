@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.list
 import me.kumatheta.feh.Axe
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
@@ -132,22 +133,31 @@ fun Application.module(testing: Boolean = false) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
-            var lastState = board.stateCopy
-            val details = board.tryAndGetDetails(moves)
-            val updates = details.map { (unitAction, state) ->
-                val action = unitAction?.toMsgAction()
-                val oldUnits = (lastState.unitsSeq(Team.PLAYER) + lastState.unitsSeq(Team.ENEMY)).associateBy { it.id }
-                val newUnits = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).associateBy { it.id }
-                val unitsUpdated = getUpdated(oldUnits, newUnits).toList()
-                val unitsAdded =
-                    newUnits.values.asSequence().filterNot { oldUnits.containsKey(it.id) }.map(HeroUnit::toUnitAdded)
-                        .toList()
-                lastState = state
-                UpdateInfo(action, unitsUpdated, unitsAdded)
-            }
-            call.respondText(json.stringify(MoveSet.serializer(), MoveSet(updates, score.bestScore, score.tries)))
+            val updates = toUpdateInfoList(board, moves)
+            val moveSet = MoveSet(updates, score.bestScore, score.tries)
+            call.respondText(json.stringify(MoveSet.serializer(), moveSet))
         }
     }
+}
+
+private fun toUpdateInfoList(
+    board: FehBoard,
+    moves: List<FehMove>
+): List<UpdateInfo> {
+    var lastState = board.stateCopy
+    val details = board.tryAndGetDetails(moves)
+    val updates = details.map { (unitAction, state) ->
+        val action = unitAction?.toMsgAction()
+        val oldUnits = (lastState.unitsSeq(Team.PLAYER) + lastState.unitsSeq(Team.ENEMY)).associateBy { it.id }
+        val newUnits = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).associateBy { it.id }
+        val unitsUpdated = getUpdated(oldUnits, newUnits).toList()
+        val unitsAdded =
+            newUnits.values.asSequence().filterNot { oldUnits.containsKey(it.id) }.map(HeroUnit::toUnitAdded)
+                .toList()
+        lastState = state
+        UpdateInfo(action, unitsUpdated, unitsAdded)
+    }
+    return updates
 }
 
 @ExperimentalTime
@@ -222,9 +232,10 @@ private suspend fun runMcts(
     scoreManager: VaryingUCT<FehMove>
 ) {
     var tries = 0
-    val fixedMoves = mutableListOf<FehMove>()
     val mctsStart = MonoClock.markNow()
     var lastFixMove = MonoClock.markNow()
+
+    val json = Json(JsonConfiguration.Stable.copy(prettyPrint = true))
 
     repeat(10000) {
         mcts.run(5, parallelCount=5)
@@ -240,14 +251,11 @@ private suspend fun runMcts(
         } catch (t: Throwable) {
             throw t
         }
-        println("fixed:")
-        fixedMoves.forEach {
-            println(it)
-        }
-        println("changing:")
-        bestMoves.forEach {
-            println(it)
-        }
+//        bestMoves.forEach {
+//            println(it)
+//        }
+        println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves)))
+
         println("best score: ${score.bestScore}")
         scoreManager.high = score.bestScore
         scoreManager.average = score.totalScore / score.tries

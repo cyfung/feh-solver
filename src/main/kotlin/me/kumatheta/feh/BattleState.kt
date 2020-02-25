@@ -233,9 +233,7 @@ class BattleState private constructor(
             false
         }
 
-        val colorAdvantage = getColorAdvantage(
-            skillWrappers
-        )
+        val colorAdvantage = getColorAdvantage(skillWrappers)
 
         val spdDiff =
             skillWrappers.attacker.inCombatStat.inCombatStat.spd - skillWrappers.defender.inCombatStat.inCombatStat.spd
@@ -1130,7 +1128,7 @@ class BattleState private constructor(
         val okToStay = if (chaseTarget.team == heroUnit.team) {
             unitsSeq(heroUnit.team.foe).mapNotNull { it.position.distanceTo(heroUnit.position) }.all { it > 2 }
         } else {
-            false
+            true
         }
 
         val basicMove = moves.values.asSequence().let { seq ->

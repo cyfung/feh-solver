@@ -3,7 +3,6 @@ package me.kumatheta.feh.util
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
-import me.kumatheta.feh.Terrain
 
 val attackTargetOrder = compareByDescending<CombatResult>(
     {
@@ -123,7 +122,7 @@ fun moveTargetOrder(
             1
         }
     }, {
-        foeThreat[it.position]
+        foeThreat[it.position] ?: 0
     }, {
         if (it.teleportRequired) {
             0

@@ -21,9 +21,11 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main() {
-    val positionMap = readMap(Paths.get("test/feh - map.csv"))
-    val (_, spawnMap) = readUnits(Paths.get("test/feh - spawn.csv"))
-    val (playerMap, _) = readUnits(Paths.get("test/feh - players.csv"))
+    val dataSet = "bhb morgan morgan"
+    Paths.get("data/$dataSet")
+    val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
+    val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
+    val (playerMap, _) = readUnits(Paths.get("data/$dataSet/$dataSet - players.csv"))
     val state = BattleState(
         BasicBattleMap(
             positionMap,
@@ -33,38 +35,25 @@ fun main() {
     )
     val phraseLimit = 20
     var board = FehBoard(phraseLimit, state, 3)
-//    val testMoves = listOf(
-//        MoveOnly(2, Position(5, 6)),
-//        MoveOnly(3, Position(4, 4)),
-//        MoveOnly(1, Position(3, 5)),
-//        MoveOnly(4, Position(4, 5)),
-//        MoveAndAttack(2, Position(5, 4), 8),
-//        MoveOnly(1, Position(3, 5)),
-//        MoveAndAssist(4, Position(4, 5), 1),
-//        MoveAndAttack(1, Position(4, 3), 6),
-//        MoveOnly(3, Position(4, 4)),
-//        MoveAndAttack(3, Position(4, 2), 7),
-//        MoveAndAttack(2, Position(5, 5), 5),
-//        MoveAndAssist(4, Position(5, 6), 2),
-//        MoveAndAttack(2, Position(5, 5), 5),
-//        MoveOnly(1, Position(4, 1)),
-//        MoveAndAttack(2, Position(5, 5), 9)
-//    ).map {
-//        FehMove(it)
-//    }
-//    val testMoves = listOf(
-//        MoveOnly(2, Position(5, 6)),
-//        MoveOnly(3, Position(4, 4)),
-//        MoveOnly(1, Position(3, 5)),
-//        MoveOnly(4, Position(4, 5)),
-//        MoveAndAttack(2, Position(5, 4), 8),
-//        MoveOnly(1, Position(5,6)),
-//        MoveOnly(4, Position(5,5)),
-//        MoveOnly(3, Position(4, 2))
-//    ).map {
-//        FehMove(it)
-//    }
-//    val testResult = board.tryMoves(testMoves.take(9),true)
+    val testMoves = listOf(
+        MoveOnly(1, Position(0, 1)),
+        MoveOnly(4, Position(1, 0)),
+        MoveOnly(3, Position(2, 1)),
+        MoveOnly(2, Position(5,1)),
+        MoveAndAttack(3,Position(1,3), 8),
+        MoveOnly(1, Position(1,1)),
+        MoveAndAssist(4, Position(1,2), 3),
+        MoveAndAssist(3, Position(0,2), 4),
+        MoveOnly(2, Position(4,1)),
+
+        MoveAndAttack(3,Position(3,2), 10),
+        MoveAndAssist(4, Position(4,2), 3),
+        MoveAndAttack(3,Position(1,2), 9),
+        MoveAndAttack(2,Position(3,2), 5)
+    ).map {
+        FehMove(it)
+    }
+    val testResult = board.tryMoves(testMoves,true)
 //    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 //
 //    testMoves.take(9).forEach { move ->
