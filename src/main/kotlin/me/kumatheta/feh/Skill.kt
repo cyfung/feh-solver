@@ -283,7 +283,7 @@ class InCombatSkillWrapper(
 
 abstract class Weapon(val weaponType: WeaponType) : Skill
 
-abstract class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) {
+open class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) {
     override val extraStat = Stat(atk = might)
 }
 

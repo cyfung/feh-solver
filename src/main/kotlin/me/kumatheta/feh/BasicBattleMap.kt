@@ -1,5 +1,9 @@
 package me.kumatheta.feh
 
+import me.kumatheta.feh.skill.assist.ALL_ASSISTS
+import me.kumatheta.feh.skill.passive.ALL_PASSIVES
+import me.kumatheta.feh.skill.special.ALL_SPECIALS
+import me.kumatheta.feh.skill.weapon.ALL_WEAPONS
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 import java.io.IOException
 import java.nio.file.Files
@@ -87,42 +91,25 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
 }
 
 private fun getWeaponType(name: String): WeaponType {
-    return getObject("me.kumatheta.feh.$name") {
-        "weapon type not found $name"
-    }
+    return ALL_WEAPONS[name].weaponType
 }
 
 private fun getWeapon(name: String): Weapon {
-    return getSkill(name, "weapon")
+    return ALL_WEAPONS[name]
 }
 
 private fun getAssist(name: String): Assist? {
     if (name.isBlank()) return null
-    return getSkill(name, "assist")
+    return ALL_ASSISTS[name]
 }
 
 private fun getSpecial(name: String): Special? {
     if (name.isBlank()) return null
-    return getSkill(name, "special")
+    return ALL_SPECIALS[name]
 }
 
 private fun getPassive(name: String): Passive {
-    return getSkill(name, "passive")
-}
-
-private fun <T> getSkill(name: String, type: String): T {
-    return getObject("me.kumatheta.feh.skill.$type.$name") {
-        "$type not found $name"
-    }
-}
-
-private inline fun <T> getObject(className: String, crossinline messageCreator: () -> String): T {
-    val clazz = Class.forName(className).kotlin
-    val instance = clazz.objectInstance
-    @Suppress("UNCHECKED_CAST")
-    return instance as? T ?: throw IOException(
-        messageCreator()
-    )
+    return ALL_PASSIVES[name]
 }
 
 class BasicBattleMap(

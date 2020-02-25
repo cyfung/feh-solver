@@ -29,7 +29,6 @@ sourceSets["main"].withConvention(KotlinSourceSet::class) {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(kotlin("reflect"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
     implementation("com.github.ben-manes.caffeine:caffeine:2.8.1")
     implementation("com.marcinmoskala:DiscreteMathToolkit:1.0.3")

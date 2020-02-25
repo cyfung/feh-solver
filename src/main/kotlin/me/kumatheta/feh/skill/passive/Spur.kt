@@ -9,14 +9,6 @@ import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
 
-object SpurDefRes2 : Passive {
-    override val supportInCombatBuff: MapSkillWithTarget<Skill?>? = Spur(Stat(def = 3, res = 3))
-}
-
-object SpurSpd1 : Passive {
-    override val supportInCombatBuff: MapSkillWithTarget<Skill?>? = Spur(Stat(spd = 2))
-}
-
 class Spur(private val stat: Stat) : MapSkillWithTarget<Skill?> {
     override fun apply(battleState: BattleState, self: HeroUnit, target: HeroUnit): Skill? {
         return if (target.position.distanceTo(self.position) == 1) {

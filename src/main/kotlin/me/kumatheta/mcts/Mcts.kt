@@ -43,7 +43,7 @@ class Mcts<T : Move, S : Score<T>>(
         val count = AtomicInteger(0)
         runBlocking {
             supervisorScope {
-                repeat(6) {
+                repeat(20) {
                     launch(dispatcher) {
                         while (clockMark.elapsedNow().inSeconds < second) {
                             repeat(10) {

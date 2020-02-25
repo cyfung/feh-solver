@@ -5,7 +5,7 @@ import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 
-abstract class Refresh : me.kumatheta.feh.NormalAssist() {
+open class Refresh : me.kumatheta.feh.NormalAssist() {
     override fun apply(
         self: HeroUnit,
         target: HeroUnit,
@@ -64,7 +64,3 @@ abstract class Refresh : me.kumatheta.feh.NormalAssist() {
         throw UnsupportedOperationException()
     }
 }
-
-object Dance : Refresh()
-
-object Sing : Refresh()

@@ -85,9 +85,9 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-    val positionMap = readMap(Paths.get("test/feh - map.csv"))
-    val (_, spawnMap) = readUnits(Paths.get("test/feh - spawn.csv"))
-    val (playerMap, _) = readUnits(Paths.get("test/feh - players.csv"))
+    val positionMap = readMap(Paths.get("data/map.csv"))
+    val (_, spawnMap) = readUnits(Paths.get("data/spawn.csv"))
+    val (playerMap, _) = readUnits(Paths.get("data/players.csv"))
     val battleMap = BasicBattleMap(
         positionMap,
         spawnMap,
@@ -109,18 +109,22 @@ fun Application.module(testing: Boolean = false) {
         }
         get("/moveset") {
             val isCompleted = jobRef.get() == null
-            val triple = if (isCompleted) {
+            val pair = if (isCompleted) {
                 // last get
                 mctsRef.getAndSet(null)
             } else {
                 mctsRef.get()
             }
-            if (triple == null) {
+            if (pair == null) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
-            val (board, mcts) = triple
-            val score = resetScoreWithRetry(mcts)
+            val (board, mcts) = pair
+            val score = if (isCompleted) {
+                mcts.score
+            } else {
+                resetScoreWithRetry(mcts)
+            }
             val moves = score.moves
             if (moves == null) {
                 call.respond(HttpStatusCode.BadRequest)

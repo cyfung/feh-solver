@@ -7,6 +7,10 @@ import me.kumatheta.feh.InCombatStat
 import me.kumatheta.feh.Passive
 
 object PoisonStrike3 : Passive {
+    // FIXME only has special debuff in not die
+    override val hasSpecialDebuff: Boolean
+        get() = true
+
     override val combatEnd: CombatEndSkill? = object : CombatEndSkill {
         override fun apply(
             battleState: BattleState,
