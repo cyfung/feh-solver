@@ -8,7 +8,7 @@ import me.kumatheta.feh.Passive
 object SparklingBoost : Passive {
     override val startOfTurn: MapSkillMethod<Unit>? = { battleState: BattleState, self: HeroUnit ->
         val allyWithHighestHpLost = battleState.unitsSeq(self.team).filterNot { it == self }.map {
-            val hpLost = it.stat.hp - it.currentHp
+            val hpLost = it.maxHp - it.currentHp
             it to hpLost
         }.groupBy({ it.second }, { it.first }).maxBy { it.key }?.value
         if (!allyWithHighestHpLost.isNullOrEmpty()) {

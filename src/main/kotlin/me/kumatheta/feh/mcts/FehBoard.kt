@@ -28,7 +28,7 @@ class FehBoard private constructor(
         phraseLimit,
         state,
         null,
-        state.unitsSeq(Team.PLAYER).sumBy { it.stat.hp },
+        state.unitsSeq(Team.PLAYER).sumBy { it.maxHp },
         maxTurnBeforeEngage
     )
 
@@ -59,7 +59,7 @@ class FehBoard private constructor(
         battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
                 battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
             Team.ENEMY
-        ).sumBy { it.stat.hp - it.currentHp } * 2 + (phraseLimit - battleState.phase) * 20
+        ).sumBy { it.maxHp - it.currentHp } * 2 + (phraseLimit - battleState.phase) * 20
 
     val stateCopy
         get() = state.copy()

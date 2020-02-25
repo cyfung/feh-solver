@@ -57,7 +57,7 @@ val ALL_PASSIVES = sequenceOf(
     "Quick Riposte 1" to quickRiposte(90).toFollowUpPassive(),
     "Bow Breaker 3" to breaker(BowC, 50).toFollowUpPassive(),
     "Vantage 3" to belowThreshold(75).toVantagePassive(),
-    "Desperation 3" to belowThreshold(75).toVantagePassive(),
+    "Desperation 3" to belowThreshold(75).toDesperationPassive(),
 
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
     "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
@@ -88,7 +88,7 @@ val ALL_PASSIVES = sequenceOf(
     "Flier Formation 3" to FlierFormation3,
     "Air Orders 3" to airOrder3.toStartOfTurnPassive(),
     "Atk Opening 3" to opening(Stat(atk = 6)) {
-        it.visibleStat.atk
+        it.startOfTurnStat.atk
     }.toStartOfTurnPassive()
 
 ).toSkillMap()

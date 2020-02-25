@@ -51,7 +51,7 @@ object HarshCommand : BuffRelatedAssist() {
 
     private fun Sequence<HeroUnit>.bestTarget(distanceToClosestFoe: Map<HeroUnit, Int>): HeroUnit? {
         return map {
-            it to (it.stat.rallyGain(-it.debuff) + it.debuff.totalExceptHp)
+            it to (it.buff.rallyGain(-it.debuff) + it.debuff.totalExceptHp)
         }.filter {
             it.second >= 2
         }.minWith(

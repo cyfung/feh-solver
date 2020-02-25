@@ -1,5 +1,6 @@
 package me.kumatheta.feh.test
 
+import javafx.geometry.Pos
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.MoveAndAssist
@@ -36,20 +37,20 @@ fun main() {
     val phraseLimit = 20
     var board = FehBoard(phraseLimit, state, 3)
     val testMoves = listOf(
-        MoveOnly(1, Position(0, 1)),
-        MoveOnly(4, Position(1, 0)),
-        MoveOnly(3, Position(2, 1)),
-        MoveOnly(2, Position(5,1)),
-        MoveAndAttack(3,Position(1,3), 8),
-        MoveOnly(1, Position(1,1)),
-        MoveAndAssist(4, Position(1,2), 3),
-        MoveAndAssist(3, Position(0,2), 4),
-        MoveOnly(2, Position(4,1)),
+        MoveOnly(4, Position(0, 0)),
+        MoveOnly(1, Position(3, 2)),
+        MoveOnly(2, Position(2, 2)),
+        MoveAndAssist(3, Position(2, 1),2),
 
-        MoveAndAttack(3,Position(3,2), 10),
-        MoveAndAssist(4, Position(4,2), 3),
-        MoveAndAttack(3,Position(1,2), 9),
-        MoveAndAttack(2,Position(3,2), 5)
+        MoveAndAttack(3, Position(4,1), 10),
+        MoveOnly(2, Position(0,2)),
+        MoveAndAttack(1, Position(2,2),5),
+        MoveAndAssist(4, Position(1,2),1),
+        MoveAndAttack(1, Position(1,1), 8),
+
+        MoveOnly(2, Position(2,2)),
+        MoveAndAssist(4, Position(2,1),2),
+        MoveAndAttack(2, Position(3,3), 6)
     ).map {
         FehMove(it)
     }

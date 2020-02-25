@@ -33,7 +33,7 @@ class HeroUnit(
     private val negativeStatus = mutableSetOf<NegativeStatus>()
     val currentStatTotal: Int
         get() {
-            return stat.totalExceptHp + buff.totalExceptHp + debuff.totalExceptHp
+            return baseStat.totalExceptHp + buff.totalExceptHp + debuff.totalExceptHp
         }
     val travelPower: Int
         get() = when (heroModel.moveType) {
@@ -50,17 +50,23 @@ class HeroUnit(
     var debuff = Stat.ZERO
         private set
 
+    val maxHp
+        get() = baseStat.hp
+
     val withPanic: Boolean
         get() = negativeStatus.contains(NegativeStatus.PANIC)
     val withMoveOrder: Boolean
         get() = positiveStatus.contains(PositiveStatus.MOVEMENT_ORDER)
 
     val visibleStat: Stat
-        get() = stat + debuff + if (withPanic) {
+        get() = baseStat + debuff + if (withPanic) {
             -buff
         } else {
             buff
         }
+    val startOfTurnStat: Stat
+        get() = baseStat + debuff
+
     val bonusAndPenalty: Pair<Stat, Stat>
         get() = if (withPanic) {
             Pair(Stat.ZERO, -buff + debuff)
@@ -68,7 +74,7 @@ class HeroUnit(
             Pair(buff, debuff)
         }
 
-    var currentHp = stat.hp
+    var currentHp = baseStat.hp
         private set
     var cooldown = cooldown ?: heroModel.cooldownCount
         private set
@@ -197,9 +203,9 @@ class HeroUnit(
 
     fun heal(healAmount: Int): Int {
         currentHp += healAmount
-        return if (currentHp > stat.hp) {
-            val actualHeal = healAmount - (currentHp - stat.hp)
-            currentHp = stat.hp
+        return if (currentHp > maxHp) {
+            val actualHeal = healAmount - (currentHp - maxHp)
+            currentHp = maxHp
             actualHeal
         } else {
             healAmount
@@ -231,7 +237,7 @@ class HeroUnit(
     }
 
     fun hpThreshold(percentage: Int): Int {
-        return compareValues(currentHp * 100, stat.hp * percentage)
+        return compareValues(currentHp * 100, maxHp * percentage)
     }
 
     fun setEngaged(isSelf: Boolean) {

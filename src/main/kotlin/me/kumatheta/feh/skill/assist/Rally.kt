@@ -33,7 +33,7 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         return targets.asSequence().filter { it.available }.filter {
             allyThreat.contains(it)
         }.map {
-            it to it.stat.rallyGain(bonus)
+            it to it.buff.rallyGain(bonus)
         }.filter {
             it.second >= 2
         }.minWith(
@@ -53,7 +53,7 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         return targets.asSequence().filter {
             allyThreat.contains(it)
         }.map {
-            it to it.stat.rallyGain(bonus)
+            it to it.buff.rallyGain(bonus)
         }.filter {
             it.second >= 2
         }.minWith(

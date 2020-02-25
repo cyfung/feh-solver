@@ -278,7 +278,7 @@ class BattleState private constructor(
             }
         }.flatMap { it }.filterNotNull()
         return attacker.skillSet.skills.asSequence() + attackerTeamSkills + defenderTeamSkills + defender.skillSet.foeEffect.asSequence().map {
-            it(CombatStatus(this, attacker, defender, true))
+            it(CombatStatus(this, defender, attacker, true))
         }.filterNotNull()
     }
 
@@ -300,7 +300,7 @@ class BattleState private constructor(
             }
         }.flatMap { it }.filterNotNull()
         return defender.skillSet.skills.asSequence() + defenderTeamSkills + attackerTeamSkills + attacker.skillSet.foeEffect.asSequence().map {
-            it(CombatStatus(this, defender, attacker, false))
+            it(CombatStatus(this, attacker, defender, false))
         }.filterNotNull()
     }
 
@@ -314,7 +314,7 @@ class BattleState private constructor(
         val modifiedPenalty = skills.neutralizePenalty.filterNotNull().fold(Stat.ONES) { acc, stat ->
             acc * stat
         } * penalty
-        val finalStat = stat + modifiedBonus + modifiedPenalty + skills.inCombatStat.fold(Stat.ZERO) { acc, stat ->
+        val finalStat = baseStat + modifiedBonus + modifiedPenalty + skills.inCombatStat.fold(Stat.ZERO) { acc, stat ->
             acc + stat
         }
         return BasicInCombatStat(
@@ -1483,7 +1483,7 @@ class BattleState private constructor(
                     val chasePriority = testState.preCalculateDamage(
                         heroUnitCopy,
                         foeCopy
-                    ).potentialDamage + distance / heroUnit.travelPower
+                    ).potentialDamage - (distance / heroUnit.travelPower) * 5
                     foe to chasePriority
                 }
             }.maxWith(compareBy({

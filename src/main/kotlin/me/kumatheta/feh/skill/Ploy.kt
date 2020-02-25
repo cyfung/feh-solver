@@ -18,7 +18,7 @@ inline fun ploy(
 
 fun resBasedPloy3(stat: Stat): MapSkillMethod<Unit> {
     return ploy { self, foe ->
-        if (foe.stat.res < self.stat.res) {
+        if (foe.visibleStat.res < self.startOfTurnStat.res) {
             foe.applyDebuff(stat)
         }
     }

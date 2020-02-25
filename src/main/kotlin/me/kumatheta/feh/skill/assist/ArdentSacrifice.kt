@@ -15,7 +15,7 @@ object ArdentSacrifice : NormalAssist() {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return self.currentHp > HEAL_AMOUNT && target.currentHp < target.stat.hp
+        return self.currentHp > HEAL_AMOUNT && target.currentHp < target.maxHp
     }
 
     override fun apply(
@@ -36,7 +36,7 @@ object ArdentSacrifice : NormalAssist() {
 
     private fun bestTarget(targets: Set<HeroUnit>): HeroUnit? {
         return targets.asSequence().filter { target ->
-            target.stat.hp - target.currentHp >= HEAL_AMOUNT
+            target.maxHp - target.currentHp >= HEAL_AMOUNT
         }.minWith(BASE_ASSIST_COMPARATOR)
     }
 

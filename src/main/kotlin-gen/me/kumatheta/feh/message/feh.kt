@@ -95,10 +95,10 @@ data class Action(
 @Serializable
 data class UnitUpdate(
     val unitId: Int,
-    val currentHp: Int,
-    val active: Boolean,
-    val x: Int,
-    val y: Int
+    val currentHp: Int?,
+    val active: Boolean?,
+    val x: Int?,
+    val y: Int?
 )
 
 @Serializable

@@ -22,7 +22,7 @@ fun healAmount(baseHeal: Int, self: HeroUnit, target: HeroUnit): Int {
     } else {
         baseHeal
     }
-    return Integer.min(maxHealAmount, target.stat.hp - target.currentHp)
+    return Integer.min(maxHealAmount, target.maxHp - target.currentHp)
 }
 
 fun applyHeal(
@@ -56,7 +56,7 @@ abstract class Heal(private val threshold: Int, isRange: Boolean = false) : Norm
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return target.currentHp < target.stat.hp
+        return target.currentHp < target.maxHp
     }
 
     final override fun isValidPreCombat(

@@ -54,7 +54,7 @@ abstract class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
         battleState: BattleState
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value.keys.filter {
-            it.stat.rallyGain(bonus) >= 2
+            it.buff.rallyGain(bonus) >= 2
         }
         val threatOrThreatened = (allyThreat.asSequence() + battleState.unitsSeq(self.team).filterNot {
             it == self

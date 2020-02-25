@@ -66,5 +66,5 @@ object Sacrifice : me.kumatheta.feh.NormalAssist() {
     }
 
     private fun healAmount(target: HeroUnit, self: HeroUnit) =
-        min(target.stat.hp - target.currentHp, self.currentHp - 1)
+        min(target.maxHp - target.currentHp, self.currentHp - 1)
 }

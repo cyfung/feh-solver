@@ -22,7 +22,7 @@ abstract class RestoreAssist(private val baseHeal: Int) : me.kumatheta.feh.Norma
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return target.currentHp < target.stat.hp || target.debuff.isNotZero()
+        return target.currentHp < target.maxHp || target.debuff.isNotZero()
     }
 
     override fun preCombatBestTarget(

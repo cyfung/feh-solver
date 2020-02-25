@@ -146,7 +146,7 @@ private fun toUpdateInfoList(
 ): List<UpdateInfo> {
     var lastState = board.stateCopy
     val details = board.tryAndGetDetails(moves)
-    val updates = details.map { (unitAction, state) ->
+    return details.map { (unitAction, state) ->
         val action = unitAction?.toMsgAction()
         val oldUnits = (lastState.unitsSeq(Team.PLAYER) + lastState.unitsSeq(Team.ENEMY)).associateBy { it.id }
         val newUnits = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).associateBy { it.id }
@@ -157,7 +157,6 @@ private fun toUpdateInfoList(
         lastState = state
         UpdateInfo(action, unitsUpdated, unitsAdded)
     }
-    return updates
 }
 
 @ExperimentalTime
@@ -195,12 +194,15 @@ private fun getUpdated(
     return oldUnits.values.asSequence().mapNotNull { old ->
         val new = newUnits[old.id]
         if (new == null) {
-            UnitUpdate(old.id, 0, false, 0, 0)
+            UnitUpdate(old.id, 0, null, null, null)
         } else {
-            if (new.currentHp == old.currentHp && new.available == old.available && new.position == old.position) {
+            val updatedHp = if (new.currentHp != old.currentHp) new.currentHp else null
+            val updatedAvailable = if (new.available != old.available) new.available else null
+            val updatedPosition = if (new.position != old.position) new.position else null
+            if (updatedHp == null && updatedAvailable == null && updatedPosition == null) {
                 null
             } else {
-                UnitUpdate(old.id, new.currentHp, new.available, new.position.x, new.position.y)
+                UnitUpdate(old.id, updatedHp, updatedAvailable, updatedPosition?.x, updatedPosition?.y)
             }
         }
     }
@@ -235,10 +237,10 @@ private suspend fun runMcts(
     val mctsStart = MonoClock.markNow()
     var lastFixMove = MonoClock.markNow()
 
-    val json = Json(JsonConfiguration.Stable.copy(prettyPrint = true))
+    val json = Json(JsonConfiguration.Stable)
 
     repeat(10000) {
-        mcts.run(5, parallelCount=5)
+        mcts.run(5, parallelCount = 5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
             lastFixMove = MonoClock.markNow()
@@ -300,11 +302,11 @@ private fun buildSetupInfo(
 }
 
 private fun HeroUnit.toUnitAdded(): UnitAdded {
-    check(currentHp == stat.hp)
+    check(currentHp == maxHp)
     return UnitAdded(
         name = name,
         unitId = id,
-        maxHp = stat.hp,
+        maxHp = maxHp,
         playerControl = team == Team.PLAYER,
         startX = position.x,
         startY = position.y,

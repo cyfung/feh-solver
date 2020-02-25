@@ -10,7 +10,7 @@ interface Hero {
     val assist: Assist?
     val special: Special?
     val skillSet: SkillSet
-    val stat: Stat
+    val baseStat: Stat
     val group: Int?
     val hasSpecialDebuff: Boolean
     val effectiveAgainstMoveType: Set<MoveType>
@@ -54,7 +54,7 @@ open class HeroModel(
     final override val neutralizeEffectiveWeaponType =
         skillSet.groupAsSet(Skill::neutralizeEffectiveWeaponType).contains(weaponType)
 
-    final override val stat: Stat = if (isFinalStat) {
+    final override val baseStat: Stat = if (isFinalStat) {
         stat
     } else {
         skillSet.skills.asSequence().mapNotNull(Skill::extraStat).fold(stat) { sum, extraStat ->

@@ -27,8 +27,8 @@ object ReciprocalAid : me.kumatheta.feh.NormalAssist() {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return (target.currentHp < target.stat.hp && self.currentHp > target.currentHp) ||
-                (self.currentHp < self.stat.hp && target.currentHp > self.currentHp)
+        return (target.currentHp < target.maxHp && self.currentHp > target.currentHp) ||
+                (self.currentHp < self.maxHp && target.currentHp > self.currentHp)
     }
 
     override fun isValidPreCombat(
@@ -63,10 +63,10 @@ object ReciprocalAid : me.kumatheta.feh.NormalAssist() {
         targets: Set<HeroUnit>
     ): HeroUnit? {
         return targets.asSequence().filter { target ->
-            target.stat.hp > target.currentHp &&
+            target.maxHp > target.currentHp &&
                     self.currentHp > target.currentHp &&
-                    target.stat.hp >= self.currentHp &&
-                    self.stat.hp >= target.currentHp
+                    target.maxHp >= self.currentHp &&
+                    self.maxHp >= target.currentHp
         }.map { target ->
             target to (self.currentHp - target.currentHp)
         }.bestHealTarget()
