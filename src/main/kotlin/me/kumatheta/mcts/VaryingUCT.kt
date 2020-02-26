@@ -2,7 +2,6 @@ package me.kumatheta.mcts
 
 import kotlin.math.ln
 import kotlin.math.sqrt
-import kotlin.random.Random
 
 class VaryingUCT<T : Move>(
     @Volatile var high: Long,
@@ -26,7 +25,7 @@ class VaryingUCT<T : Move>(
         val averageScore = (childScore.totalScore.toDouble() / childTries - ref) / (high - ref)
 //        val averageScore = (childScore.bestScore.toDouble() - ref) / (high - ref) / 2
         return averageScore +
-                explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble())
+            explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble())
     }
 
     override fun newEmptyScore(): MyScore<T> {

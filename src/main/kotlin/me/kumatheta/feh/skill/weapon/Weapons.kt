@@ -46,7 +46,7 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Gleipnir" to Gleipnir,
 
     "Brave Sword+" to Sword.brave(8),
-    "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp=2, atk=1)),
+    "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp = 2, atk = 1)),
     "Guard Bow+" to BowC.serpent(12),
     "Gronnraven+" to MagicG.raven(11)
 ).toSkillMap()

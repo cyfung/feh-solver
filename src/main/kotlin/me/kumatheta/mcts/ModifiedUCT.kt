@@ -22,8 +22,8 @@ class ModifiedUCT<T : Move>(
         val childTries = childScore.tries
         val average = childScore.totalScore.toDouble() / childTries
         return average +
-                explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble()) +
-                sqrt((childScore.scoreSquareSum - average * childScore.bestScore + explorationConstantD) / childTries)
+            explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble()) +
+            sqrt((childScore.scoreSquareSum - average * childScore.bestScore + explorationConstantD) / childTries)
     }
 
     override fun newEmptyScore(): ScoreWithSquareSum<T> {

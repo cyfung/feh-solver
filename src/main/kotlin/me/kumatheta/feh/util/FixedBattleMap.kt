@@ -8,7 +8,6 @@ import me.kumatheta.feh.Obstacle
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.Terrain
 import me.kumatheta.feh.ThreatReceiver
-import javax.sound.midi.Receiver
 
 class FixedBattleMap(delegate: BattleMap) :
     BattleMap {

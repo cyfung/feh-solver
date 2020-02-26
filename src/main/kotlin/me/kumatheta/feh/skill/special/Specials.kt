@@ -1,6 +1,5 @@
 package me.kumatheta.feh.skill.special
 
-import me.kumatheta.feh.skill.passive.GentleDream
 import me.kumatheta.feh.skill.toSkillMap
 
 val ALL_SPECIALS = sequenceOf(

@@ -1,6 +1,5 @@
 package me.kumatheta.feh.test
 
-import javafx.geometry.Pos
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.MoveAndAssist
@@ -40,21 +39,21 @@ fun main() {
         MoveOnly(4, Position(0, 0)),
         MoveOnly(1, Position(3, 2)),
         MoveOnly(2, Position(2, 2)),
-        MoveAndAssist(3, Position(2, 1),2),
+        MoveAndAssist(3, Position(2, 1), 2),
 
-        MoveAndAttack(3, Position(4,1), 10),
-        MoveOnly(2, Position(0,2)),
-        MoveAndAttack(1, Position(2,2),5),
-        MoveAndAssist(4, Position(1,2),1),
-        MoveAndAttack(1, Position(1,1), 8),
+        MoveAndAttack(3, Position(4, 1), 10),
+        MoveOnly(2, Position(0, 2)),
+        MoveAndAttack(1, Position(2, 2), 5),
+        MoveAndAssist(4, Position(1, 2), 1),
+        MoveAndAttack(1, Position(1, 1), 8),
 
-        MoveOnly(2, Position(2,2)),
-        MoveAndAssist(4, Position(2,1),2),
-        MoveAndAttack(2, Position(3,3), 6)
+        MoveOnly(2, Position(2, 2)),
+        MoveAndAssist(4, Position(2, 1), 2),
+        MoveAndAttack(2, Position(3, 3), 6)
     ).map {
         FehMove(it)
     }
-    val testResult = board.tryMoves(testMoves,true)
+    val testResult = board.tryMoves(testMoves, true)
 //    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 //
 //    testMoves.take(9).forEach { move ->

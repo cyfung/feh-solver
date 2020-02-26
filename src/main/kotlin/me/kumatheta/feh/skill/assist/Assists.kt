@@ -19,5 +19,5 @@ val ALL_ASSISTS = sequenceOf(
     "Play" to Refresh(),
 
     "Gentle Dream" to GentleDream,
-    "Rally Atk/Spd" to Rally(Stat(atk=3,spd=3))
+    "Rally Atk/Spd" to Rally(Stat(atk = 3, spd = 3))
 ).toSkillMap()

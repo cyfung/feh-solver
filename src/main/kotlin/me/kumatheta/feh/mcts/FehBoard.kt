@@ -1,9 +1,11 @@
 package me.kumatheta.feh.mcts
 
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.MoveAndAssist
 import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.Team
 import me.kumatheta.feh.UnitAction
+import me.kumatheta.feh.skill.assist.Refresh
 import me.kumatheta.mcts.Board
 import me.kumatheta.mcts.Move
 
@@ -57,7 +59,7 @@ class FehBoard private constructor(
 
     fun calculateScore(battleState: BattleState) =
         battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
-                battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
+            battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
             Team.ENEMY
         ).sumBy { it.maxHp - it.currentHp } * 2 + (phraseLimit - battleState.phase) * 20
 
@@ -90,9 +92,11 @@ class FehBoard private constructor(
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
         return nextMoves.asSequence().sortedBy {
             if (it.unitAction is MoveAndAttack) {
+                1
+            } else if (it.unitAction is MoveAndAssist && state.getUnit(it.unitAction.heroUnitId).assist is Refresh) {
                 0
             } else {
-                1
+                2
             }
         }
     }

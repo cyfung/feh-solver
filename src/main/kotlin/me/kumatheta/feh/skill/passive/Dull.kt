@@ -4,7 +4,6 @@ import me.kumatheta.feh.CombatStartSkill
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.combatSkill
 import me.kumatheta.feh.combatStartSkill
 
 private val ZERO = object : Skill {

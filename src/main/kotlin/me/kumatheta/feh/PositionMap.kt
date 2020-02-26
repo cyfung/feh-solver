@@ -78,7 +78,7 @@ fun readMap(file: Path): PositionMap {
             }
             position to Terrain(terrainType, isDefenseTile)
         }
-    }.flatMap  { it }.associate { it }
+    }.flatMap { it }.associate { it }
 
     return PositionMap(terrainMap, obstacles.toMap(), idMap.toMap(), size)
 }

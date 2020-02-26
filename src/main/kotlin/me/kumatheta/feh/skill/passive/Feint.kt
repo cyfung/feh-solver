@@ -23,7 +23,7 @@ object DefFeint3 : Passive {
             }
             battleState.unitsSeq(self.team.foe).filter {
                 it.position.x == self.position.x || it.position.y == self.position.y ||
-                        it.position.x == ally.position.x || it.position.y == ally.position.y
+                    it.position.x == ally.position.x || it.position.y == ally.position.y
             }.forEach {
                 it.applyDebuff(Stat(def = -7))
             }

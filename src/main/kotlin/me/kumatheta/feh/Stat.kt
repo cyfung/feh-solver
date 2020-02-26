@@ -28,9 +28,9 @@ data class Stat(
 
     fun rallyGain(bonus: Stat): Int {
         return max(bonus.atk - atk, 0) +
-                max(bonus.spd - spd, 0) +
-                max(bonus.def - def, 0) +
-                max(bonus.res - res, 0)
+            max(bonus.spd - spd, 0) +
+            max(bonus.def - def, 0) +
+            max(bonus.res - res, 0)
     }
 
     fun isZero(): Boolean {

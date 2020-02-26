@@ -7,7 +7,7 @@ interface Score<T> {
     val moves: List<T>?
 }
 
-interface ScoreManager<T: Move, S: Score<T>> {
+interface ScoreManager<T : Move, S : Score<T>> {
     fun newChildScore(childScore: Long, moves: List<T>): S
     fun computeScore(childScore: S, tries: Int): Double
     fun newEmptyScore(): S

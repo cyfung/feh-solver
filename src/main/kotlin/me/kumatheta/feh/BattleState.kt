@@ -215,20 +215,20 @@ class BattleState private constructor(
 
         // check adaptive
         val attackerAdaptive = skillWrappers.attacker.adaptiveDamage.any { it } &&
-                skillWrappers.defender.denyAdaptiveDamage.none { it }
+            skillWrappers.defender.denyAdaptiveDamage.none { it }
         val defenderAdaptive = skillWrappers.defender.adaptiveDamage.any { it } &&
-                skillWrappers.attacker.denyAdaptiveDamage.none { it }
+            skillWrappers.attacker.denyAdaptiveDamage.none { it }
 
         // check staff damage
         val attackerReducedStaffDamage = if (attacker.weaponType == Staff) {
             skillWrappers.attacker.staffAsNormal.none { it } ||
-                    skillWrappers.defender.denyStaffAsNormal.any { it }
+                skillWrappers.defender.denyStaffAsNormal.any { it }
         } else {
             false
         }
         val defenderReducedStaffDamage = if (defender.weaponType == Staff) {
             skillWrappers.defender.staffAsNormal.none { it } ||
-                    skillWrappers.attacker.denyStaffAsNormal.any { it }
+                skillWrappers.attacker.denyStaffAsNormal.any { it }
         } else {
             false
         }
@@ -646,7 +646,7 @@ class BattleState private constructor(
         val canCounter = rangeMatch
 
         val disablePriorityChange = attackerSkillSet.disablePriorityChange.any { it } ||
-                defenderSkillSet.disablePriorityChange.any { it }
+            defenderSkillSet.disablePriorityChange.any { it }
 
         val desperation: Boolean
         val vantage: Boolean
@@ -1362,7 +1362,7 @@ class BattleState private constructor(
 
     fun getChessPiece(position: Position) = locationMap[position]
 
-    private fun getUnit(heroUnitId: Int): HeroUnit =
+    fun getUnit(heroUnitId: Int): HeroUnit =
         locationMap.values.asSequence().filterIsInstance<HeroUnit>().first { it.id == heroUnitId }
 
     private fun moveTargets(

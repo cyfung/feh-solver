@@ -21,7 +21,7 @@ object IceMirror : DefenseSpecial(2) {
         }
     }
 
-    override val damageReducedListener: PerAttackListener<Int>? = lambda@ { combatStatus, value ->
+    override val damageReducedListener: PerAttackListener<Int>? = lambda@{ combatStatus, value ->
         val state = combatStatus.self.heroUnit.combatSkillData[IceMirror] as State? ?: return@lambda
         if (state.damageReduced == null) {
             combatStatus.self.heroUnit.combatSkillData[IceMirror] = State(value)
@@ -29,7 +29,7 @@ object IceMirror : DefenseSpecial(2) {
     }
 
 
-    override val damageIncrease: PerAttackSkill<Int>? = lambda@ { combatStatus, _ ->
+    override val damageIncrease: PerAttackSkill<Int>? = lambda@{ combatStatus, _ ->
         val state = combatStatus.self.heroUnit.combatSkillData[IceMirror] as State? ?: return@lambda 0
         val damageReduced = state.damageReduced ?: throw IllegalStateException()
         combatStatus.self.heroUnit.combatSkillData.remove(IceMirror)

@@ -57,7 +57,6 @@ class CountableNodeManager<T : Move, S : Score<T>>(
     }
 
 
-
     fun invalidate(countableNode: CountableNode<T, S>) {
         sizeRef.decrementAndGet()
         countableNode.removeAllChildren()

@@ -5,7 +5,7 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.MapSkillMethod
 import me.kumatheta.feh.Stat
 
-fun tactics(stat: Stat) : MapSkillMethod<Unit> = { battleState: BattleState, self: HeroUnit ->
+fun tactics(stat: Stat): MapSkillMethod<Unit> = { battleState: BattleState, self: HeroUnit ->
     val pos = self.position
     val team = battleState.unitsSeq(self.team).toList()
     val counts = team.asSequence().groupingBy { it.moveType }.eachCount()

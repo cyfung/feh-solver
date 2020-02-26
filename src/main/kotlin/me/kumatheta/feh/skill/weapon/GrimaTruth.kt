@@ -4,8 +4,8 @@ import me.kumatheta.feh.BasicWeapon
 import me.kumatheta.feh.CombatEndSkill
 import me.kumatheta.feh.MagicR
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.aoeDebuffFoe
 import me.kumatheta.feh.skill.aoeBuffAlly
+import me.kumatheta.feh.skill.aoeDebuffFoe
 
 object GrimaTruth : BasicWeapon(MagicR, 14) {
     override val extraStat: Stat = Stat(def = 3)

@@ -250,7 +250,7 @@ class HeroUnit(
 
     fun isEffective(foe: HeroUnit): Boolean {
         return (!foe.neutralizeEffectiveMoveType && effectiveAgainstMoveType.contains(foe.moveType)) ||
-                (!foe.neutralizeEffectiveWeaponType && effectiveAgainstWeaponType.contains(foe.weaponType))
+            (!foe.neutralizeEffectiveWeaponType && effectiveAgainstWeaponType.contains(foe.weaponType))
     }
 }
 
