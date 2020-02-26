@@ -26,7 +26,7 @@ abstract class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return target.buff.rallyGain(bonus) > 0
+        return target.extraBuffAmount(bonus) > 0
     }
 
     final override fun preCombatBestTarget(
@@ -54,7 +54,7 @@ abstract class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
         battleState: BattleState
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value.keys.filter {
-            it.buff.rallyGain(bonus) >= 2
+            it.extraBuffAmount(bonus) >= 2
         }
         val threatOrThreatened = (allyThreat.asSequence() + battleState.unitsSeq(self.team).filterNot {
             it == self

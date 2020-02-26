@@ -4,7 +4,6 @@ import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import kotlinx.coroutines.GlobalScope
@@ -14,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.list
+import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.Axe
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
@@ -100,7 +100,7 @@ fun Application.module(testing: Boolean = false) {
         battleMap
     )
     val setupInfo = buildSetupInfo(positionMap, battleMap, state)
-    val json = Json(JsonConfiguration.Stable)
+    val protoBuf = ProtoBuf()
     val mctsRef =
         AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>(null)
     val jobRef = AtomicReference<Job?>(null)
@@ -108,7 +108,7 @@ fun Application.module(testing: Boolean = false) {
     routing {
         get("/start") {
             val (board, mcts) = getMcts(state, mctsRef, jobRef)
-            call.respondText(json.stringify(SetupInfo.serializer(), setupInfo))
+            call.respond(protoBuf.dump(SetupInfo.serializer(), setupInfo))
         }
         get("/moveset") {
             val isCompleted = jobRef.get() == null
@@ -135,10 +135,12 @@ fun Application.module(testing: Boolean = false) {
             }
             val updates = toUpdateInfoList(board, moves)
             val moveSet = MoveSet(updates, score.bestScore, score.tries)
-            call.respondText(json.stringify(MoveSet.serializer(), moveSet))
+            call.respond(protoBuf.dump(MoveSet.serializer(), moveSet))
         }
     }
 }
+
+private val NULL_ACTION = Action(-1, -1, -1, -1, -1, -1)
 
 private fun toUpdateInfoList(
     board: FehBoard,
@@ -155,7 +157,7 @@ private fun toUpdateInfoList(
             newUnits.values.asSequence().filterNot { oldUnits.containsKey(it.id) }.map(HeroUnit::toUnitAdded)
                 .toList()
         lastState = state
-        UpdateInfo(action, unitsUpdated, unitsAdded)
+        UpdateInfo(action ?: NULL_ACTION, unitsUpdated, unitsAdded)
     }
 }
 
@@ -194,15 +196,12 @@ private fun getUpdated(
     return oldUnits.values.asSequence().mapNotNull { old ->
         val new = newUnits[old.id]
         if (new == null) {
-            UnitUpdate(old.id, 0, null, null, null)
+            UnitUpdate(old.id, 0, false, 0, 0)
         } else {
-            val updatedHp = if (new.currentHp != old.currentHp) new.currentHp else null
-            val updatedAvailable = if (new.available != old.available) new.available else null
-            val updatedPosition = if (new.position != old.position) new.position else null
-            if (updatedHp == null && updatedAvailable == null && updatedPosition == null) {
+            if (new.currentHp == old.currentHp && new.available != old.available && new.position == old.position) {
                 null
             } else {
-                UnitUpdate(old.id, updatedHp, updatedAvailable, updatedPosition?.x, updatedPosition?.y)
+                UnitUpdate(old.id, new.currentHp, new.available, new.position.x, new.position.y)
             }
         }
     }
@@ -210,21 +209,24 @@ private fun getUpdated(
 
 private fun UnitAction.toMsgAction(): Action {
     return when (this) {
-        is MoveOnly -> Action(heroUnitId, moveTarget.x, moveTarget.y, null, null, null)
-        is MoveAndAttack -> Action(heroUnitId, moveTarget.x, moveTarget.y, attackTargetId, null, null)
-        is MoveAndBreak -> Action(heroUnitId, moveTarget.x, moveTarget.y, null, obstacle.x, obstacle.y)
-        is MoveAndAssist -> Action(heroUnitId, moveTarget.x, moveTarget.y, assistTargetId, null, null)
+        is MoveOnly -> Action(heroUnitId, moveTarget.x, moveTarget.y, -1, -1, -1)
+        is MoveAndAttack -> Action(heroUnitId, moveTarget.x, moveTarget.y, attackTargetId, -1, -1)
+        is MoveAndBreak -> Action(heroUnitId, moveTarget.x, moveTarget.y, -1, obstacle.x, obstacle.y)
+        is MoveAndAssist -> Action(heroUnitId, moveTarget.x, moveTarget.y, assistTargetId, -1, -1)
     }
 }
 
 private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>>): VaryingUCT.MyScore<FehMove> {
-    val score = mcts.resetRecentScore()
-    val moves = score.moves
-    if (moves == null) {
-        delay(500)
-        return mcts.resetRecentScore()
+    repeat(10) {
+        val score = mcts.resetRecentScore()
+        val moves = score.moves
+        if (moves != null) {
+            return score
+        }
+        println("delay response")
+        delay(50)
     }
-    return score
+    return mcts.resetRecentScore()
 }
 
 @ExperimentalTime
@@ -253,16 +255,13 @@ private suspend fun runMcts(
         } catch (t: Throwable) {
             throw t
         }
-//        bestMoves.forEach {
-//            println(it)
-//        }
+        println(bestMoves.asSequence().map { it.unitAction }.toList())
         println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves)))
 
         println("best score: ${score.bestScore}")
         scoreManager.high = score.bestScore
         scoreManager.average = score.totalScore / score.tries
         println("average = ${scoreManager.average}")
-        println("calculated best score: ${board.calculateScore(testState)}")
         println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
         tries = score.tries
         println("estimatedSize: ${mcts.estimatedSize}")

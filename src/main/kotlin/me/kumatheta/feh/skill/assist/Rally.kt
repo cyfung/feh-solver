@@ -20,7 +20,7 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return target.buff.rallyGain(bonus) > 0
+        return target.extraBuffAmount(bonus) > 0
     }
 
     final override fun preCombatBestTarget(
@@ -33,7 +33,7 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         return targets.asSequence().filter { it.available }.filter {
             allyThreat.contains(it)
         }.map {
-            it to it.buff.rallyGain(bonus)
+            it to it.extraBuffAmount(bonus)
         }.filter {
             it.second >= 2
         }.minWith(
@@ -53,7 +53,7 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         return targets.asSequence().filter {
             allyThreat.contains(it)
         }.map {
-            it to it.buff.rallyGain(bonus)
+            it to it.extraBuffAmount(bonus)
         }.filter {
             it.second >= 2
         }.minWith(

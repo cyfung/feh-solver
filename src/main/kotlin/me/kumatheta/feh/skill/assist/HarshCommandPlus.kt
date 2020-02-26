@@ -53,9 +53,9 @@ object HarshCommandPlus : BuffRelatedAssist() {
     private fun Sequence<HeroUnit>.bestTarget(distanceToClosestFoe: Map<HeroUnit, Int>): HeroUnit? {
         return map {
             it to if (it.withPanic) {
-                it.buff.rallyGain(-it.debuff) + it.debuff.totalExceptHp + it.buff.totalExceptHp
+                it.extraBuffAmount(-it.debuff) + it.debuff.totalExceptHp + it.buff.totalExceptHp
             } else {
-                it.buff.rallyGain(-it.debuff) + it.debuff.totalExceptHp
+                it.extraBuffAmount(-it.debuff) + it.debuff.totalExceptHp
             }
         }.filter {
             it.second >= 2 || it.first.hasNegativeStatus

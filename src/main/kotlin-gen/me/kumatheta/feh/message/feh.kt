@@ -79,7 +79,7 @@ data class BattleMap(
 @Serializable
 data class SetupInfo(
     val battleMap: BattleMap,
-    val unitsAdded: List<UnitAdded>
+    val unitsAdded: List<UnitAdded> = emptyList()
 )
 
 @Serializable
@@ -87,30 +87,30 @@ data class Action(
     val unitId: Int,
     val moveX: Int,
     val moveY: Int,
-    val targetUnitId: Int?,
-    val obstacleX: Int?,
-    val obstacleY: Int?
+    val targetUnitId: Int,
+    val obstacleX: Int,
+    val obstacleY: Int
 )
 
 @Serializable
 data class UnitUpdate(
     val unitId: Int,
-    val currentHp: Int?,
-    val active: Boolean?,
-    val x: Int?,
-    val y: Int?
+    val currentHp: Int,
+    val active: Boolean,
+    val x: Int,
+    val y: Int
 )
 
 @Serializable
 data class UpdateInfo(
-    val action: Action?,
-    val unitUpdates: List<UnitUpdate>,
-    val unitsAdded: List<UnitAdded>
+    val action: Action,
+    val unitUpdates: List<UnitUpdate> = emptyList(),
+    val unitsAdded: List<UnitAdded> = emptyList()
 )
 
 @Serializable
 data class MoveSet(
-    val moves: List<UpdateInfo>,
+    val moves: List<UpdateInfo> = emptyList(),
     val score: Long,
     val tries: Int
 )

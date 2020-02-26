@@ -33,8 +33,11 @@ class MoveOnly(
     heroUnitId: Int,
     moveTarget: Position
 ) : UnitAction(heroUnitId, moveTarget) {
+
+    constructor(heroUnitId: Int, moveTargetX: Int, moveTargetY: Int) : this(heroUnitId, Position(moveTargetX, moveTargetY))
+
     override fun toString(): String {
-        return "MoveOnly() ${super.toString()}"
+        return "MoveOnly(heroUnitId = $heroUnitId, moveTargetX = ${moveTarget.x}, moveTargetY = ${moveTarget.y})"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -51,8 +54,21 @@ class MoveAndAttack(
     moveTarget: Position,
     val attackTargetId: Int
 ) : UnitAction(heroUnitId, moveTarget) {
+
+    constructor(
+        heroUnitId: Int,
+        moveTargetX: Int,
+        moveTargetY: Int,
+        attackTargetId: Int
+    ) : this(
+        heroUnitId,
+        Position(moveTargetX, moveTargetY),
+        attackTargetId
+    )
+
     override fun toString(): String {
-        return "MoveAndAttack(attackTargetId=$attackTargetId) ${super.toString()}"
+        return "MoveAndAttack(heroUnitId = $heroUnitId, moveTargetX = ${moveTarget.x}, " +
+            "moveTargetY = ${moveTarget.y}, attackTargetId = $attackTargetId)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -80,8 +96,21 @@ class MoveAndBreak(
     moveTarget: Position,
     val obstacle: Position
 ) : UnitAction(heroUnitId, moveTarget) {
+    constructor(
+        heroUnitId: Int,
+        moveTargetX: Int,
+        moveTargetY: Int,
+        obstacleX: Int,
+        obstacleY: Int
+    ) : this(
+        heroUnitId,
+        Position(moveTargetX, moveTargetY),
+        Position(obstacleX, obstacleY)
+    )
+
     override fun toString(): String {
-        return "MoveAndBreak(obstacle=$obstacle) ${super.toString()}"
+        return "MoveAndBreak(heroUnitId = $heroUnitId, moveTargetX = ${moveTarget.x}, " +
+            "moveTargetY = ${moveTarget.y}, obstacleX = ${obstacle.x}, obstacleY = ${obstacle.y})"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -108,8 +137,20 @@ class MoveAndAssist(
     moveTarget: Position,
     val assistTargetId: Int
 ) : UnitAction(heroUnitId, moveTarget) {
+    constructor(
+        heroUnitId: Int,
+        moveTargetX: Int,
+        moveTargetY: Int,
+        assistTargetId: Int
+    ) : this(
+        heroUnitId,
+        Position(moveTargetX, moveTargetY),
+        assistTargetId
+    )
+
     override fun toString(): String {
-        return "MoveAndAssist(assistTargetId=$assistTargetId) ${super.toString()}"
+        return "MoveAndAssist(heroUnitId = $heroUnitId, moveTargetX = ${moveTarget.x}, " +
+            "moveTargetY = ${moveTarget.y}, assistTargetId = $assistTargetId)"
     }
 
     override fun equals(other: Any?): Boolean {

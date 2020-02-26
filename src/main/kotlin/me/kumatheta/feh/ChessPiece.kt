@@ -50,6 +50,14 @@ class HeroUnit(
     var debuff = Stat.ZERO
         private set
 
+    fun extraBuffAmount(bonus: Stat): Int {
+        return maxOf(bonus.atk - buff.atk, 0) +
+            maxOf(bonus.spd - buff.spd, 0) +
+            maxOf(bonus.def - buff.def, 0) +
+            maxOf(bonus.res - buff.res, 0)
+    }
+
+
     val maxHp
         get() = baseStat.hp
 
