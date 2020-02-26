@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class UnitAdded(
     val name: String,
+    val imageName: String,
     val unitId: Int,
     val maxHp: Int,
     val playerControl: Boolean,
@@ -112,5 +113,10 @@ data class UpdateInfo(
 data class MoveSet(
     val moves: List<UpdateInfo> = emptyList(),
     val score: Long,
-    val tries: Int
+    val tries: Int,
+    val enemyDied: Int,
+    val playerDied: Int,
+    val bestScore: Long,
+    val totalTries: Int,
+    val numberOfNodes: Int
 )

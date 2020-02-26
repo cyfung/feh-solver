@@ -1,5 +1,5 @@
 id,spawn time,name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
-1,,Eir,,,,FLYING,Lyfjaberg,,Iceberg,35,46,37,14,34,SwiftSparrow2,MysticBoost3,SparklingBoost
-2,,Fjorm,,,,INFANTRY,Leiptr,,IceMirror,39,46,31,30,34,AtkDefBond3,ShieldPulse3,DriveAtk2
-3,,Eirika - Sacred Memories,,,,CAVALRY,Gleipnir,Rally Atk/Spd,,36,45,35,20,25,SwiftSparrow2,Desperation3,
-4,,Peony,,,,FLYING,Flower of Joy,Gentle Dream,,43,45,36,16,27,B Duel Flying 3,Aerobatics 3,Fortify Res 4
+1,,Eir,,,,,FLYING,Lyfjaberg,,Iceberg,35,46,37,14,34,SwiftSparrow2,MysticBoost3,SparklingBoost
+2,,Fjorm,,,,,INFANTRY,Leiptr,,IceMirror,39,46,31,30,34,AtkDefBond3,ShieldPulse3,DriveAtk2
+3,,Eirika,Eirika - Sacred Memories,,,,CAVALRY,Gleipnir,Rally Atk/Spd,,36,45,35,20,25,SwiftSparrow2,Desperation3,
+4,,Peony,,,,,FLYING,Flower of Joy,Gentle Dream,,43,45,36,16,27,B Duel Flying 3,Aerobatics 3,Fortify Res 4

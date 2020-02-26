@@ -18,6 +18,7 @@ interface Hero {
     val neutralizeEffectiveMoveType: Boolean
     val neutralizeEffectiveWeaponType: Boolean
     val name: String
+    val imageName: String
 }
 
 fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
@@ -31,6 +32,7 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
 
 open class HeroModel(
     override val name: String,
+    override val imageName: String,
     final override val group: Int?,
     val engageDelay: Int?,
     final override val moveType: MoveType,

@@ -123,18 +123,30 @@ fun Application.module(testing: Boolean = false) {
                 return@get
             }
             val (board, mcts) = pair
-            val score = if (isCompleted) {
+            val currentScore = if (isCompleted) {
                 mcts.score
             } else {
                 resetScoreWithRetry(mcts)
             }
-            val moves = score.moves
+            val moves = currentScore.moves
             if (moves == null) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
-            val updates = toUpdateInfoList(board, moves)
-            val moveSet = MoveSet(updates, score.bestScore, score.tries)
+            val (testState, updates) = toUpdateInfoList(board, moves)
+
+            val allTimeBest = mcts.score
+            val moveSet = MoveSet(
+                updates,
+                currentScore.bestScore,
+                currentScore.tries,
+                testState.enemyDied,
+                testState.playerDied,
+                allTimeBest.bestScore,
+                allTimeBest.tries,
+                mcts.estimatedSize
+            )
+
             call.respond(protoBuf.dump(MoveSet.serializer(), moveSet))
         }
     }
@@ -145,10 +157,10 @@ private val NULL_ACTION = Action(-1, -1, -1, -1, -1, -1)
 private fun toUpdateInfoList(
     board: FehBoard,
     moves: List<FehMove>
-): List<UpdateInfo> {
+): Pair<BattleState, List<UpdateInfo>> {
     var lastState = board.stateCopy
     val details = board.tryAndGetDetails(moves)
-    return details.map { (unitAction, state) ->
+    val list = details.map { (unitAction, state) ->
         val action = unitAction?.toMsgAction()
         val oldUnits = (lastState.unitsSeq(Team.PLAYER) + lastState.unitsSeq(Team.ENEMY)).associateBy { it.id }
         val newUnits = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).associateBy { it.id }
@@ -159,6 +171,7 @@ private fun toUpdateInfoList(
         lastState = state
         UpdateInfo(action ?: NULL_ACTION, unitsUpdated, unitsAdded)
     }
+    return lastState to list
 }
 
 @ExperimentalTime
@@ -169,7 +182,7 @@ private suspend fun getMcts(
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
     val phraseLimit = 20
     val board = FehBoard(phraseLimit, state, 3)
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.5)
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000)
     val mcts = Mcts(board, scoreManager)
     val next = Pair(board, mcts)
     do {
@@ -256,7 +269,7 @@ private suspend fun runMcts(
             throw t
         }
         println(bestMoves.asSequence().map { it.unitAction }.toList())
-        println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves)))
+        println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
 
         println("best score: ${score.bestScore}")
         scoreManager.high = score.bestScore
@@ -304,6 +317,7 @@ private fun HeroUnit.toUnitAdded(): UnitAdded {
     check(currentHp == maxHp)
     return UnitAdded(
         name = name,
+        imageName = imageName,
         unitId = id,
         maxHp = maxHp,
         playerControl = team == Team.PLAYER,

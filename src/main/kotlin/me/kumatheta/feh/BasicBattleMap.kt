@@ -30,6 +30,7 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
             SpawnTime.valueOf(spawnTimeString)
         }
         val name = valueIterator.next()
+        val imageName = valueIterator.next()
         val groupString = valueIterator.next()
         val engagedString = valueIterator.next()
         val cdString = valueIterator.next()
@@ -70,6 +71,7 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
 
         val heroModel = HeroModel(
             name = name,
+            imageName = imageName,
             group = group,
             engageDelay = engageDelay,
             moveType = moveType,
