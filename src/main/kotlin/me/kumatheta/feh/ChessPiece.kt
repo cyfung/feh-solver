@@ -63,6 +63,8 @@ class HeroUnit(
 
     val withPanic: Boolean
         get() = negativeStatus.contains(NegativeStatus.PANIC)
+    val withIsolation: Boolean
+        get() = negativeStatus.contains(NegativeStatus.ISOLATION)
     val withMoveOrder: Boolean
         get() = positiveStatus.contains(PositiveStatus.MOVEMENT_ORDER)
 
@@ -263,7 +265,8 @@ class HeroUnit(
 }
 
 enum class NegativeStatus {
-    PANIC
+    PANIC,
+    ISOLATION
 }
 
 enum class PositiveStatus {

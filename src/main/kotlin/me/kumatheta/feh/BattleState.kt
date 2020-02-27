@@ -308,12 +308,12 @@ class BattleState private constructor(
         skills: InCombatSkillSet
     ): BasicInCombatStat {
         val (bonus, penalty) = bonusAndPenalty
-        val modifiedBonus = skills.neutralizeBonus.filterNotNull().fold(Stat.ONES) { acc, stat ->
+        val modifiedBonus = skills.neutralizeBonus.filterNotNull().fold(bonus) { acc, stat ->
             acc * stat
-        } * bonus
-        val modifiedPenalty = skills.neutralizePenalty.filterNotNull().fold(Stat.ONES) { acc, stat ->
+        }
+        val modifiedPenalty = skills.neutralizePenalty.filterNotNull().fold(penalty) { acc, stat ->
             acc * stat
-        } * penalty
+        }
         val finalStat = baseStat + modifiedBonus + modifiedPenalty + skills.inCombatStat.fold(Stat.ZERO) { acc, stat ->
             acc + stat
         }
@@ -1264,10 +1264,10 @@ class BattleState private constructor(
     private fun HeroUnit.assistTargets(
         moves: Map<Position, MoveStep>
     ): Sequence<Pair<HeroUnit, MoveStep>> {
-        if (assist == null) return emptySequence()
+        if (assist == null || withIsolation) return emptySequence()
         val teammates = teammates(this).toList()
         return moves.values.asSequence().flatMap { moveStep ->
-            teammates.asSequence().filterValidAssistTarget(this, moveStep.position).map {
+            teammates.asSequence().filterNot { it.withIsolation }.filterValidAssistTarget(this, moveStep.position).map {
                 it to moveStep
             }
         }
@@ -1424,33 +1424,42 @@ class BattleState private constructor(
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
             val teammates = teammates(heroUnit).toList()
             moveTargets(heroUnit).map { it.position }.flatMap { move ->
-                attackTargetPositions(heroUnit, move, maxPosition).mapNotNull { attackTargetPosition ->
-                    when (val chessPiece = locationMap[attackTargetPosition]) {
-                        null -> null
-                        is HeroUnit -> if (chessPiece.team == Team.ENEMY) {
-                            MoveAndAttack(
-                                heroUnitId = heroUnit.id,
-                                moveTarget = move,
-                                attackTargetId = chessPiece.id
-                            )
-                        } else {
-                            null
-                        }
-                        is Obstacle -> MoveAndBreak(
-                            heroUnitId = heroUnit.id,
-                            moveTarget = move,
-                            obstacle = attackTargetPosition
-                        )
-                    }
-                } + teammates.asSequence().filterValidAssistTarget(heroUnit, move).map { assistTarget ->
-                    MoveAndAssist(
-                        heroUnitId = heroUnit.id,
-                        moveTarget = move,
-                        assistTargetId = assistTarget.id
-                    )
-                } + MoveOnly(
+                attackMoves(heroUnit, move) + assistMoves(teammates, heroUnit, move) + MoveOnly(
                     heroUnitId = heroUnit.id,
                     moveTarget = move
+                )
+            }
+        }
+    }
+
+    private fun assistMoves(teammates: List<HeroUnit>, heroUnit: HeroUnit, move: Position): Sequence<MoveAndAssist> {
+        if (heroUnit.assist == null || heroUnit.withIsolation) return emptySequence()
+        return teammates.asSequence().filterValidAssistTarget(heroUnit, move).map { assistTarget ->
+            MoveAndAssist(
+                heroUnitId = heroUnit.id,
+                moveTarget = move,
+                assistTargetId = assistTarget.id
+            )
+        }
+    }
+
+    private fun attackMoves(heroUnit: HeroUnit, move: Position): Sequence<UnitAction> {
+        return attackTargetPositions(heroUnit, move, maxPosition).mapNotNull { attackTargetPosition ->
+            when (val chessPiece = locationMap[attackTargetPosition]) {
+                null -> null
+                is HeroUnit -> if (chessPiece.team == Team.ENEMY) {
+                    MoveAndAttack(
+                        heroUnitId = heroUnit.id,
+                        moveTarget = move,
+                        attackTargetId = chessPiece.id
+                    )
+                } else {
+                    null
+                }
+                is Obstacle -> MoveAndBreak(
+                    heroUnitId = heroUnit.id,
+                    moveTarget = move,
+                    obstacle = attackTargetPosition
                 )
             }
         }

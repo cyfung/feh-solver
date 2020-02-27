@@ -3,10 +3,11 @@ package me.kumatheta.feh.skill.assist
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.NormalAssist
 import me.kumatheta.feh.Position
 import kotlin.math.min
 
-object Sacrifice : me.kumatheta.feh.NormalAssist() {
+object Sacrifice : NormalAssist() {
     override fun apply(
         self: HeroUnit,
         target: HeroUnit,
