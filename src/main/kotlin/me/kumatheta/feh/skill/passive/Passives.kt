@@ -13,6 +13,7 @@ import me.kumatheta.feh.skill.airOrder3
 import me.kumatheta.feh.skill.belowThreshold
 import me.kumatheta.feh.skill.blow
 import me.kumatheta.feh.skill.bond
+import me.kumatheta.feh.skill.boost
 import me.kumatheta.feh.skill.breaker
 import me.kumatheta.feh.skill.hone
 import me.kumatheta.feh.skill.opening
@@ -62,6 +63,7 @@ val ALL_PASSIVES = sequenceOf(
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
     "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
     "Fortify Res 4" to hone(Stat(res = 7)).toStartOfTurnPassive(),
+    "Wrathful Staff 3" to WrathfulStaff3,
 
 
     "Res 3" to Stat(res = 3).toExtraStatPassive(),
@@ -70,6 +72,7 @@ val ALL_PASSIVES = sequenceOf(
     "Spur Atk/Spd 2" to Spur(Stat(atk = 2, spd = 2)).toSupportInCombatBuffPassive(),
     "Spur Def/Res 2" to Spur(Stat(def = 3, res = 3)).toSupportInCombatBuffPassive(),
     "Spur Spd 1" to Spur(Stat(spd = 2)).toSupportInCombatBuffPassive(),
+    "Earth Boost 3" to boost(Stat(def=6)).toInCombatStatPassive(),
 
     "Guard 3" to Guard3,
     "Triangle Adept 3" to TriangleAdept3,

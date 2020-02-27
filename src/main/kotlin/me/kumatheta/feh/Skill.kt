@@ -23,6 +23,10 @@ interface Skill {
         get() = null
     val pass: MapSkillMethod<Boolean>?
         get() = null
+    val adaptiveDamage: MapSkillMethod<Boolean>?
+        get() = null
+    val denyAdaptiveDamage: MapSkillMethod<Boolean>?
+        get() = null
     val teleport: MapSkillMethod<Sequence<Position>>?
         get() = null
     val supportInCombatBuff: MapSkillWithTarget<Skill?>?
@@ -68,10 +72,6 @@ interface Skill {
     val cancelAffinity: InCombatSkill<Int>?
         get() = null
     val raven: InCombatSkill<Boolean>?
-        get() = null
-    val adaptiveDamage: InCombatSkill<Boolean>?
-        get() = null
-    val denyAdaptiveDamage: InCombatSkill<Boolean>?
         get() = null
     val staffAsNormal: InCombatSkill<Boolean>?
         get() = null
@@ -144,6 +144,12 @@ class InCombatSkillSet(
         return map { it.invoke(combatStatus) }
     }
 
+    val adaptiveDamage: Sequence<MapSkillMethod<Boolean>>
+        get() = methodSeq(Skill::adaptiveDamage)
+    val denyAdaptiveDamage: Sequence<MapSkillMethod<Boolean>>
+        get() = methodSeq(Skill::denyAdaptiveDamage)
+
+
     val neutralizeBonus: Sequence<Stat?>
         get() = methodSeq(Skill::neutralizeBonus).applyAll()
     val neutralizePenalty: Sequence<Stat?>
@@ -153,10 +159,6 @@ class InCombatSkillSet(
 
     val additionalInCombatStat: Sequence<InCombatSkill<Stat>>
         get() = methodSeq(Skill::additionalInCombatStat)
-    val adaptiveDamage: Sequence<InCombatSkill<Boolean>>
-        get() = methodSeq(Skill::adaptiveDamage)
-    val denyAdaptiveDamage: Sequence<InCombatSkill<Boolean>>
-        get() = methodSeq(Skill::denyAdaptiveDamage)
     val staffAsNormal: Sequence<InCombatSkill<Boolean>>
         get() = methodSeq(Skill::staffAsNormal)
     val denyStaffAsNormal: Sequence<InCombatSkill<Boolean>>
@@ -219,6 +221,10 @@ class InCombatSkillWrapper(
     val inCombatStat: InCombatStat
         get() = self
 
+    private fun <T> Sequence<MapSkillMethod<T>>.mapSkillApplyAll(): Sequence<T> {
+        return map { it(combatStatus.battleState, combatStatus.self.heroUnit) }
+    }
+
     private fun <T> Sequence<InCombatSkill<T>>.applyAll(): Sequence<T> {
         return map { it(combatStatus) }
     }
@@ -234,9 +240,9 @@ class InCombatSkillWrapper(
     val additionalInCombatStat: Sequence<Stat>
         get() = baseSkillSet.additionalInCombatStat.applyAll()
     val adaptiveDamage: Sequence<Boolean>
-        get() = baseSkillSet.adaptiveDamage.applyAll()
+        get() = baseSkillSet.adaptiveDamage.mapSkillApplyAll()
     val denyAdaptiveDamage: Sequence<Boolean>
-        get() = baseSkillSet.denyAdaptiveDamage.applyAll()
+        get() = baseSkillSet.denyAdaptiveDamage.mapSkillApplyAll()
     val staffAsNormal: Sequence<Boolean>
         get() = baseSkillSet.staffAsNormal.applyAll()
     val denyStaffAsNormal: Sequence<Boolean>
@@ -290,8 +296,9 @@ open class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) 
 abstract class Special(val coolDownCount: Int) : Skill
 
 abstract class AoeSpecial(coolDownCount: Int) : Special(coolDownCount) {
-    abstract fun getTargets(battleState: BattleState, self: InCombatStat, mainTarget: InCombatStat)
-    abstract fun getDamage(battleState: BattleState, self: InCombatStat, foe: InCombatStat, defenderDefRes: Int): Int
+    abstract val damageFactor: Int
+
+    abstract fun getTargets(battleState: BattleState, self: HeroUnit, mainTarget: HeroUnit): Sequence<HeroUnit>
 }
 
 abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {

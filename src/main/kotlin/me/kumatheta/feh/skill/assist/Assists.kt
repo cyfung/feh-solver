@@ -13,11 +13,14 @@ val BASE_ASSIST_COMPARATOR = me.kumatheta.feh.util.compareByDescending<HeroUnit>
 
 val ALL_ASSISTS = sequenceOf(
     "Reciprocal Aid" to ReciprocalAid,
-    "Physics+" to HealingPlus(8, true, 0, 8),
+    "Physic+" to HealingPlus(8, true, 0, 8),
     "Dance" to Refresh(),
     "Sing" to Refresh(),
     "Play" to Refresh(),
 
     "Gentle Dream" to GentleDream,
-    "Rally Atk/Spd" to Rally(Stat(atk = 3, spd = 3))
+    "Rally Atk/Spd" to Rally(Stat(atk = 3, spd = 3)),
+    "Reposition" to Reposition,
+    "Draw Back" to DrawBack,
+    "To Change Fate!" to ToChangeFate
 ).toSkillMap()

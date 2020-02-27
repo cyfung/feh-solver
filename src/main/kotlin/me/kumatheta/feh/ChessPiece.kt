@@ -77,11 +77,28 @@ class HeroUnit(
     val startOfTurnStat: Stat
         get() = baseStat + debuff
 
-    val bonusAndPenalty: Pair<Stat, Stat>
+    val bonus: Stat
         get() = if (withPanic) {
-            Pair(Stat.ZERO, -buff + debuff)
+            Stat.ZERO
         } else {
-            Pair(buff, debuff)
+            buff
+        }
+    val penalty: Stat
+        get() = if (withPanic) {
+            -buff + debuff
+        } else {
+            debuff
+        }
+
+    val aoeInCombatStat: InCombatStat
+        get() {
+            return object: InCombatStat {
+                override val heroUnit: HeroUnit
+                    get() = this@HeroUnit
+                override val bonus: Stat = this@HeroUnit.bonus
+                override val penalty: Stat = this@HeroUnit.penalty
+                override val inCombatStat: Stat = this@HeroUnit.visibleStat
+            }
         }
 
     var currentHp = baseStat.hp
@@ -265,6 +282,7 @@ class HeroUnit(
 }
 
 enum class NegativeStatus {
+    GRAVITY,
     PANIC,
     ISOLATION
 }

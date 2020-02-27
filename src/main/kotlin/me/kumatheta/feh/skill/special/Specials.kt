@@ -17,6 +17,12 @@ val ALL_SPECIALS = sequenceOf(
     "Iceberg" to SelfStatBased(3) {
         it.res / 2
     },
+    "Ignis" to SelfStatBased(4) {
+        it.def * 4 / 5
+    },
+    "Glacies" to SelfStatBased(4) {
+        it.def * 4 / 5
+    },
     "Draconic Aura" to SelfStatBased(3) {
         it.atk * 3 / 10
     },

@@ -1,0 +1,5 @@
+id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,
+1,,Boey,,,,,INFANTRY,Gronnowl+,,Ignis,43,39,27,32,18,Earth Boost 3,
+2,,Genny,,,,,INFANTRY,Gravity+,Physic+,,32,45,25,21,34,Wrathful Staff 3,
+3,,Mae,,,,,INFANTRY,Blarowl+,Draw Back,,35,46,31,16,30,Desperation3,
+4,,Celica,,,,,INFANTRY,Ragnarok,,Blazing Light,39,46,33,22,22,Distant Def 3,Spur Def 3

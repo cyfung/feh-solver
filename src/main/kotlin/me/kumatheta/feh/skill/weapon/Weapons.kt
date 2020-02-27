@@ -34,8 +34,11 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Slaying Bow+ B" to BowB.slaying(12),
     "Thoron+" to MagicB.basic(13),
     "Raudrblade+" to MagicR.bladeTome(13),
+    "Gronnowl+" to MagicG.owl(10),
+    "Blarowl+" to MagicB.owl(10),
 
     "Slow+" to SlowPlus,
+    "Gravity+" to GravityPlus,
 
     "Draconic Poleax Eff" to DraconicPoleaxEff,
     "Lyfjaberg" to Lyfjaberg,
@@ -44,6 +47,8 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Grima's Truth" to GrimaTruth,
     "Flower of Joy" to FlowerOfJoy,
     "Gleipnir" to Gleipnir,
+    "Randgridr" to Randgridr,
+    "Ragnarok" to Ragnarok,
 
     "Brave Sword+" to Sword.brave(8),
     "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp = 2, atk = 1)),

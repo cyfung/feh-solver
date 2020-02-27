@@ -307,7 +307,6 @@ class BattleState private constructor(
     private fun HeroUnit.basicStat(
         skills: InCombatSkillSet
     ): BasicInCombatStat {
-        val (bonus, penalty) = bonusAndPenalty
         val modifiedBonus = skills.neutralizeBonus.filterNotNull().fold(bonus) { acc, stat ->
             acc * stat
         }
@@ -329,22 +328,7 @@ class BattleState private constructor(
         attacker: HeroUnit,
         defender: HeroUnit
     ): AttackerDefenderPair<InCombatSkillWrapper> {
-        val attackerTeam = unitsSeq(attacker.team).toList()
-        val defenderTeam = unitsSeq(defender.team).toList()
-        val attackerSkills = InCombatSkillSet(
-            battleState = this,
-            self = attacker,
-            foe = defender,
-            initAttack = true,
-            skills = getAttackerSkillSeq(attacker, defender, attackerTeam, defenderTeam)
-        )
-        val defenderSkills = InCombatSkillSet(
-            battleState = this,
-            self = defender,
-            foe = attacker,
-            initAttack = false,
-            skills = getDefenderSkillSeq(attacker, defender, attackerTeam, defenderTeam)
-        )
+        val (attackerSkills, defenderSkills) = getInCombatSkills(attacker, defender)
         val attackerInCombatStat = attacker.basicStat(attackerSkills)
         val defenderInCombatStat = defender.basicStat(defenderSkills)
         val attackerSkillWrapper = InCombatSkillWrapper(attackerInCombatStat, defenderInCombatStat, attackerSkills)
@@ -374,6 +358,26 @@ class BattleState private constructor(
             attackerSkillWrapper,
             defenderSkillWrapper
         )
+    }
+
+    private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): Pair<InCombatSkillSet, InCombatSkillSet> {
+        val attackerTeam = unitsSeq(attacker.team).toList()
+        val defenderTeam = unitsSeq(defender.team).toList()
+        val attackerSkills = InCombatSkillSet(
+            battleState = this,
+            self = attacker,
+            foe = defender,
+            initAttack = true,
+            skills = getAttackerSkillSeq(attacker, defender, attackerTeam, defenderTeam)
+        )
+        val defenderSkills = InCombatSkillSet(
+            battleState = this,
+            self = defender,
+            foe = attacker,
+            initAttack = false,
+            skills = getDefenderSkillSeq(attacker, defender, attackerTeam, defenderTeam)
+        )
+        return Pair(attackerSkills, defenderSkills)
     }
 
     private fun getColorAdvantage(
@@ -477,6 +481,26 @@ class BattleState private constructor(
 
     private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
         check(attacker.team.foe == defender.team)
+        if (attacker.cooldown == 0 && attacker.special is AoeSpecial) {
+            val attackerStat = attacker.aoeInCombatStat
+            attacker.special.getTargets(this, attacker, defender).forEach { target ->
+                val (attackerSkills, defenderSkills) = getInCombatSkills(attacker, target)
+                val attackerAdaptive = attackerSkills.adaptiveDamage.asSequence().map {
+                    it(this, attacker)
+                }.any() && defenderSkills.denyAdaptiveDamage.asSequence().map {
+                    it(this, attacker)
+                }.none()
+                val targetStat = target.aoeInCombatStat
+                val defRes = getDefRes(attacker, attackerAdaptive, targetStat.inCombatStat)
+                val atk = attacker.visibleStat.atk
+                val baseDamage = min((atk - defRes) * attacker.special.damageFactor / 100, 0)
+                val finalDamage = baseDamage + attackerSkills.damageIncrease.asSequence().map {
+                    it(CombatStatus(this, attackerStat, targetStat, true), true)
+                }.sum()
+                target.takeNonLethalDamage(finalDamage)
+            }
+        }
+
         val potentialDamage = preCalculateDamage(attacker, defender)
 
         val cooldownAmount = potentialDamage.cooldownAmount
@@ -724,16 +748,7 @@ class BattleState private constructor(
         colorAdvantage: Int,
         damagingSpecial: DamagingSpecial?
     ): Int {
-        val defenderDefRes = if (damageDealer.adaptiveDamage) {
-            min(damageReceiver.inCombatStat.res, damageReceiver.inCombatStat.def)
-        } else {
-            val targetRes = damageDealer.heroUnit.weaponType.targetRes
-            if (targetRes) {
-                damageReceiver.inCombatStat.res
-            } else {
-                damageReceiver.inCombatStat.def
-            }
-        }
+        val defenderDefRes = getDefRes(damageDealer.heroUnit, damageDealer.adaptiveDamage, damageReceiver.inCombatStat)
         val effAtk = if (isEffective(damageDealer.heroUnit, damageReceiver.heroUnit)) {
             damageDealer.inCombatStat.atk * 3 / 2
         } else {
@@ -754,6 +769,19 @@ class BattleState private constructor(
 
         damage += damageDealer.skills.getDamageIncrease(damagingSpecial != null).sum()
         return damage
+    }
+
+    private fun getDefRes(damageDealer: HeroUnit, damageDealerAdaptiveDamage: Boolean, damageReceiverStat: Stat): Int {
+        return if (damageDealerAdaptiveDamage) {
+            min(damageReceiverStat.res, damageReceiverStat.def)
+        } else {
+            val targetRes = damageDealer.weaponType.targetRes
+            if (targetRes) {
+                damageReceiverStat.res
+            } else {
+                damageReceiverStat.def
+            }
+        }
     }
 
     private fun isEffective(attacker: HeroUnit, defender: HeroUnit): Boolean {

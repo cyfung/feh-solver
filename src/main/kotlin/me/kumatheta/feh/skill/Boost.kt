@@ -1,0 +1,14 @@
+package me.kumatheta.feh.skill
+
+import me.kumatheta.feh.CombatStartSkill
+import me.kumatheta.feh.Stat
+
+fun boost(stat: Stat): CombatStartSkill<Stat> {
+    return { combatStatus ->
+        if (combatStatus.self.currentHp >= combatStatus.foe.currentHp + 3) {
+            stat
+        } else {
+            Stat.ZERO
+        }
+    }
+}
