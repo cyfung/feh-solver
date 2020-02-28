@@ -7,7 +7,7 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.combatStartSkill
-import me.kumatheta.feh.skill.passive.toInCombatStatPassive
+import me.kumatheta.feh.skill.toInCombatStatPassive
 
 private val FOE_EFFECT = combatStartSkill(Stat(atk = -6, def = -6)).toInCombatStatPassive()
 

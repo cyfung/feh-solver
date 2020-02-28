@@ -1,9 +1,15 @@
-package me.kumatheta.feh.skill.assist
+package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.assist.DrawBack
+import me.kumatheta.feh.skill.assist.HealingPlus
+import me.kumatheta.feh.skill.assist.Rally
+import me.kumatheta.feh.skill.assist.ReciprocalAid
+import me.kumatheta.feh.skill.assist.Refresh
+import me.kumatheta.feh.skill.assist.Reposition
+import me.kumatheta.feh.skill.assist.ToChangeFate
 import me.kumatheta.feh.skill.passive.GentleDream
-import me.kumatheta.feh.skill.toSkillMap
 
 val BASE_ASSIST_COMPARATOR = me.kumatheta.feh.util.compareByDescending<HeroUnit>({
     it.currentStatTotal

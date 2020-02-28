@@ -1,7 +1,8 @@
-package me.kumatheta.feh.skill
+package me.kumatheta.feh.skill.effect
 
 import me.kumatheta.feh.CombatEndSkill
 import me.kumatheta.feh.NegativeStatus
+import me.kumatheta.feh.skill.nearbyAllies
 
 fun negativeStatus(negativeStatus: NegativeStatus, range: Int, applyToTarget: Boolean): CombatEndSkill? {
     return { combatStatus, _ ->

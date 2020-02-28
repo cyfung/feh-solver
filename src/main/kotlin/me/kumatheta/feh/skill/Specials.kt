@@ -1,9 +1,17 @@
-package me.kumatheta.feh.skill.special
+package me.kumatheta.feh.skill
 
-import me.kumatheta.feh.skill.toSkillMap
+import me.kumatheta.feh.skill.special.BlazingLight
+import me.kumatheta.feh.skill.special.DamageAmplify
+import me.kumatheta.feh.skill.special.FoeDefResBased
+import me.kumatheta.feh.skill.special.IceMirror
+import me.kumatheta.feh.skill.special.Imbue
+import me.kumatheta.feh.skill.special.Miracle
+import me.kumatheta.feh.skill.special.SelfStatBased
 
 val ALL_SPECIALS = sequenceOf(
     "Ice Mirror" to IceMirror,
+
+    "Blazing Light" to BlazingLight,
 
     "Luna" to FoeDefResBased(3, 1, 2),
     "Moonbow" to FoeDefResBased(2, 3, 10),

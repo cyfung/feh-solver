@@ -61,6 +61,9 @@ class HeroUnit(
     val maxHp
         get() = baseStat.hp
 
+    fun withNegativeStatus(ns: NegativeStatus): Boolean {
+        return negativeStatus.contains(ns)
+    }
     val withPanic: Boolean
         get() = negativeStatus.contains(NegativeStatus.PANIC)
     val withIsolation: Boolean

@@ -63,7 +63,7 @@ fun readMap(file: Path): PositionMap {
             val terrainType = when {
                 terrainCode.isLetter() -> {
                     val terrain = terrainCodes[terrainCode] ?: throw IOException("unknown terrain")
-                    if (value.length > 1) {
+                    if (value.length > idStart) {
                         value.substring(idStart).split('.').associateTo(idMap) {
                             it.toInt() to position
                         }

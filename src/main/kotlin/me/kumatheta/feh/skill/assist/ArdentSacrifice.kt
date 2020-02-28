@@ -5,6 +5,7 @@ import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.NormalAssist
 import me.kumatheta.feh.Position
+import me.kumatheta.feh.skill.BASE_ASSIST_COMPARATOR
 
 private const val HEAL_AMOUNT = 10
 

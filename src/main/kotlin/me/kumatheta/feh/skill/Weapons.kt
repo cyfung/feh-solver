@@ -1,9 +1,10 @@
-package me.kumatheta.feh.skill.weapon
+package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.Axe
 import me.kumatheta.feh.BasicWeapon
 import me.kumatheta.feh.BowB
 import me.kumatheta.feh.BowC
+import me.kumatheta.feh.DragonG
 import me.kumatheta.feh.Lance
 import me.kumatheta.feh.MagicB
 import me.kumatheta.feh.MagicG
@@ -13,8 +14,22 @@ import me.kumatheta.feh.Staff
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.Sword
 import me.kumatheta.feh.WeaponType
-import me.kumatheta.feh.skill.SkillMap
-import me.kumatheta.feh.skill.toSkillMap
+import me.kumatheta.feh.skill.weapon.DraconicPoleaxEff
+import me.kumatheta.feh.skill.weapon.FlowerOfJoy
+import me.kumatheta.feh.skill.weapon.Gleipnir
+import me.kumatheta.feh.skill.weapon.GravityPlus
+import me.kumatheta.feh.skill.weapon.GrimaTruth
+import me.kumatheta.feh.skill.weapon.Leiptr
+import me.kumatheta.feh.skill.weapon.Lyfjaberg
+import me.kumatheta.feh.skill.weapon.Ragnarok
+import me.kumatheta.feh.skill.weapon.Randgridr
+import me.kumatheta.feh.skill.weapon.SlowPlus
+import me.kumatheta.feh.skill.weapon.bladeTome
+import me.kumatheta.feh.skill.weapon.brave
+import me.kumatheta.feh.skill.weapon.owl
+import me.kumatheta.feh.skill.weapon.raven
+import me.kumatheta.feh.skill.weapon.serpent
+import me.kumatheta.feh.skill.weapon.slaying
 
 val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Iron Lance" to Lance.basic(6),
@@ -23,6 +38,7 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Iron Sword" to Sword.basic(6),
     "Steel Sword" to Sword.basic(8),
     "Silver Sword" to Sword.basic(11),
+    "Flametongue+G" to DragonG.basic(15),
     "Armorsmasher+" to Sword.effective(14, MoveType.ARMORED),
     "Iron Axe" to Axe.basic(6),
     "Steel Axe" to Axe.basic(8),
@@ -50,7 +66,9 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Randgridr" to Randgridr,
     "Ragnarok" to Ragnarok,
 
+    "Brave Bow+" to BowC.brave(7),
     "Brave Sword+" to Sword.brave(8),
+    "Brave Lance+" to Lance.brave(8),
     "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp = 2, atk = 1)),
     "Guard Bow+" to BowC.serpent(12),
     "Gronnraven+" to MagicG.raven(11)

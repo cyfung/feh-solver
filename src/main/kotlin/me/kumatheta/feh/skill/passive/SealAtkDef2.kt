@@ -2,7 +2,7 @@ package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.seal
+import me.kumatheta.feh.skill.effect.seal
 
 object SealAtkDef2 : Passive {
     override val combatEnd

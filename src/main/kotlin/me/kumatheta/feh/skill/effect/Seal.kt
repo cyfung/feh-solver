@@ -1,4 +1,4 @@
-package me.kumatheta.feh.skill
+package me.kumatheta.feh.skill.effect
 
 import me.kumatheta.feh.CombatEndSkill
 import me.kumatheta.feh.Stat

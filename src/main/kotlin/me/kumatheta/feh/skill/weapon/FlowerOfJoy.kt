@@ -9,7 +9,7 @@ import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.combatStartSkill
 import me.kumatheta.feh.skill.inCardinalDirection
-import me.kumatheta.feh.skill.passive.toInCombatStatPassive
+import me.kumatheta.feh.skill.toInCombatStatPassive
 
 private val IN_COMBAT_BUFF = Stat(atk = 3, spd = 3)
 

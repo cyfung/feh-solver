@@ -1,7 +1,7 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.assist.Pivot
+import me.kumatheta.feh.skill.effect.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.util.DistanceIndex
 import me.kumatheta.feh.util.DistanceReceiver
@@ -328,11 +328,11 @@ class BattleState private constructor(
         attacker: HeroUnit,
         defender: HeroUnit
     ): AttackerDefenderPair<InCombatSkillWrapper> {
-        val (attackerSkills, defenderSkills) = getInCombatSkills(attacker, defender)
-        val attackerInCombatStat = attacker.basicStat(attackerSkills)
-        val defenderInCombatStat = defender.basicStat(defenderSkills)
-        val attackerSkillWrapper = InCombatSkillWrapper(attackerInCombatStat, defenderInCombatStat, attackerSkills)
-        val defenderSkillWrapper = InCombatSkillWrapper(defenderInCombatStat, attackerInCombatStat, defenderSkills)
+        val skillsPair = getInCombatSkills(attacker, defender)
+        val attackerInCombatStat = attacker.basicStat(skillsPair.attacker)
+        val defenderInCombatStat = defender.basicStat(skillsPair.defender)
+        val attackerSkillWrapper = InCombatSkillWrapper(attackerInCombatStat, defenderInCombatStat, skillsPair.attacker)
+        val defenderSkillWrapper = InCombatSkillWrapper(defenderInCombatStat, attackerInCombatStat, skillsPair.defender)
         attackerInCombatStat.inCombatStat += attackerSkillWrapper.additionalInCombatStat.fold(Stat.ZERO) { acc, stat ->
             acc + stat
         }
@@ -360,7 +360,7 @@ class BattleState private constructor(
         )
     }
 
-    private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): Pair<InCombatSkillSet, InCombatSkillSet> {
+    private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): AttackerDefenderPair<InCombatSkillSet> {
         val attackerTeam = unitsSeq(attacker.team).toList()
         val defenderTeam = unitsSeq(defender.team).toList()
         val attackerSkills = InCombatSkillSet(
@@ -377,7 +377,7 @@ class BattleState private constructor(
             initAttack = false,
             skills = getDefenderSkillSeq(attacker, defender, attackerTeam, defenderTeam)
         )
-        return Pair(attackerSkills, defenderSkills)
+        return AttackerDefenderPair(attackerSkills, defenderSkills)
     }
 
     private fun getColorAdvantage(
@@ -484,17 +484,17 @@ class BattleState private constructor(
         if (attacker.cooldown == 0 && attacker.special is AoeSpecial) {
             val attackerStat = attacker.aoeInCombatStat
             attacker.special.getTargets(this, attacker, defender).forEach { target ->
-                val (attackerSkills, defenderSkills) = getInCombatSkills(attacker, target)
-                val attackerAdaptive = attackerSkills.adaptiveDamage.asSequence().map {
+                val skillsPair = getInCombatSkills(attacker, target)
+                val attackerAdaptive = skillsPair.attacker.adaptiveDamage.asSequence().map {
                     it(this, attacker)
-                }.any() && defenderSkills.denyAdaptiveDamage.asSequence().map {
+                }.any() && skillsPair.defender.denyAdaptiveDamage.asSequence().map {
                     it(this, attacker)
                 }.none()
                 val targetStat = target.aoeInCombatStat
                 val defRes = getDefRes(attacker, attackerAdaptive, targetStat.inCombatStat)
                 val atk = attacker.visibleStat.atk
                 val baseDamage = min((atk - defRes) * attacker.special.damageFactor / 100, 0)
-                val finalDamage = baseDamage + attackerSkills.damageIncrease.asSequence().map {
+                val finalDamage = baseDamage + skillsPair.attacker.damageIncrease.asSequence().map {
                     it(CombatStatus(this, attackerStat, targetStat, true), true)
                 }.sum()
                 target.takeNonLethalDamage(finalDamage)
@@ -1550,9 +1550,14 @@ class DistanceReceiverRealMovement(
             it.distanceTravel >= 0
         }
 
+    private val withGravity = self.withNegativeStatus(NegativeStatus.GRAVITY)
+
     override fun receive(moveStep: MoveStep): Boolean {
         val position = moveStep.position
         if (resultMap[position] != null) {
+            return false
+        }
+        if (withGravity && !moveStep.teleportRequired && position.distanceTo(self.position) > 2) {
             return false
         }
         return when (val obstacle = obstacles[position]) {

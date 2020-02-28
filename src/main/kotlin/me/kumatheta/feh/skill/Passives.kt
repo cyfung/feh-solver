@@ -1,4 +1,4 @@
-package me.kumatheta.feh.skill.passive
+package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.BowC
 import me.kumatheta.feh.CombatStartSkill
@@ -9,19 +9,41 @@ import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.airOrder3
-import me.kumatheta.feh.skill.belowThreshold
-import me.kumatheta.feh.skill.blow
-import me.kumatheta.feh.skill.bond
-import me.kumatheta.feh.skill.boost
-import me.kumatheta.feh.skill.breaker
-import me.kumatheta.feh.skill.hone
-import me.kumatheta.feh.skill.opening
-import me.kumatheta.feh.skill.ploy
-import me.kumatheta.feh.skill.resBasedPloy3
-import me.kumatheta.feh.skill.stance
-import me.kumatheta.feh.skill.tactics
-import me.kumatheta.feh.skill.toSkillMap
+import me.kumatheta.feh.skill.effect.airOrder3
+import me.kumatheta.feh.skill.effect.belowThreshold
+import me.kumatheta.feh.skill.effect.blow
+import me.kumatheta.feh.skill.effect.bond
+import me.kumatheta.feh.skill.effect.boost
+import me.kumatheta.feh.skill.effect.breaker
+import me.kumatheta.feh.skill.effect.chill
+import me.kumatheta.feh.skill.effect.hone
+import me.kumatheta.feh.skill.effect.opening
+import me.kumatheta.feh.skill.effect.ploy
+import me.kumatheta.feh.skill.effect.rangeDefStat
+import me.kumatheta.feh.skill.effect.resBasedPloy3
+import me.kumatheta.feh.skill.effect.stance
+import me.kumatheta.feh.skill.effect.tactics
+import me.kumatheta.feh.skill.effect.wave
+import me.kumatheta.feh.skill.passive.Aerobatics3
+import me.kumatheta.feh.skill.passive.CounterIgnoreRange
+import me.kumatheta.feh.skill.passive.DefFeint3
+import me.kumatheta.feh.skill.passive.DriveAtk2
+import me.kumatheta.feh.skill.passive.DullClose3
+import me.kumatheta.feh.skill.passive.DullRange3
+import me.kumatheta.feh.skill.passive.FlierFormation3
+import me.kumatheta.feh.skill.passive.Fury3
+import me.kumatheta.feh.skill.passive.GoadCavalry
+import me.kumatheta.feh.skill.passive.Guard3
+import me.kumatheta.feh.skill.passive.IoteShield
+import me.kumatheta.feh.skill.passive.MysticBoost3
+import me.kumatheta.feh.skill.passive.PoisonStrike3
+import me.kumatheta.feh.skill.passive.ShieldPulse3
+import me.kumatheta.feh.skill.passive.SparklingBoost
+import me.kumatheta.feh.skill.passive.Spur
+import me.kumatheta.feh.skill.passive.TriangleAdept3
+import me.kumatheta.feh.skill.passive.WrathfulStaff3
+import me.kumatheta.feh.skill.passive.quickRiposte
+import me.kumatheta.feh.skill.passive.sabotage
 
 val ALL_PASSIVES = sequenceOf(
     "Close Counter" to CounterIgnoreRange,
@@ -39,6 +61,7 @@ val ALL_PASSIVES = sequenceOf(
     "Sturdy Blow 2" to blow(Stat(atk = 4, def = 4)).toInCombatStatPassive(),
     "Mirror Strike 2" to blow(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
 
+    "Fierce Stance 3" to stance(Stat(atk=6)).toInCombatStatPassive(),
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)).toInCombatStatPassive(),
 
@@ -61,18 +84,31 @@ val ALL_PASSIVES = sequenceOf(
     "Desperation 3" to belowThreshold(75).toDesperationPassive(),
 
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
+    "Distant Def 3" to rangeDefStat(Stat(atk = 6)).toInCombatStatPassive(),
     "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
     "Fortify Res 4" to hone(Stat(res = 7)).toStartOfTurnPassive(),
     "Wrathful Staff 3" to WrathfulStaff3,
 
+    "Chill Def 3" to chill(Stat(def = -7)) {
+        it.visibleStat.def
+    }.toStartOfTurnPassive(),
+    "Odd Atk Wave 3" to wave(Stat(atk = 6), oddTurn = true).toStartOfTurnPassive(),
+    "Odd Res Wave 3" to wave(Stat(res = 6), oddTurn = true).toStartOfTurnPassive(),
+    "Even Res Wave 3" to wave(Stat(res = 6), oddTurn = false).toStartOfTurnPassive(),
 
+    "HP+5" to Stat(hp=5).toExtraStatPassive(),
     "Res 3" to Stat(res = 3).toExtraStatPassive(),
+    "Atk/Res 2" to Stat(atk = 2, res = 2).toExtraStatPassive(),
+    "Fortress Res 3" to Stat(atk = -3, res = 5).toExtraStatPassive(),
+    "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStatPassive(),
     "B Duel Flying 3" to Stat(hp = 5).toExtraStatPassive(),
     "Atk/Spd 2" to Stat(atk = 2, spd = 2).toExtraStatPassive(),
     "Spur Atk/Spd 2" to Spur(Stat(atk = 2, spd = 2)).toSupportInCombatBuffPassive(),
     "Spur Def/Res 2" to Spur(Stat(def = 3, res = 3)).toSupportInCombatBuffPassive(),
+    "Spur Def 3" to Spur(Stat(def = 4)).toSupportInCombatBuffPassive(),
+    "Spur Res 3" to Spur(Stat(res = 4)).toSupportInCombatBuffPassive(),
     "Spur Spd 1" to Spur(Stat(spd = 2)).toSupportInCombatBuffPassive(),
-    "Earth Boost 3" to boost(Stat(def=6)).toInCombatStatPassive(),
+    "Earth Boost 3" to boost(Stat(def = 6)).toInCombatStatPassive(),
 
     "Guard 3" to Guard3,
     "Triangle Adept 3" to TriangleAdept3,

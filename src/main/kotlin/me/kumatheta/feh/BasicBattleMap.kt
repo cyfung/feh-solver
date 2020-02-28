@@ -1,9 +1,9 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.assist.ALL_ASSISTS
-import me.kumatheta.feh.skill.passive.ALL_PASSIVES
-import me.kumatheta.feh.skill.special.ALL_SPECIALS
-import me.kumatheta.feh.skill.weapon.ALL_WEAPONS
+import me.kumatheta.feh.skill.ALL_ASSISTS
+import me.kumatheta.feh.skill.ALL_PASSIVES
+import me.kumatheta.feh.skill.ALL_SPECIALS
+import me.kumatheta.feh.skill.ALL_WEAPONS
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 import java.nio.file.Files
 import java.nio.file.Path

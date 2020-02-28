@@ -6,6 +6,7 @@ import me.kumatheta.feh.HealingSpecial
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.NormalAssist
 import me.kumatheta.feh.Position
+import me.kumatheta.feh.skill.BASE_ASSIST_COMPARATOR
 import me.kumatheta.feh.skill.special.Imbue
 
 val HEAL_COMPARATOR = compareByDescending<Pair<HeroUnit, Int>> {
