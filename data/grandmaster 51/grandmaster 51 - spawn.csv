@@ -1,8 +1,15 @@
 id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,,
-5,START,Bow Cavalier,Knight - Bow,,,,CAVALRY,Brave Bow+,,,40,49,22,19,20,Life and Death 3,Atk/Res 2,,
-6,START,Lance Cavalier,Knight - Lance,,,,CAVALRY,Brave Lance+,,,41,47,24,20,25,Life and Death 3,Chill Def 3,Odd Atk Wave 3,
-7,START,Lance Fighter,Fighter - Lance,,,,INFANTRY,Brave Lance+,,,44,43,29,27,22,Distant Counter,Atk/Spd 2,,
-8,START,Lance Cavalier2,Knight - Lance,,,,CAVALRY,Brave Lance+,,,46,44,19,22,31,Triangle Adept 3,Odd Res Wave 3,HP+5,
-9,START,Bow Fighter,Fighter - Bow,,,3,INFANTRY,Guard Bow+,,Draconic Aura,43,38,29,29,24,Fortress Res 3,Guard 3,Spur Res 3,
-10,START,Green Fafnir,Manakete Winged - Green,,,3,FLYING,Flametongue+G,,Draconic Aura,39,44,36,32,27,Triangle Adept 3,,,
-11,START,Lance Fighter2,Fighter - Lance,,,,INFANTRY,Brave Lance+,,,44,39,26,27,25,Distant Counter,Guard 3,Even Res Wave 3,Fierce Stance 3
+5,1,Bow Cavalier,Knight - Bow,,,,CAVALRY,Brave Bow+C,,,40,49,22,19,20,Life and Death 3,Atk/Res 2,,
+6,1,Lance Cavalier,Knight - Lance,,,,CAVALRY,Brave Lance+,,,41,47,24,20,25,Life and Death 3,Chill Def 3,Odd Atk Wave 3,
+7,1,Lance Fighter,Fighter - Lance,,,,INFANTRY,Brave Lance+,,,44,43,29,27,22,Distant Counter,Atk/Spd 2,,
+8,1,Lance Cavalier2,Knight - Lance,,,,CAVALRY,Brave Lance+,,,46,44,19,22,31,Triangle Adept 3,Odd Res Wave 3,HP+5,
+9,1,Bow Fighter,Fighter - Bow,,,3,INFANTRY,Guard Bow+C,,Draconic Aura,43,38,29,29,24,Fortress Res 3,Guard 3,Spur Res 3,
+10,1,Green Fafnir,Manakete Winged - Green,,,3,FLYING,Flametongue+G,,Draconic Aura,39,44,36,32,27,Triangle Adept 3,,,
+11,1,Lance Fighter2,Fighter - Lance,,,,INFANTRY,Brave Lance+,,,44,39,26,27,25,Distant Counter,Guard 3,Even Res Wave 3,Fierce Stance 3
+12,2,Green Fafnir2,Manakete Winged - Green,,,,FLYING,Flametongue+G,,,39,47,36,29,30,Triangle Adept 3,Res+3,,
+13,2,Green Bow,Fighter - Green Bow,,,,INFANTRY,Guard Bow+G,,,43,37,29,29,24,Fortress Res 3,Guard 3,,
+14,2,Axe Fighter,Fighter - Axe,,,,INFANTRY,Silver Axe+,,,44,43,31,35,22,Fortress Def 3,,,
+15,3,Axe Cavalier,Knight - Axe,,,2,CAVALRY,Slaying Axe+,,Bonfire,41,45,21,32,31,Distant Counter,Fortress Def 3,,
+16,3,Green Bow,Fighter - Green Bow,,,2,INFANTRY,Slaying Bow+G,,Draconic Aura,43,44,29,26,19,Atk/Spd Solo 3,Quick Riposte 3,Odd Res Wave 3,Drive Atk 2
+17,3,Red Bow,Fighter - Red Bow,,,,INFANTRY,Brave Bow+R,,,43,38,24,26,22,Fortress Res 3,,,
+18,3,Axe Fighter,Fighter - Axe,,,,INFANTRY,Emerald Axe+,,,43,43,32,30,22,Distant Counter,Drive Spd 2,,

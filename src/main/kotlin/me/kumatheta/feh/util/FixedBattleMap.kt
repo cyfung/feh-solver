@@ -20,6 +20,7 @@ class FixedBattleMap(delegate: BattleMap) :
     override fun toChessPieceMap(): Map<Position, ChessPiece> {
         return chessPieceMap
     }
+    override val reinforceByTime = delegate.reinforceByTime.asSequence().associate { it.key to it.value.toList() }
 
     override val enemyCount: Int = delegate.enemyCount
     override val playerCount: Int = delegate.playerCount

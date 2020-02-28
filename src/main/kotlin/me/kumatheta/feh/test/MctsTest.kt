@@ -1,19 +1,22 @@
 package me.kumatheta.feh.test
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.list
 import me.kumatheta.feh.BasicBattleMap
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.MoveAndAssist
 import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.MoveOnly
-import me.kumatheta.feh.Position
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
+import me.kumatheta.feh.message.UpdateInfo
 import me.kumatheta.feh.readMap
 import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.RecyclableNode
 import me.kumatheta.mcts.RecycleManager
 import me.kumatheta.mcts.VaryingUCT
+import me.kumatheta.ws.toUpdateInfoList
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
@@ -21,7 +24,7 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main() {
-    val dataSet = "bhb morgan morgan"
+    val dataSet = "grandmaster 51"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -33,39 +36,42 @@ fun main() {
             playerMap
         )
     )
-    val phraseLimit = 20
+    val phraseLimit = 7
     var board = FehBoard(phraseLimit, state, 3)
     val testMoves = listOf(
-        MoveOnly(4, Position(0, 0)),
-        MoveOnly(1, Position(3, 2)),
-        MoveOnly(2, Position(2, 2)),
-        MoveAndAssist(3, Position(2, 1), 2),
+        MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 3, attackTargetId = 10),
+        MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 4, attackTargetId = 9),
+        MoveAndAssist(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, assistTargetId = 2),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 5, attackTargetId = 6),
 
-        MoveAndAttack(3, Position(4, 1), 10),
-        MoveOnly(2, Position(0, 2)),
-        MoveAndAttack(1, Position(2, 2), 5),
-        MoveAndAssist(4, Position(1, 2), 1),
-        MoveAndAttack(1, Position(1, 1), 8),
+        MoveAndAssist(heroUnitId = 2, moveTargetX = 4, moveTargetY = 3, assistTargetId = 1),
+        MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 5, attackTargetId = 9),
+        MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, attackTargetId = 7),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 8),
 
-        MoveOnly(2, Position(2, 2)),
-        MoveAndAssist(4, Position(2, 1), 2),
-        MoveAndAttack(2, Position(3, 3), 6)
+        MoveAndAssist(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3, assistTargetId = 4),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 11),
+            MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 3, attackTargetId = 17),
+        MoveAndAttack(heroUnitId = 4, moveTargetX = 2, moveTargetY = 5, attackTargetId = 12)
     ).map {
         FehMove(it)
     }
-    val testResult = board.tryMoves(testMoves, true)
-//    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
+    val testResult = board.tryMoves(testMoves, false)
+    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
+
+    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 //
-//    testMoves.take(9).forEach { move ->
-//        val exists = board.moves.any {
-//            it == move
-//        }
-//        if (!exists) {
-//            throw IllegalStateException()
-//        }
-//        board = board.applyMove(move)
-//    }
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 0.5)
+    testMoves.take(8).forEach { move ->
+        val exists = board.moves.any {
+            it == move
+        }
+        if (!exists) {
+            throw IllegalStateException("moves not exists $move")
+        }
+        board = board.applyMove(move)
+    }
+    println(board.suggestedOrder(board.moves).map { it.unitAction }.toList())
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.0)
     val mcts = Mcts(board, scoreManager)
     var tries = 0
     val fixedMoves = mutableListOf<FehMove>()
@@ -100,7 +106,8 @@ fun main() {
         scoreManager.average = score.totalScore / score.tries
         println("average = ${scoreManager.average}")
         println("calculated best score: ${board.calculateScore(testState)}")
-        println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
+        println(
+            "tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
         tries = score.tries
         println("estimatedSize: ${mcts.estimatedSize}")
         println("elapsed ${clockMark.elapsedNow()}")

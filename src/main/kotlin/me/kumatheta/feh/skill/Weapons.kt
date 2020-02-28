@@ -4,6 +4,8 @@ import me.kumatheta.feh.Axe
 import me.kumatheta.feh.BasicWeapon
 import me.kumatheta.feh.BowB
 import me.kumatheta.feh.BowC
+import me.kumatheta.feh.BowG
+import me.kumatheta.feh.BowR
 import me.kumatheta.feh.DragonG
 import me.kumatheta.feh.Lance
 import me.kumatheta.feh.MagicB
@@ -30,6 +32,7 @@ import me.kumatheta.feh.skill.weapon.owl
 import me.kumatheta.feh.skill.weapon.raven
 import me.kumatheta.feh.skill.weapon.serpent
 import me.kumatheta.feh.skill.weapon.slaying
+import me.kumatheta.feh.skill.weapon.triangleAdept
 
 val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Iron Lance" to Lance.basic(6),
@@ -43,11 +46,14 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Iron Axe" to Axe.basic(6),
     "Steel Axe" to Axe.basic(8),
     "Silver Axe" to Axe.basic(11),
+    "Silver Axe+" to Axe.basic(15),
     "Slaying Hammer" to Axe.effective(10, MoveType.ARMORED),
     "Slaying Hammer+" to Axe.effective(14, MoveType.ARMORED),
-    "Steel Bow" to BowC.basic(6),
+    "Steel Bow C" to BowC.basic(6),
     "Assault" to Staff.basic(10),
     "Slaying Bow+ B" to BowB.slaying(12),
+    "Slaying Bow+ G" to BowG.slaying(12),
+    "Slaying Axe+" to Axe.slaying(14),
     "Thoron+" to MagicB.basic(13),
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
@@ -66,12 +72,15 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Randgridr" to Randgridr,
     "Ragnarok" to Ragnarok,
 
-    "Brave Bow+" to BowC.brave(7),
+    "Brave Bow+C" to BowC.brave(7),
+    "Brave Bow+R" to BowR.brave(7),
     "Brave Sword+" to Sword.brave(8),
     "Brave Lance+" to Lance.brave(8),
     "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp = 2, atk = 1)),
-    "Guard Bow+" to BowC.serpent(12),
-    "Gronnraven+" to MagicG.raven(11)
+    "Guard Bow+C" to BowC.serpent(12),
+    "Guard Bow+G" to BowG.serpent(12),
+    "Gronnraven+" to MagicG.raven(11),
+    "Emerald Axe+" to Axe.triangleAdept(12)
 ).toSkillMap()
 
 private fun WeaponType.basic(might: Int): BasicWeapon {

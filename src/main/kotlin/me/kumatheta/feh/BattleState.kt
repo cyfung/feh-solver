@@ -121,7 +121,9 @@ class BattleState private constructor(
     private fun executeMove(unitAction: UnitAction): Team? {
         check(winningTeam == null)
         val heroUnit = getUnit(unitAction.heroUnitId)
-        check(heroUnit.available)
+        check(heroUnit.available) {
+            "hero not available"
+        }
         move(heroUnit, unitAction.moveTarget)
         return when (unitAction) {
             is MoveOnly -> {
@@ -172,6 +174,35 @@ class BattleState private constructor(
         unitsSeq(nextTeam.foe).forEach {
             it.endOfTurn()
         }
+        if (nextTeam == Team.PLAYER) {
+            battleMap.reinforceByTime[turn]?.forEach { it ->
+                val newUnit = it.copy()
+                if (locationMap.putIfAbsent(newUnit.position, newUnit) != null) {
+                    val pathAvailable = distanceFrom(newUnit, newUnit.position).keys
+                    val actualLocation = battleMap.terrainMap.asSequence().filter {
+                        locationMap[it.key] == null
+                    }.filterNot {
+                        it.value.type == Terrain.Type.WALL
+                    }.minWith(
+                        compareBy({
+                            when {
+                                pathAvailable.contains(it.key) -> 0
+                                it.value.moveCost(newUnit.moveType) != null -> 1
+                                else -> 2
+                            }
+                        }, {
+                            it.key.distanceTo(newUnit.position)
+                        }, {
+                            it.key
+                        })
+                    )?.key ?: throw IllegalStateException("whole map full?")
+                    if (locationMap.putIfAbsent(actualLocation, newUnit) != null) {
+                        throw IllegalStateException()
+                    }
+                    newUnit.position = actualLocation
+                }
+            }
+        }
         startOfTurn(nextTeam)
     }
 
@@ -180,7 +211,7 @@ class BattleState private constructor(
         if (originalPosition != position) {
             val piece = locationMap.putIfAbsent(position, heroUnit)
             require(piece == null) {
-                piece.toString()
+                "${heroUnit.name} move to $position occupied by ${(piece as? HeroUnit)?.name ?: "Obstacle"}"
             }
             heroUnit.position = position
             val removed = locationMap.remove(originalPosition)
@@ -482,7 +513,7 @@ class BattleState private constructor(
     private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
         check(attacker.team.foe == defender.team)
         if (attacker.cooldown == 0 && attacker.special is AoeSpecial) {
-            val attackerStat = attacker.aoeInCombatStat
+            val attackerStat = attacker.aoeInCombatStat()
             attacker.special.getTargets(this, attacker, defender).forEach { target ->
                 val skillsPair = getInCombatSkills(attacker, target)
                 val attackerAdaptive = skillsPair.attacker.adaptiveDamage.asSequence().map {
@@ -490,15 +521,16 @@ class BattleState private constructor(
                 }.any() && skillsPair.defender.denyAdaptiveDamage.asSequence().map {
                     it(this, attacker)
                 }.none()
-                val targetStat = target.aoeInCombatStat
+                val targetStat = target.aoeInCombatStat()
                 val defRes = getDefRes(attacker, attackerAdaptive, targetStat.inCombatStat)
                 val atk = attacker.visibleStat.atk
-                val baseDamage = min((atk - defRes) * attacker.special.damageFactor / 100, 0)
+                val baseDamage = max((atk - defRes) * attacker.special.damageFactor / 100, 0)
                 val finalDamage = baseDamage + skillsPair.attacker.damageIncrease.asSequence().map {
                     it(CombatStatus(this, attackerStat, targetStat, true), true)
                 }.sum()
                 target.takeNonLethalDamage(finalDamage)
             }
+            attacker.resetCooldown()
         }
 
         val potentialDamage = preCalculateDamage(attacker, defender)
@@ -558,6 +590,24 @@ class BattleState private constructor(
         }
 
         return Pair(deadUnit, potentialDamage.potentialDamage)
+    }
+
+    private fun HeroUnit.aoeInCombatStat(): InCombatStat {
+        val inCombatStat: Stat = if (battleMap.getTerrain(position).isDefenseTile) {
+            visibleStat.copy(
+                def = visibleStat.def * 13 / 10,
+                res = visibleStat.res * 13 / 10
+            )
+        } else {
+            visibleStat
+        }
+        return object : InCombatStat {
+            override val heroUnit: HeroUnit
+                get() = this@aoeInCombatStat
+            override val bonus: Stat = this@aoeInCombatStat.bonus
+            override val penalty: Stat = this@aoeInCombatStat.penalty
+            override val inCombatStat: Stat = inCombatStat
+        }
     }
 
     private fun setGroupEngaged(heroUnit: HeroUnit) {
@@ -1557,7 +1607,7 @@ class DistanceReceiverRealMovement(
         if (resultMap[position] != null) {
             return false
         }
-        if (withGravity && !moveStep.teleportRequired && position.distanceTo(self.position) > 2) {
+        if (withGravity && !moveStep.teleportRequired && position.distanceTo(self.position) > 1) {
             return false
         }
         return when (val obstacle = obstacles[position]) {

@@ -5,6 +5,7 @@ import me.kumatheta.feh.MoveAndAssist
 import me.kumatheta.feh.MoveAndAttack
 import me.kumatheta.feh.Team
 import me.kumatheta.feh.UnitAction
+import me.kumatheta.feh.skill.assist.Heal
 import me.kumatheta.feh.skill.assist.Refresh
 import me.kumatheta.mcts.Board
 import me.kumatheta.mcts.Move
@@ -61,7 +62,11 @@ class FehBoard private constructor(
         battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
             battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
             Team.ENEMY
-        ).sumBy { it.maxHp - it.currentHp } * 2 + (phraseLimit - battleState.phase) * 20
+        ).sumBy { it.maxHp - it.currentHp } * 2 + (phraseLimit - battleState.phase) * 20 + if(battleState.phase >= phraseLimit) {
+            -1500L
+        } else {
+            0L
+        }
 
     val stateCopy
         get() = state.copy()
@@ -93,8 +98,13 @@ class FehBoard private constructor(
         return nextMoves.asSequence().sortedBy {
             if (it.unitAction is MoveAndAttack) {
                 1
-            } else if (it.unitAction is MoveAndAssist && state.getUnit(it.unitAction.heroUnitId).assist is Refresh) {
-                0
+            } else if (it.unitAction is MoveAndAssist) {
+                val assist = state.getUnit(it.unitAction.heroUnitId).assist
+                if (assist is Refresh || assist is Heal) {
+                    0
+                } else {
+                    2
+                }
             } else {
                 2
             }

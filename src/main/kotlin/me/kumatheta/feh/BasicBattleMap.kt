@@ -8,9 +8,11 @@ import me.kumatheta.feh.skill.weapon.EmptyWeapon
 import java.nio.file.Files
 import java.nio.file.Path
 
-enum class SpawnTime {
-    START
-}
+sealed class SpawnTime
+
+object Unknown : SpawnTime()
+object Start : SpawnTime()
+class ReinforceByTime(val turn: Int) : SpawnTime()
 
 class Spawn(val heroModel: HeroModel, val cooldown: Int?, val spawnTime: SpawnTime)
 
@@ -27,7 +29,11 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
         val spawnTime = if (spawnTimeString.isBlank()) {
             null
         } else {
-            SpawnTime.valueOf(spawnTimeString)
+            when(val time = spawnTimeString.toIntOrNull()) {
+                null -> Unknown
+                1 -> Start
+                else -> ReinforceByTime(time)
+            }
         }
         val name = valueIterator.next()
         val imageName = valueIterator.next()
@@ -136,16 +142,9 @@ class BasicBattleMap(
 
     override fun toChessPieceMap(): Map<Position, ChessPiece> {
         val chessPieceSequence = spawnMap.asSequence().filter {
-            it.value.spawnTime == SpawnTime.START
+            it.value.spawnTime == Start
         }.map {
-            val position = idMap[it.key] ?: throw IllegalStateException()
-            HeroUnit(
-                id = it.key,
-                heroModel = it.value.heroModel,
-                team = Team.ENEMY,
-                position = position,
-                cooldown = it.value.cooldown
-            )
+            newHeroUnit(it.key, it.value)
         } + obstacles.asSequence().map {
             Obstacle(it.value, it.key)
         } + playerMap.asSequence().map {
@@ -155,4 +154,30 @@ class BasicBattleMap(
 
         return chessPieceSequence.associateBy { it.position }
     }
+
+    private fun newHeroUnit(id: Int, spawn: Spawn): HeroUnit {
+        val position = idMap[id] ?: throw IllegalStateException()
+        return HeroUnit(
+            id = id,
+            heroModel = spawn.heroModel,
+            team = Team.ENEMY,
+            position = position,
+            cooldown = spawn.cooldown
+        )
+    }
+
+    override val reinforceByTime
+        get() = spawnMap.asSequence().mapNotNull {
+            val spawn = it.value
+            val spawnTime = spawn.spawnTime
+            if(spawnTime is ReinforceByTime) {
+                spawnTime.turn to newHeroUnit(it.key, spawn)
+            } else {
+                null
+            }
+        }.groupBy({
+            it.first
+        }, {
+            it.second
+        })
 }

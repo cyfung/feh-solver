@@ -21,13 +21,14 @@ import me.kumatheta.feh.skill.effect.opening
 import me.kumatheta.feh.skill.effect.ploy
 import me.kumatheta.feh.skill.effect.rangeDefStat
 import me.kumatheta.feh.skill.effect.resBasedPloy3
+import me.kumatheta.feh.skill.effect.solo
 import me.kumatheta.feh.skill.effect.stance
 import me.kumatheta.feh.skill.effect.tactics
 import me.kumatheta.feh.skill.effect.wave
 import me.kumatheta.feh.skill.passive.Aerobatics3
 import me.kumatheta.feh.skill.passive.CounterIgnoreRange
 import me.kumatheta.feh.skill.passive.DefFeint3
-import me.kumatheta.feh.skill.passive.DriveAtk2
+import me.kumatheta.feh.skill.passive.Drive
 import me.kumatheta.feh.skill.passive.DullClose3
 import me.kumatheta.feh.skill.passive.DullRange3
 import me.kumatheta.feh.skill.passive.FlierFormation3
@@ -56,12 +57,14 @@ val ALL_PASSIVES = sequenceOf(
     "Atk/Res Bond 2" to bond(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
     "Atk/Res Bond 3" to bond(Stat(atk = 5, res = 5)).toInCombatStatPassive(),
 
+    "Atk/Spd Solo 3" to solo(Stat(atk = 6, spd = 6)).toInCombatStatPassive(),
+
     "Death Blow 3" to blow(Stat(atk = 6)).toInCombatStatPassive(),
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)).toInCombatStatPassive(),
     "Sturdy Blow 2" to blow(Stat(atk = 4, def = 4)).toInCombatStatPassive(),
     "Mirror Strike 2" to blow(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
 
-    "Fierce Stance 3" to stance(Stat(atk=6)).toInCombatStatPassive(),
+    "Fierce Stance 3" to stance(Stat(atk = 6)).toInCombatStatPassive(),
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)).toInCombatStatPassive(),
 
@@ -84,7 +87,7 @@ val ALL_PASSIVES = sequenceOf(
     "Desperation 3" to belowThreshold(75).toDesperationPassive(),
 
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
-    "Distant Def 3" to rangeDefStat(Stat(atk = 6)).toInCombatStatPassive(),
+    "Distant Def 3" to rangeDefStat(Stat(def = 6, res = 6)).toInCombatStatPassive(),
     "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
     "Fortify Res 4" to hone(Stat(res = 7)).toStartOfTurnPassive(),
     "Wrathful Staff 3" to WrathfulStaff3,
@@ -96,10 +99,11 @@ val ALL_PASSIVES = sequenceOf(
     "Odd Res Wave 3" to wave(Stat(res = 6), oddTurn = true).toStartOfTurnPassive(),
     "Even Res Wave 3" to wave(Stat(res = 6), oddTurn = false).toStartOfTurnPassive(),
 
-    "HP+5" to Stat(hp=5).toExtraStatPassive(),
-    "Res 3" to Stat(res = 3).toExtraStatPassive(),
+    "HP+5" to Stat(hp = 5).toExtraStatPassive(),
+    "Res+3" to Stat(res = 3).toExtraStatPassive(),
     "Atk/Res 2" to Stat(atk = 2, res = 2).toExtraStatPassive(),
     "Fortress Res 3" to Stat(atk = -3, res = 5).toExtraStatPassive(),
+    "Fortress Def 3" to Stat(atk = -3, def = 5).toExtraStatPassive(),
     "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStatPassive(),
     "B Duel Flying 3" to Stat(hp = 5).toExtraStatPassive(),
     "Atk/Spd 2" to Stat(atk = 2, spd = 2).toExtraStatPassive(),
@@ -122,7 +126,8 @@ val ALL_PASSIVES = sequenceOf(
     "Mystic Boost 3" to MysticBoost3,
     "Sparkling Boost" to SparklingBoost,
     "Shield Pulse 3" to ShieldPulse3,
-    "Drive Atk 2" to DriveAtk2,
+    "Drive Atk 2" to Drive(Stat(atk = 3)),
+    "Drive Spd 2" to Drive(Stat(spd = 3)),
     "Goad Cavalry" to GoadCavalry,
     "Flier Formation 3" to FlierFormation3,
     "Air Orders 3" to airOrder3.toStartOfTurnPassive(),

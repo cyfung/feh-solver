@@ -6,4 +6,5 @@ interface BattleMap {
     fun toChessPieceMap(): Map<Position, ChessPiece>
     val enemyCount: Int
     val playerCount: Int
+    val reinforceByTime: Map<Int, List<HeroUnit>>
 }

@@ -3,6 +3,7 @@ package me.kumatheta.feh.skill
 import me.kumatheta.feh.skill.special.BlazingLight
 import me.kumatheta.feh.skill.special.DamageAmplify
 import me.kumatheta.feh.skill.special.FoeDefResBased
+import me.kumatheta.feh.skill.special.HeavenlyLight
 import me.kumatheta.feh.skill.special.IceMirror
 import me.kumatheta.feh.skill.special.Imbue
 import me.kumatheta.feh.skill.special.Miracle
@@ -17,6 +18,7 @@ val ALL_SPECIALS = sequenceOf(
     "Moonbow" to FoeDefResBased(2, 3, 10),
 
     "Imbue" to Imbue,
+    "Heavenly Light" to HeavenlyLight,
     "Miracle" to Miracle,
 
     "Bonfire" to SelfStatBased(3) {

@@ -52,6 +52,7 @@ import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -105,6 +106,7 @@ fun Application.module(testing: Boolean = false) {
     val mctsRef =
         AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>(null)
     val jobRef = AtomicReference<Job?>(null)
+    val oldSolutions = ConcurrentHashMap<String, Boolean>()
 
     routing {
         get("/start") {
@@ -134,6 +136,10 @@ fun Application.module(testing: Boolean = false) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
+            println(moves)
+            if(oldSolutions.putIfAbsent(moves.toString(), true)!=null) {
+                System.err.println("repeated")
+            }
             val (testState, updates) = toUpdateInfoList(board, moves)
 
             val allTimeBest = mcts.score
@@ -155,7 +161,7 @@ fun Application.module(testing: Boolean = false) {
 
 private val NULL_ACTION = Action(-1, -1, -1, -1, -1, -1)
 
-private fun toUpdateInfoList(
+fun toUpdateInfoList(
     board: FehBoard,
     moves: List<FehMove>
 ): Pair<BattleState, List<UpdateInfo>> {
@@ -181,7 +187,7 @@ private suspend fun getMcts(
     mctsRef: AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>,
     jobRef: AtomicReference<Job?>
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
-    val phraseLimit = 20
+    val phraseLimit = 7
     val board = FehBoard(phraseLimit, state, 3)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000)
     val mcts = Mcts(board, scoreManager)
@@ -212,7 +218,7 @@ private fun getUpdated(
         if (new == null) {
             UnitUpdate(old.id, 0, false, 0, 0)
         } else {
-            if (new.currentHp == old.currentHp && new.available != old.available && new.position == old.position) {
+            if (new.currentHp == old.currentHp && new.available == old.available && new.position == old.position) {
                 null
             } else {
                 UnitUpdate(old.id, new.currentHp, new.available, new.position.x, new.position.y)

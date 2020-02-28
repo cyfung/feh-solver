@@ -93,17 +93,6 @@ class HeroUnit(
             debuff
         }
 
-    val aoeInCombatStat: InCombatStat
-        get() {
-            return object: InCombatStat {
-                override val heroUnit: HeroUnit
-                    get() = this@HeroUnit
-                override val bonus: Stat = this@HeroUnit.bonus
-                override val penalty: Stat = this@HeroUnit.penalty
-                override val inCombatStat: Stat = this@HeroUnit.visibleStat
-            }
-        }
-
     var currentHp = baseStat.hp
         private set
     var cooldown = cooldown ?: heroModel.cooldownCount
@@ -198,6 +187,7 @@ class HeroUnit(
 
     fun actionEnded() {
         clearPenalty()
+        clearNegativeStatus()
         available = false
     }
 

@@ -24,8 +24,10 @@ abstract class Dragon(color: Color) : WeaponType(color, false, true)
 
 object DaggerC : Dagger(Color.COLORLESS)
 
-object BowC : Bow(Color.COLORLESS)
+object BowR : Bow(Color.RED)
 object BowB : Bow(Color.BLUE)
+object BowG : Bow(Color.GREEN)
+object BowC : Bow(Color.COLORLESS)
 
 object MagicR : Magic(Color.RED)
 object MagicB : Magic(Color.BLUE)
