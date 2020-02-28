@@ -7,8 +7,7 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.aoeBuffAlly
 import me.kumatheta.feh.skill.aoeDebuffFoe
 
-object GrimaTruth : BasicWeapon(MagicR, 14) {
-    override val extraStat: Stat = Stat(def = 3)
+object GrimaTruth : BasicWeapon(MagicR, 14, Stat(def = 3)) {
     override val combatEnd: CombatEndSkill? = { combatStatus, attacked ->
         if (attacked) {
             aoeDebuffFoe(combatStatus, Stat(atk = -5, spd = -5))

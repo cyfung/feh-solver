@@ -5,7 +5,7 @@ import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.WeaponType
 
-class BraveWeapon(weaponType: WeaponType, might: Int, override val extraStat: Stat = Stat(spd = -5)) : BasicWeapon(weaponType, might) {
+class BraveWeapon(weaponType: WeaponType, might: Int, extraStat: Stat = Stat(spd = -5)) : BasicWeapon(weaponType, might, extraStat) {
     override val brave: InCombatSkill<Boolean>? = {
         it.initAttack
     }

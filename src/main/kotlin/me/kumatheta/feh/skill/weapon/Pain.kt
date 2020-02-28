@@ -7,7 +7,7 @@ import me.kumatheta.feh.Staff
 object Pain : BasicWeapon(Staff, 3) {
     override val combatEnd: CombatEndSkill? = { combatStatus, attacked ->
         if (attacked && !combatStatus.foe.heroUnit.isDead) {
-            combatStatus.foe.heroUnit.endOfCombatEffects.takeNonLethalDamage(10)
+            combatStatus.foe.heroUnit.cachedEffect.takeNonLethalDamage(10)
         }
     }
 }

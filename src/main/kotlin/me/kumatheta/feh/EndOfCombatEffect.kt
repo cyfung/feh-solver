@@ -1,6 +1,7 @@
 package me.kumatheta.feh
 
-class EndOfCombatEffect {
+class CachedEffect {
+    var cooldown: Int = 0
     var hp: Int = 0
         private set
 
@@ -11,4 +12,5 @@ class EndOfCombatEffect {
     fun heal(healAmount: Int) {
         hp += healAmount
     }
+
 }

@@ -19,6 +19,7 @@ interface Hero {
     val neutralizeEffectiveWeaponType: Boolean
     val name: String
     val imageName: String
+    val cooldownCount: Int?
 }
 
 fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
@@ -64,7 +65,7 @@ open class HeroModel(
         }
     }
 
-    val cooldownCount: Int? = if (special?.coolDownCount != null) {
+    override val cooldownCount: Int? = if (special?.coolDownCount != null) {
         special.coolDownCount + skillSet.skills.sumBy(Skill::coolDownCountAdj)
     } else {
         null

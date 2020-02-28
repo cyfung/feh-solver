@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill.special
 
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.DamageDealt
 import me.kumatheta.feh.DefenseSpecial
 import me.kumatheta.feh.InCombatStat
 import me.kumatheta.feh.PerAttackListener
@@ -21,10 +22,10 @@ object IceMirror : DefenseSpecial(2) {
         }
     }
 
-    override val damageReducedListener: PerAttackListener<Int>? = lambda@{ combatStatus, value ->
+    override val damageReceivedListener: PerAttackListener<DamageDealt>? = lambda@{ combatStatus, damageDealt ->
         val state = combatStatus.self.heroUnit.combatSkillData[IceMirror] as State? ?: return@lambda
         if (state.damageReduced == null) {
-            combatStatus.self.heroUnit.combatSkillData[IceMirror] = State(value)
+            combatStatus.self.heroUnit.combatSkillData[IceMirror] = State(damageDealt.damageReduced)
         }
     }
 

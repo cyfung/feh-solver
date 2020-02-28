@@ -11,8 +11,7 @@ import me.kumatheta.feh.skill.toInCombatStatPassive
 
 private val FOE_EFFECT = combatStartSkill(Stat(atk = -6, def = -6)).toInCombatStatPassive()
 
-object Randgridr : BasicWeapon(BowB, 14) {
-    override val extraStat: Stat = Stat(atk = 3)
+object Randgridr : BasicWeapon(BowB, 14, Stat(atk = 3)) {
     override val effectiveAgainstMoveType: Set<MoveType>? = setOf(MoveType.FLYING, MoveType.ARMORED)
     override val neutralizePenalty: CombatStartSkill<Stat?>? = {combatStatus ->
         if (combatStatus.foe.currentHp == combatStatus.foe.maxHp) {

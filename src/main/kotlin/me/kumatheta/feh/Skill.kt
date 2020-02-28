@@ -88,9 +88,9 @@ interface Skill {
         get() = null
 
     // listener
-    val damageReceivedListener: PerAttackListener<Int>?
+    val damageDealtListener: PerAttackListener<DamageDealt>?
         get() = null
-    val damageReducedListener: PerAttackListener<Int>?
+    val damageReceivedListener: PerAttackListener<DamageDealt>?
         get() = null
 
     // combat end
@@ -196,10 +196,11 @@ class InCombatSkillSet(
         get() = methodSeq(Skill::damageIncrease)
 
     // listener
-    val damageReceivedListener: Sequence<PerAttackListener<Int>>
+    val damageDealtListener: Sequence<PerAttackListener<DamageDealt>>
+        get() = methodSeq(Skill::damageDealtListener)
+    val damageReceivedListener: Sequence<PerAttackListener<DamageDealt>>
         get() = methodSeq(Skill::damageReceivedListener)
-    val damageReducedListener: Sequence<PerAttackListener<Int>>
-        get() = methodSeq(Skill::damageReducedListener)
+
 
     val postCombat: Sequence<CombatEndSkill>
         get() = methodSeq(Skill::combatEnd)
@@ -279,8 +280,8 @@ class InCombatSkillWrapper(
     fun getDamageIncrease(specialTriggered: Boolean): Sequence<Int> =
         baseSkillSet.damageIncrease.applyAllPerAttack(specialTriggered)
 
-    fun damageReceived(damage: Int) = baseSkillSet.damageReceivedListener.applyAllPerAttack(damage)
-    fun damageReduced(reduced: Int) = baseSkillSet.damageReducedListener.applyAllPerAttack(reduced)
+    fun damageDealt(damageDealt: DamageDealt) = baseSkillSet.damageDealtListener.applyAllPerAttack(damageDealt)
+    fun damageReceived(damageDealt: DamageDealt) = baseSkillSet.damageReceivedListener.applyAllPerAttack(damageDealt)
 
     fun postCombat(attacked: Boolean) = baseSkillSet.postCombat.forEach {
         it(combatStatus, attacked)
@@ -289,8 +290,8 @@ class InCombatSkillWrapper(
 
 abstract class Weapon(val weaponType: WeaponType) : Skill
 
-open class BasicWeapon(weaponType: WeaponType, might: Int) : Weapon(weaponType) {
-    override val extraStat = Stat(atk = might)
+open class BasicWeapon(weaponType: WeaponType, might: Int, extraStat: Stat = Stat.ZERO) : Weapon(weaponType) {
+    final override val extraStat = Stat(atk = might) + extraStat
 }
 
 abstract class Special(val coolDownCount: Int) : Skill
@@ -387,3 +388,5 @@ fun <T> combatStartSkill(value: T): CombatStartSkill<T> = combatSkill(value)
 val combatStartSkillTrue: CombatStartSkill<Boolean> = combatSkill(true)
 
 val inCombatSkillTrue: InCombatSkill<Boolean> = combatSkill(true)
+
+data class DamageDealt(val attackSpecialTriggered: Boolean, val defendSpecialTriggered: Boolean, val damage: Int, val damageReduced: Int)

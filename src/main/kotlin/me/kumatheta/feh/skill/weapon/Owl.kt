@@ -6,7 +6,7 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.WeaponType
 import me.kumatheta.feh.skill.adjacentAllies
 
-class Owl(weaponType: WeaponType, might: Int) : BasicWeapon(weaponType, might) {
+class Owl(weaponType: WeaponType, might: Int, extraStat: Stat = Stat.ZERO) : BasicWeapon(weaponType, might, extraStat) {
     override val inCombatStat: CombatStartSkill<Stat>? = { combatStatus ->
         val (battleState, self) = combatStatus
         val buff = self.adjacentAllies(battleState).count() * 2
@@ -15,6 +15,6 @@ class Owl(weaponType: WeaponType, might: Int) : BasicWeapon(weaponType, might) {
 }
 
 
-fun WeaponType.owl(might: Int): Owl {
-    return Owl(this, might)
+fun WeaponType.owl(might: Int, extraStat: Stat = Stat.ZERO): Owl {
+    return Owl(this, might, extraStat)
 }

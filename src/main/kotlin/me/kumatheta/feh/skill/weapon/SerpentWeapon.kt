@@ -6,7 +6,7 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.WeaponType
 import me.kumatheta.feh.skill.effect.rangeDefStat
 
-class SerpentWeapon(weaponType: WeaponType, might: Int, override val extraStat: Stat) : BasicWeapon(weaponType, might) {
+class SerpentWeapon(weaponType: WeaponType, might: Int, extraStat: Stat) : BasicWeapon(weaponType, might, extraStat) {
     override val inCombatStat: CombatStartSkill<Stat>? = rangeDefStat(Stat(def = 6, res = 6))
 }
 

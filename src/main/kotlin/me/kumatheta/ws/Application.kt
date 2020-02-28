@@ -88,7 +88,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
 //    val dataSet = "bhb morgan morgan"
-    val dataSet = "grandmaster 51"
+    val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -135,10 +135,6 @@ fun Application.module(testing: Boolean = false) {
             if (moves == null) {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
-            }
-            println(moves)
-            if(oldSolutions.putIfAbsent(moves.toString(), true)!=null) {
-                System.err.println("repeated")
             }
             val (testState, updates) = toUpdateInfoList(board, moves)
 
@@ -187,7 +183,7 @@ private suspend fun getMcts(
     mctsRef: AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>,
     jobRef: AtomicReference<Job?>
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
-    val phraseLimit = 7
+    val phraseLimit = 20
     val board = FehBoard(phraseLimit, state, 3)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000)
     val mcts = Mcts(board, scoreManager)

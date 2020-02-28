@@ -13,6 +13,6 @@ object MysticBoost3 : Passive {
     override val denyStaffAsNormal: InCombatSkill<Boolean>?
         get() = inCombatSkillTrue
     override val combatEnd: CombatEndSkill? = { combatStatus, _ ->
-        combatStatus.self.heroUnit.endOfCombatEffects.heal(6)
+        combatStatus.self.heroUnit.cachedEffect.heal(6)
     }
 }

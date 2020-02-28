@@ -13,9 +13,7 @@ import me.kumatheta.feh.skill.toInCombatStatPassive
 
 private val IN_COMBAT_BUFF = Stat(atk = 3, spd = 3)
 
-object FlowerOfJoy : BasicWeapon(MagicB, 14) {
-    override val extraStat: Stat = Stat(res = 3)
-
+object FlowerOfJoy : BasicWeapon(MagicB, 14, Stat(res = 3)) {
     override val supportInCombatBuff: MapSkillWithTarget<Skill?>? = object : MapSkillWithTarget<Skill?> {
         override fun apply(battleState: BattleState, self: HeroUnit, target: HeroUnit): Skill? {
             return if (self.inCardinalDirection(target)) {

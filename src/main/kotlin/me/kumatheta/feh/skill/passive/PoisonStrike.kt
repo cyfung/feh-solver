@@ -10,7 +10,7 @@ object PoisonStrike3 : Passive {
 
     override val combatEnd: CombatEndSkill? = { combatStatus, _ ->
         if (combatStatus.initAttack) {
-            combatStatus.foe.heroUnit.endOfCombatEffects.takeNonLethalDamage(10)
+            combatStatus.foe.heroUnit.cachedEffect.takeNonLethalDamage(10)
         }
     }
 }

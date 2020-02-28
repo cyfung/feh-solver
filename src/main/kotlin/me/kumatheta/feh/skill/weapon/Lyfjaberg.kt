@@ -10,8 +10,7 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.combatSkill
 import me.kumatheta.feh.skill.aoeDebuffFoe
 
-object Lyfjaberg : BasicWeapon(DaggerC, 14) {
-    override val extraStat: Stat = Stat(res = 3)
+object Lyfjaberg : BasicWeapon(DaggerC, 14, Stat(res = 3)) {
     override val inCombatStat: CombatStartSkill<Stat>? = { combatStatus ->
         if (combatStatus.self.hpThreshold(50) >= 0) {
             combatStatus.self.combatSkillData[this@Lyfjaberg] = true
@@ -36,7 +35,7 @@ object Lyfjaberg : BasicWeapon(DaggerC, 14) {
         if (attacked) {
             aoeDebuffFoe(combatStatus, Stat(def = -7, res = -7))
             if (combatStatus.self.heroUnit.combatSkillData[this@Lyfjaberg] == true) {
-                combatStatus.self.heroUnit.endOfCombatEffects.takeNonLethalDamage(4)
+                combatStatus.self.heroUnit.cachedEffect.takeNonLethalDamage(4)
             }
         }
     }

@@ -287,7 +287,7 @@ class BattleState private constructor(
             defenderInCombat,
             colorAdvantage = colorAdvantage,
             damagingSpecial = null
-        )
+        ).first
         return PotentialDamage(attackerInCombat, defenderInCombat, attackOrder, colorAdvantage, potentialDamage)
     }
 
@@ -634,7 +634,7 @@ class BattleState private constructor(
             } else {
                 null
             }
-        val baseDamage = calculateBaseDamage(
+        val (baseDamage, damagingSpecialUsed) = calculateBaseDamage(
             damageDealer, damageReceiver, colorAdvantage, damagingSpecial
         )
 
@@ -662,8 +662,9 @@ class BattleState private constructor(
             damage = 0
         }
 
-        damageReceiver.skills.damageReceived(damage)
-        damageReceiver.skills.damageReduced(baseDamage - damage)
+        val damageDealt = DamageDealt(damagingSpecialUsed, defenseSpecialUsed, damage, baseDamage - damage)
+        damageDealer.skills.damageDealt(damageDealt)
+        damageReceiver.skills.damageReceived(damageDealt)
 
         val previousHp = damageReceiver.heroUnit.takeDamage(damage)
 
@@ -797,7 +798,7 @@ class BattleState private constructor(
         damageReceiver: FullInCombatStat,
         colorAdvantage: Int,
         damagingSpecial: DamagingSpecial?
-    ): Int {
+    ): Pair<Int, Boolean> {
         val defenderDefRes = getDefRes(damageDealer.heroUnit, damageDealer.adaptiveDamage, damageReceiver.inCombatStat)
         val effAtk = if (isEffective(damageDealer.heroUnit, damageReceiver.heroUnit)) {
             damageDealer.inCombatStat.atk * 3 / 2
@@ -818,7 +819,7 @@ class BattleState private constructor(
         }
 
         damage += damageDealer.skills.getDamageIncrease(damagingSpecial != null).sum()
-        return damage
+        return damage to (damagingSpecial!=null)
     }
 
     private fun getDefRes(damageDealer: HeroUnit, damageDealerAdaptiveDamage: Boolean, damageReceiverStat: Stat): Int {

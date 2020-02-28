@@ -1,38 +1,7 @@
 package me.kumatheta.feh.skill
 
-import me.kumatheta.feh.Axe
-import me.kumatheta.feh.BasicWeapon
-import me.kumatheta.feh.BowB
-import me.kumatheta.feh.BowC
-import me.kumatheta.feh.BowG
-import me.kumatheta.feh.BowR
-import me.kumatheta.feh.DragonG
-import me.kumatheta.feh.Lance
-import me.kumatheta.feh.MagicB
-import me.kumatheta.feh.MagicG
-import me.kumatheta.feh.MagicR
-import me.kumatheta.feh.MoveType
-import me.kumatheta.feh.Staff
-import me.kumatheta.feh.Stat
-import me.kumatheta.feh.Sword
-import me.kumatheta.feh.WeaponType
-import me.kumatheta.feh.skill.weapon.DraconicPoleaxEff
-import me.kumatheta.feh.skill.weapon.FlowerOfJoy
-import me.kumatheta.feh.skill.weapon.Gleipnir
-import me.kumatheta.feh.skill.weapon.GravityPlus
-import me.kumatheta.feh.skill.weapon.GrimaTruth
-import me.kumatheta.feh.skill.weapon.Leiptr
-import me.kumatheta.feh.skill.weapon.Lyfjaberg
-import me.kumatheta.feh.skill.weapon.Ragnarok
-import me.kumatheta.feh.skill.weapon.Randgridr
-import me.kumatheta.feh.skill.weapon.SlowPlus
-import me.kumatheta.feh.skill.weapon.bladeTome
-import me.kumatheta.feh.skill.weapon.brave
-import me.kumatheta.feh.skill.weapon.owl
-import me.kumatheta.feh.skill.weapon.raven
-import me.kumatheta.feh.skill.weapon.serpent
-import me.kumatheta.feh.skill.weapon.slaying
-import me.kumatheta.feh.skill.weapon.triangleAdept
+import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.weapon.*
 
 val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Iron Lance" to Lance.basic(6),
@@ -58,6 +27,7 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
     "Blarowl+" to MagicB.owl(10),
+    "Blarowl+Spd" to MagicB.owl(10, Stat(hp = 2, spd = 2)),
 
     "Slow+" to SlowPlus,
     "Gravity+" to GravityPlus,
@@ -71,6 +41,7 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Gleipnir" to Gleipnir,
     "Randgridr" to Randgridr,
     "Ragnarok" to Ragnarok,
+    "Sublime Surge" to SublimeSurge,
 
     "Brave Bow+C" to BowC.brave(7),
     "Brave Bow+R" to BowR.brave(7),

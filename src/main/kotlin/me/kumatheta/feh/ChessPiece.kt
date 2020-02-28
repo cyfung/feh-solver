@@ -22,7 +22,7 @@ class HeroUnit(
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
 
-    var endOfCombatEffects = EndOfCombatEffect()
+    var cachedEffect = CachedEffect()
         private set
 
     private val positiveStatus = mutableSetOf<PositiveStatus>()
@@ -52,9 +52,9 @@ class HeroUnit(
 
     fun extraBuffAmount(bonus: Stat): Int {
         return maxOf(bonus.atk - buff.atk, 0) +
-            maxOf(bonus.spd - buff.spd, 0) +
-            maxOf(bonus.def - buff.def, 0) +
-            maxOf(bonus.res - buff.res, 0)
+                maxOf(bonus.spd - buff.spd, 0) +
+                maxOf(bonus.def - buff.def, 0) +
+                maxOf(bonus.res - buff.res, 0)
     }
 
 
@@ -64,6 +64,7 @@ class HeroUnit(
     fun withNegativeStatus(ns: NegativeStatus): Boolean {
         return negativeStatus.contains(ns)
     }
+
     val withPanic: Boolean
         get() = negativeStatus.contains(NegativeStatus.PANIC)
     val withIsolation: Boolean
@@ -168,8 +169,18 @@ class HeroUnit(
         val cooldown = cooldown ?: return
         this.cooldown = when {
             count <= 0 -> return
-            count > cooldown -> 0
+            count >= cooldown -> 0
             else -> cooldown - count
+        }
+    }
+
+    fun addCooldown(count: Int) {
+        val cooldown = cooldown ?: return
+        val cooldownCount = heroModel.cooldownCount ?: return
+        this.cooldown = when {
+            count <= 0 -> return
+            count + cooldown >= cooldownCount -> cooldownCount
+            else -> cooldown + count
         }
     }
 
@@ -205,7 +216,7 @@ class HeroUnit(
             val engageCountDown = engageCountDown
             require(engageCountDown != null)
             val newCountDown = engageCountDown - 1
-            this.engageCountDown == newCountDown
+            this.engageCountDown = newCountDown
             if (newCountDown == 0) {
                 engaged = true
             }
@@ -246,14 +257,24 @@ class HeroUnit(
 
     fun endOfCombat() {
         if (isDead) return
-        val hp = endOfCombatEffects.hp
+        applyCachedEffect()
+        combatSkillData.clear()
+    }
+
+    private fun applyCachedEffect() {
+        val hp = cachedEffect.hp
         if (hp > 0) {
             heal(hp)
         } else if (hp < 0) {
             takeNonLethalDamage(-hp)
         }
-        endOfCombatEffects = EndOfCombatEffect()
-        combatSkillData.clear()
+        val cooldownChange = cachedEffect.cooldown
+        if (cooldownChange > 0) {
+            addCooldown(cooldownChange)
+        } else if(cooldownChange < 0) {
+            reduceCooldown(-cooldownChange)
+        }
+        cachedEffect = CachedEffect()
     }
 
     fun hpThreshold(percentage: Int): Int {
@@ -270,7 +291,7 @@ class HeroUnit(
 
     fun isEffective(foe: HeroUnit): Boolean {
         return (!foe.neutralizeEffectiveMoveType && effectiveAgainstMoveType.contains(foe.moveType)) ||
-            (!foe.neutralizeEffectiveWeaponType && effectiveAgainstWeaponType.contains(foe.weaponType))
+                (!foe.neutralizeEffectiveWeaponType && effectiveAgainstWeaponType.contains(foe.weaponType))
     }
 }
 

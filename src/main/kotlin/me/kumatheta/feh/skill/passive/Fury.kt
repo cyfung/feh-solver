@@ -8,6 +8,6 @@ object Fury3 : Passive {
     override val extraStat: Stat? = Stat(atk = 3, spd = 3, def = 3, res = 3)
 
     override val combatEnd: CombatEndSkill? = { combatStatus, _ ->
-        combatStatus.self.heroUnit.endOfCombatEffects.takeNonLethalDamage(6)
+        combatStatus.self.heroUnit.cachedEffect.takeNonLethalDamage(6)
     }
 }

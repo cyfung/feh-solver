@@ -25,26 +25,8 @@ import me.kumatheta.feh.skill.effect.solo
 import me.kumatheta.feh.skill.effect.stance
 import me.kumatheta.feh.skill.effect.tactics
 import me.kumatheta.feh.skill.effect.wave
-import me.kumatheta.feh.skill.passive.Aerobatics3
-import me.kumatheta.feh.skill.passive.CounterIgnoreRange
-import me.kumatheta.feh.skill.passive.DefFeint3
-import me.kumatheta.feh.skill.passive.Drive
-import me.kumatheta.feh.skill.passive.DullClose3
-import me.kumatheta.feh.skill.passive.DullRange3
-import me.kumatheta.feh.skill.passive.FlierFormation3
-import me.kumatheta.feh.skill.passive.Fury3
-import me.kumatheta.feh.skill.passive.GoadCavalry
-import me.kumatheta.feh.skill.passive.Guard3
-import me.kumatheta.feh.skill.passive.IoteShield
-import me.kumatheta.feh.skill.passive.MysticBoost3
-import me.kumatheta.feh.skill.passive.PoisonStrike3
-import me.kumatheta.feh.skill.passive.ShieldPulse3
-import me.kumatheta.feh.skill.passive.SparklingBoost
-import me.kumatheta.feh.skill.passive.Spur
-import me.kumatheta.feh.skill.passive.TriangleAdept3
-import me.kumatheta.feh.skill.passive.WrathfulStaff3
-import me.kumatheta.feh.skill.passive.quickRiposte
-import me.kumatheta.feh.skill.passive.sabotage
+import me.kumatheta.feh.skill.passive.*
+import me.kumatheta.feh.skill.special.TimePulse3
 
 val ALL_PASSIVES = sequenceOf(
     "Close Counter" to CounterIgnoreRange,
@@ -91,6 +73,8 @@ val ALL_PASSIVES = sequenceOf(
     "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
     "Fortify Res 4" to hone(Stat(res = 7)).toStartOfTurnPassive(),
     "Wrathful Staff 3" to WrathfulStaff3,
+    "Wrath 3" to Wrath(75),
+    "Time's Pulse 3" to TimePulse3,
 
     "Chill Def 3" to chill(Stat(def = -7)) {
         it.visibleStat.def
@@ -113,6 +97,8 @@ val ALL_PASSIVES = sequenceOf(
     "Spur Res 3" to Spur(Stat(res = 4)).toSupportInCombatBuffPassive(),
     "Spur Spd 1" to Spur(Stat(spd = 2)).toSupportInCombatBuffPassive(),
     "Earth Boost 3" to boost(Stat(def = 6)).toInCombatStatPassive(),
+    "Wind Boost 3" to boost(Stat(spd = 6)).toInCombatStatPassive(),
+    "Fierce Boost 3" to boost(Stat(atk = 6)).toInCombatStatPassive(),
 
     "Guard 3" to Guard3,
     "Triangle Adept 3" to TriangleAdept3,

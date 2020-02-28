@@ -8,9 +8,11 @@ import me.kumatheta.feh.skill.special.IceMirror
 import me.kumatheta.feh.skill.special.Imbue
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.skill.special.SelfStatBased
+import me.kumatheta.feh.skill.special.Sirius
 
 val ALL_SPECIALS = sequenceOf(
     "Ice Mirror" to IceMirror,
+    "Sirius" to Sirius,
 
     "Blazing Light" to BlazingLight,
 
