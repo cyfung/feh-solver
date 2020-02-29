@@ -1,6 +1,6 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.Assist
+import me.kumatheta.feh.skill.Assist
 import me.kumatheta.feh.AssistRelated
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit

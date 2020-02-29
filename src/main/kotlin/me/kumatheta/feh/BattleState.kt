@@ -1,23 +1,12 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.assist.Pivot
+import me.kumatheta.feh.skill.MovementAssist
+import me.kumatheta.feh.skill.NormalAssist
+import me.kumatheta.feh.skill.ProtectiveMovementAssist
+import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.effect.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.special.Miracle
-import me.kumatheta.feh.util.DistanceIndex
-import me.kumatheta.feh.util.DistanceReceiver
-import me.kumatheta.feh.util.FixedBattleMap
-import me.kumatheta.feh.util.MoveStep
-import me.kumatheta.feh.util.ThreatIndex
-import me.kumatheta.feh.util.attackPositionOrder
-import me.kumatheta.feh.util.attackTargetOrder
-import me.kumatheta.feh.util.attackTargetPositions
-import me.kumatheta.feh.util.attackerOrder
-import me.kumatheta.feh.util.bodyBlockTargetOrder
-import me.kumatheta.feh.util.calculateDistance
-import me.kumatheta.feh.util.getTerrain
-import me.kumatheta.feh.util.moveTargetOrder
-import me.kumatheta.feh.util.surroundings
-import me.kumatheta.feh.util.unitMoveOrder
+import me.kumatheta.feh.util.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -244,22 +233,24 @@ class BattleState private constructor(
     ): PotentialDamage {
         val skillWrappers = getInCombatStat(attacker, defender)
 
+        val neutralizeFollowUp = skillWrappers.attacker.neutralizeFollowUp || skillWrappers.defender.neutralizeFollowUp
+
         // check adaptive
         val attackerAdaptive = skillWrappers.attacker.adaptiveDamage.any { it } &&
-            skillWrappers.defender.denyAdaptiveDamage.none { it }
+                skillWrappers.defender.denyAdaptiveDamage.none { it }
         val defenderAdaptive = skillWrappers.defender.adaptiveDamage.any { it } &&
-            skillWrappers.attacker.denyAdaptiveDamage.none { it }
+                skillWrappers.attacker.denyAdaptiveDamage.none { it }
 
         // check staff damage
         val attackerReducedStaffDamage = if (attacker.weaponType == Staff) {
             skillWrappers.attacker.staffAsNormal.none { it } ||
-                skillWrappers.defender.denyStaffAsNormal.any { it }
+                    skillWrappers.defender.denyStaffAsNormal.any { it }
         } else {
             false
         }
         val defenderReducedStaffDamage = if (defender.weaponType == Staff) {
             skillWrappers.defender.staffAsNormal.none { it } ||
-                skillWrappers.attacker.denyStaffAsNormal.any { it }
+                    skillWrappers.attacker.denyStaffAsNormal.any { it }
         } else {
             false
         }
@@ -280,7 +271,7 @@ class BattleState private constructor(
             reducedStaffDamage = defenderReducedStaffDamage
         )
 
-        val attackOrder = createAttackOrder(attackerInCombat, defenderInCombat, spdDiff)
+        val attackOrder = createAttackOrder(attackerInCombat, defenderInCombat, spdDiff, neutralizeFollowUp)
 
         val potentialDamage = attackOrder.asSequence().filter { it }.count() * calculateBaseDamage(
             attackerInCombat,
@@ -573,6 +564,10 @@ class BattleState private constructor(
         }.firstOrNull()
 
         attacker.actionEnded()
+        val movementEffect = attacker.skillSet.postInitiateMovement
+        if (movementEffect != null && movementEffect.isValidAction(attacker, defender, this, attacker.position)) {
+            movementEffect.applyMovement(attacker, defender, this)
+        }
 
         potentialDamage.attackerInCombat.skills.postCombat(attackerAttacked)
         potentialDamage.defenderInCombat.skills.postCombat(defenderAttacked)
@@ -705,7 +700,8 @@ class BattleState private constructor(
     private fun createAttackOrder(
         attackerInCombat: FullInCombatStat,
         defenderInCombat: FullInCombatStat,
-        spdDiff: Int
+        spdDiff: Int,
+        neutralizeFollowUp: Boolean
     ): MutableList<Boolean> {
         val attacker = attackerInCombat.heroUnit
         val defender = defenderInCombat.heroUnit
@@ -721,7 +717,7 @@ class BattleState private constructor(
         val canCounter = rangeMatch
 
         val disablePriorityChange = attackerSkillSet.disablePriorityChange.any { it } ||
-            defenderSkillSet.disablePriorityChange.any { it }
+                defenderSkillSet.disablePriorityChange.any { it }
 
         val desperation: Boolean
         val vantage: Boolean
@@ -733,15 +729,34 @@ class BattleState private constructor(
             vantage = defenderSkillSet.vantage.any { it }
         }
 
-        val attackerFollowup = when (val guarantee =
-            attackerSkillSet.followUp.sum()) {
-            0 -> spdDiff >= 5
-            else -> guarantee > 0
-        }
-        val defenderFollowup = when (val guarantee =
-            defenderSkillSet.followUp.sum()) {
-            0 -> spdDiff <= -5
-            else -> guarantee > 0
+        val attackerFollowup: Boolean
+        val defenderFollowup: Boolean
+        if (neutralizeFollowUp) {
+            when {
+                spdDiff >= 5 -> {
+                    attackerFollowup = true
+                    defenderFollowup = false
+                }
+                spdDiff <= -5 -> {
+                    attackerFollowup = false
+                    defenderFollowup = true
+                }
+                else -> {
+                    attackerFollowup = false
+                    defenderFollowup = false
+                }
+            }
+        } else {
+            attackerFollowup = when (val guarantee =
+                attackerSkillSet.followUp.sum()) {
+                0 -> spdDiff >= 5
+                else -> guarantee > 0
+            }
+            defenderFollowup = when (val guarantee =
+                defenderSkillSet.followUp.sum()) {
+                0 -> spdDiff <= -5
+                else -> guarantee > 0
+            }
         }
 
         val attackOrder = mutableListOf<Boolean>()
@@ -819,7 +834,7 @@ class BattleState private constructor(
         }
 
         damage += damageDealer.skills.getDamageIncrease(damagingSpecial != null).sum()
-        return damage to (damagingSpecial!=null)
+        return damage to (damagingSpecial != null)
     }
 
     private fun getDefRes(damageDealer: HeroUnit, damageDealerAdaptiveDamage: Boolean, damageReceiverStat: Stat): Int {

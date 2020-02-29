@@ -1,14 +1,6 @@
 package me.kumatheta.feh.skill
 
-import me.kumatheta.feh.BowC
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.MapSkillMethod
-import me.kumatheta.feh.MapSkillWithTarget
-import me.kumatheta.feh.NegativeStatus
-import me.kumatheta.feh.Passive
-import me.kumatheta.feh.Skill
-import me.kumatheta.feh.Stat
+import me.kumatheta.feh.*
 import me.kumatheta.feh.skill.effect.airOrder3
 import me.kumatheta.feh.skill.effect.belowThreshold
 import me.kumatheta.feh.skill.effect.blow
@@ -40,6 +32,7 @@ val ALL_PASSIVES = sequenceOf(
     "Atk/Res Bond 3" to bond(Stat(atk = 5, res = 5)).toInCombatStatPassive(),
 
     "Atk/Spd Solo 3" to solo(Stat(atk = 6, spd = 6)).toInCombatStatPassive(),
+    "Atk/Def Solo 3" to solo(Stat(atk = 6, def = 6)).toInCombatStatPassive(),
 
     "Death Blow 3" to blow(Stat(atk = 6)).toInCombatStatPassive(),
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)).toInCombatStatPassive(),
@@ -65,6 +58,7 @@ val ALL_PASSIVES = sequenceOf(
     "Quick Riposte 2" to quickRiposte(80).toFollowUpPassive(),
     "Quick Riposte 1" to quickRiposte(90).toFollowUpPassive(),
     "Bow Breaker 3" to breaker(BowC, 50).toFollowUpPassive(),
+    "B Tome breaker 3" to breaker(MagicB, 50).toFollowUpPassive(),
     "Vantage 3" to belowThreshold(75).toVantagePassive(),
     "Desperation 3" to belowThreshold(75).toDesperationPassive(),
 
@@ -80,7 +74,12 @@ val ALL_PASSIVES = sequenceOf(
         it.visibleStat.def
     }.toStartOfTurnPassive(),
     "Odd Atk Wave 3" to wave(Stat(atk = 6), oddTurn = true).toStartOfTurnPassive(),
+    "Odd Spd Wave 3" to wave(Stat(spd = 6), oddTurn = true).toStartOfTurnPassive(),
+    "Odd Def Wave 3" to wave(Stat(def = 6), oddTurn = true).toStartOfTurnPassive(),
     "Odd Res Wave 3" to wave(Stat(res = 6), oddTurn = true).toStartOfTurnPassive(),
+    "Even Atk Wave 3" to wave(Stat(atk = 6), oddTurn = false).toStartOfTurnPassive(),
+    "Even Spd Wave 3" to wave(Stat(spd = 6), oddTurn = false).toStartOfTurnPassive(),
+    "Even Def Wave 3" to wave(Stat(def = 6), oddTurn = false).toStartOfTurnPassive(),
     "Even Res Wave 3" to wave(Stat(res = 6), oddTurn = false).toStartOfTurnPassive(),
 
     "HP+5" to Stat(hp = 5).toExtraStatPassive(),
@@ -100,6 +99,7 @@ val ALL_PASSIVES = sequenceOf(
     "Wind Boost 3" to boost(Stat(spd = 6)).toInCombatStatPassive(),
     "Fierce Boost 3" to boost(Stat(atk = 6)).toInCombatStatPassive(),
 
+    "Null Follow-up 3" to NullFollowUp3,
     "Guard 3" to Guard3,
     "Triangle Adept 3" to TriangleAdept3,
     "Poison Strike 3" to PoisonStrike3,

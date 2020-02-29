@@ -5,8 +5,9 @@ import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.skill.BASE_ASSIST_COMPARATOR
+import me.kumatheta.feh.skill.NormalAssist
 
-open class Refresh : me.kumatheta.feh.NormalAssist() {
+open class Refresh : NormalAssist() {
     override fun apply(
         self: HeroUnit,
         target: HeroUnit,

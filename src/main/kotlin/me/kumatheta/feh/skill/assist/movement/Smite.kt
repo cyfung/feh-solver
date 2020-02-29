@@ -1,17 +1,23 @@
-package me.kumatheta.feh.skill.assist
+package me.kumatheta.feh.skill.assist.movement
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
-import me.kumatheta.feh.ProtectiveMovementAssist
+import me.kumatheta.feh.skill.MovementEffect
+import me.kumatheta.feh.skill.MovementEffect.Companion.isValidPosition
+import me.kumatheta.feh.skill.MovementEffect.Companion.positionTransform
+import me.kumatheta.feh.skill.ProtectiveMovementAssist
 
-object Smite : ProtectiveMovementAssist(true) {
-    override fun apply(
-        self: HeroUnit,
-        target: HeroUnit,
-        battleState: BattleState
-    ) {
-        val targetEndPosition = targetEndPosition(battleState, self, self.position, target.position)
+object Smite : ProtectiveMovementAssist(true, SmiteEffect)
+
+object SmiteEffect : MovementEffect {
+    override fun applyMovement(self: HeroUnit, target: HeroUnit, battleState: BattleState) {
+        val targetEndPosition = targetEndPosition(
+            battleState,
+            self,
+            self.position,
+            target.position
+        )
         battleState.move(target, targetEndPosition)
     }
 
@@ -21,19 +27,13 @@ object Smite : ProtectiveMovementAssist(true) {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        val targetEndPosition = targetEndPosition(battleState, self, fromPosition, target.position)
+        val targetEndPosition = targetEndPosition(
+            battleState,
+            self,
+            fromPosition,
+            target.position
+        )
         return isValidPosition(battleState, self, targetEndPosition)
-    }
-
-    private fun isValid(
-        battleState: BattleState,
-        self: HeroUnit,
-        target: HeroUnit,
-        endPosition: Position
-    ): Boolean {
-        if (!battleState.isValidPosition(target, endPosition)) return false
-        val chessPiece = battleState.getChessPiece(endPosition)
-        return chessPiece == null || chessPiece == self
     }
 
     override fun targetEndPosition(

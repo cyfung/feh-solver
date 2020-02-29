@@ -1,0 +1,53 @@
+package me.kumatheta.feh.skill
+
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.Position
+
+interface MovementEffect {
+    companion object {
+        fun isValidPosition(battleState: BattleState, self: HeroUnit, position: Position): Boolean {
+            if (!battleState.isValidPosition(self, position)) return false
+            val chessPiece = battleState.getChessPiece(position)
+            return chessPiece == null || chessPiece == self
+        }
+
+        fun positionTransform(a: Position, b: Position, change: Int): Position {
+            return when {
+                a.x == b.x -> when (a.y - b.y) {
+                    -1 -> Position(a.x, a.y + change)
+                    1 -> Position(a.x, a.y - change)
+                    else -> throw IllegalStateException()
+                }
+                a.y == b.y -> when (a.x - b.x) {
+                    -1 -> Position(a.x + change, a.y)
+                    1 -> Position(a.x - change, a.y)
+                    else -> throw IllegalStateException()
+                }
+                else -> throw IllegalStateException()
+            }
+        }
+    }
+
+    fun applyMovement(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState
+    )
+
+    fun isValidAction(
+        self: HeroUnit,
+        target: HeroUnit,
+        battleState: BattleState,
+        fromPosition: Position
+    ): Boolean
+
+    fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position
+
+    fun targetEndPosition(
+        battleState: BattleState,
+        self: HeroUnit,
+        selfPosition: Position,
+        targetPosition: Position
+    ): Position
+}

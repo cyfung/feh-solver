@@ -1,5 +1,6 @@
 package me.kumatheta.feh
 
+import me.kumatheta.feh.skill.Assist
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 
 interface Hero {

@@ -1,6 +1,11 @@
 package me.kumatheta.feh
 
+import me.kumatheta.feh.skill.Assist
+import me.kumatheta.feh.skill.MovementEffect
+
 interface Skill {
+    val postInitiateMovement: MovementEffect?
+        get() = null
     val extraStat: Stat?
         get() = null
     val coolDownCountAdj: Int
@@ -40,6 +45,8 @@ interface Skill {
 
     // very beginning of combat
     val foeEffect: CombatStartSkill<Skill?>?
+        get() = null
+    val neutralizeFollowUp: CombatStartSkill<Boolean>?
         get() = null
     val neutralizeBonus: CombatStartSkill<Stat?>?
         get() = null
@@ -109,6 +116,16 @@ class SkillSet(skills: Sequence<Skill>) {
 
     val skills = skills.toList()
 
+    val postInitiateMovement: MovementEffect?
+
+    init {
+        val movements = this.skills.mapNotNull(Skill::postInitiateMovement)
+        if (movements.size > 1) {
+            throw IllegalStateException("more than one possible movement post combat")
+        }
+        postInitiateMovement = movements.singleOrNull()
+    }
+
     val startOfTurn = this.skills.mapNotNull(Skill::startOfTurn)
     val pass = this.skills.mapNotNull(Skill::pass)
     val teleport = this.skills.mapNotNull(Skill::teleport)
@@ -150,6 +167,8 @@ class InCombatSkillSet(
         get() = methodSeq(Skill::denyAdaptiveDamage)
 
 
+    val neutralizeFollowUp: Sequence<CombatStartSkill<Boolean>>
+        get() = methodSeq(Skill::neutralizeFollowUp)
     val neutralizeBonus: Sequence<Stat?>
         get() = methodSeq(Skill::neutralizeBonus).applyAll()
     val neutralizePenalty: Sequence<Stat?>
@@ -286,6 +305,8 @@ class InCombatSkillWrapper(
     fun postCombat(attacked: Boolean) = baseSkillSet.postCombat.forEach {
         it(combatStatus, attacked)
     }
+
+    val neutralizeFollowUp = baseSkillSet.neutralizeFollowUp.any { it(baseSkillSet.combatStatus) }
 }
 
 abstract class Weapon(val weaponType: WeaponType) : Skill
@@ -389,4 +410,9 @@ val combatStartSkillTrue: CombatStartSkill<Boolean> = combatSkill(true)
 
 val inCombatSkillTrue: InCombatSkill<Boolean> = combatSkill(true)
 
-data class DamageDealt(val attackSpecialTriggered: Boolean, val defendSpecialTriggered: Boolean, val damage: Int, val damageReduced: Int)
+data class DamageDealt(
+    val attackSpecialTriggered: Boolean,
+    val defendSpecialTriggered: Boolean,
+    val damage: Int,
+    val damageReduced: Int
+)

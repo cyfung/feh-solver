@@ -2,7 +2,7 @@ package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NormalAssist
+import me.kumatheta.feh.skill.NormalAssist
 import me.kumatheta.feh.WinLoss
 import me.kumatheta.feh.skill.BASE_ASSIST_COMPARATOR
 

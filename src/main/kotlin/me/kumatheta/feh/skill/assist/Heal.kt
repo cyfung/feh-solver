@@ -4,7 +4,7 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HealingSpecial
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NormalAssist
+import me.kumatheta.feh.skill.NormalAssist
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.skill.BASE_ASSIST_COMPARATOR
 import me.kumatheta.feh.skill.special.Imbue

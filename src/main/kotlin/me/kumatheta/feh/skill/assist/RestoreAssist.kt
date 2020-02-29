@@ -3,10 +3,11 @@ package me.kumatheta.feh.skill.assist
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
+import me.kumatheta.feh.skill.NormalAssist
 
 private const val THRESHOLD = 10
 
-abstract class RestoreAssist(private val baseHeal: Int) : me.kumatheta.feh.NormalAssist() {
+abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
     override fun apply(
         self: HeroUnit,
         target: HeroUnit,

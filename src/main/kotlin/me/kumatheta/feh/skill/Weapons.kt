@@ -27,7 +27,8 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
     "Blarowl+" to MagicB.owl(10),
-    "Blarowl+Spd" to MagicB.owl(10, Stat(hp = 2, spd = 2)),
+    "Blarowl+ Spd" to MagicB.owl(10, Stat(hp = 2, spd = 2)),
+    "Wo Gun+ Def" to Axe.specialDamage(14, extraStat = Stat(hp=5, def=4)),
 
     "Slow+" to SlowPlus,
     "Gravity+" to GravityPlus,

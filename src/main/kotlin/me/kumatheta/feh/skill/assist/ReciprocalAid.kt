@@ -4,8 +4,9 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
+import me.kumatheta.feh.skill.NormalAssist
 
-object ReciprocalAid : me.kumatheta.feh.NormalAssist() {
+object ReciprocalAid : NormalAssist() {
     override fun apply(
         self: HeroUnit,
         target: HeroUnit,

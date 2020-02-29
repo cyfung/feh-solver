@@ -3,7 +3,7 @@ package me.kumatheta.feh.skill.assist
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.NormalAssist
+import me.kumatheta.feh.skill.NormalAssist
 import me.kumatheta.feh.Position
 import kotlin.math.min
 
