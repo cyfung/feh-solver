@@ -737,7 +737,7 @@ class BattleState private constructor(
             else -> defenderSkillSet.counterIgnoreRange.any { it }
         }
 
-        val canCounter = rangeMatch
+        val canCounter = rangeMatch && defenderSkillSet.counter.sum() >= 0
 
         val disablePriorityChange = attackerSkillSet.disablePriorityChange.any { it } ||
                 defenderSkillSet.disablePriorityChange.any { it }

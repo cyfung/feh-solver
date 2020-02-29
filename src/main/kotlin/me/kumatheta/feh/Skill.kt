@@ -38,6 +38,8 @@ interface Skill {
         get() = null
     val supportInCombatDebuff: MapSkillWithTarget<Skill?>?
         get() = null
+    val onHealOthers: ((battleState: BattleState, self: HeroUnit, target: HeroUnit, healAmount: Int) -> Unit)?
+        get() = null
 
     val assistRelated: AssistRelated?
         get() = null
@@ -56,6 +58,14 @@ interface Skill {
         get() = null
     val additionalInCombatStat: InCombatSkill<Stat>?
         get() = null
+    val counter: CombatStartSkill<Int>?
+        get() = null
+    val followUp: CombatStartSkill<Int>?
+        get() = null
+    val desperation: CombatStartSkill<Boolean>?
+        get() = null
+    val vantage: CombatStartSkill<Boolean>?
+        get() = null
 
     // actual in combat
     val counterIgnoreRange: InCombatSkill<Boolean>?
@@ -63,12 +73,6 @@ interface Skill {
     val brave: InCombatSkill<Boolean>?
         get() = null
     val disablePriorityChange: InCombatSkill<Boolean>?
-        get() = null
-    val desperation: InCombatSkill<Boolean>?
-        get() = null
-    val vantage: InCombatSkill<Boolean>?
-        get() = null
-    val followUp: InCombatSkill<Int>?
         get() = null
     val cooldownBuff: InCombatSkill<CooldownChange<Int>>?
         get() = null
@@ -134,6 +138,7 @@ class SkillSet(skills: Sequence<Skill>) {
 
     val supportInCombatBuff = this.skills.mapNotNull(Skill::supportInCombatBuff)
     val supportInCombatDebuff = this.skills.mapNotNull(Skill::supportInCombatDebuff)
+    val onHealOthers = this.skills.mapNotNull(Skill::onHealOthers)
 
     val assistRelated = this.skills.mapNotNull(Skill::assistRelated)
 
@@ -175,6 +180,15 @@ class InCombatSkillSet(
         get() = methodSeq(Skill::neutralizePenalty).applyAll()
     val inCombatStat: Sequence<Stat>
         get() = methodSeq(Skill::inCombatStat).applyAll()
+    val counter: Sequence<Int>
+        get() = methodSeq(Skill::counter).applyAll()
+    val followUp: Sequence<Int>
+        get() = methodSeq(Skill::followUp).applyAll()
+    val desperation: Sequence<Boolean>
+        get() = methodSeq(Skill::desperation).applyAll()
+    val vantage: Sequence<Boolean>
+        get() = methodSeq(Skill::vantage).applyAll()
+
 
     val additionalInCombatStat: Sequence<InCombatSkill<Stat>>
         get() = methodSeq(Skill::additionalInCombatStat)
@@ -190,12 +204,6 @@ class InCombatSkillSet(
         get() = methodSeq(Skill::brave)
     val disablePriorityChange: Sequence<InCombatSkill<Boolean>>
         get() = methodSeq(Skill::disablePriorityChange)
-    val desperation: Sequence<InCombatSkill<Boolean>>
-        get() = methodSeq(Skill::desperation)
-    val vantage: Sequence<InCombatSkill<Boolean>>
-        get() = methodSeq(Skill::vantage)
-    val followUp: Sequence<InCombatSkill<Int>>
-        get() = methodSeq(Skill::followUp)
     val cooldownBuff: Sequence<InCombatSkill<CooldownChange<Int>>>
         get() = methodSeq(Skill::cooldownBuff)
     val cooldownDebuff: Sequence<InCombatSkill<CooldownChange<Int>>>
@@ -257,12 +265,22 @@ class InCombatSkillWrapper(
         return forEach { it(combatStatus, value) }
     }
 
-    val additionalInCombatStat: Sequence<Stat>
-        get() = baseSkillSet.additionalInCombatStat.applyAll()
     val adaptiveDamage: Sequence<Boolean>
         get() = baseSkillSet.adaptiveDamage.mapSkillApplyAll()
     val denyAdaptiveDamage: Sequence<Boolean>
         get() = baseSkillSet.denyAdaptiveDamage.mapSkillApplyAll()
+
+    val counter: Sequence<Int>
+        get() = baseSkillSet.counter
+    val followUp: Sequence<Int>
+        get() = baseSkillSet.followUp
+    val desperation: Sequence<Boolean>
+        get() = baseSkillSet.desperation
+    val vantage: Sequence<Boolean>
+        get() = baseSkillSet.vantage
+
+    val additionalInCombatStat: Sequence<Stat>
+        get() = baseSkillSet.additionalInCombatStat.applyAll()
     val staffAsNormal: Sequence<Boolean>
         get() = baseSkillSet.staffAsNormal.applyAll()
     val denyStaffAsNormal: Sequence<Boolean>
@@ -283,12 +301,6 @@ class InCombatSkillWrapper(
         get() = baseSkillSet.brave.applyAll()
     val disablePriorityChange: Sequence<Boolean>
         get() = baseSkillSet.disablePriorityChange.applyAll()
-    val desperation: Sequence<Boolean>
-        get() = baseSkillSet.desperation.applyAll()
-    val vantage: Sequence<Boolean>
-        get() = baseSkillSet.vantage.applyAll()
-    val followUp: Sequence<Int>
-        get() = baseSkillSet.followUp.applyAll()
 
     fun getPercentageDamageReduce(specialTriggered: Boolean): Sequence<Int> =
         baseSkillSet.percentageDamageReduce.applyAllPerAttack(specialTriggered)

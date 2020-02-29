@@ -40,10 +40,11 @@ fun applyHeal(
     } else {
         self.reduceCooldown(1)
     }
+    self.skillSet.onHealOthers.forEach { it(battleState, self, target, healAmount)  }
 }
 
 abstract class Heal(private val threshold: Int, isRange: Boolean = false) : NormalAssist(isRange) {
-    final override fun apply(
+    override fun apply(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState
@@ -60,14 +61,14 @@ abstract class Heal(private val threshold: Int, isRange: Boolean = false) : Norm
         return target.currentHp < target.maxHp
     }
 
-    final override fun isValidPreCombat(
+    override fun isValidPreCombat(
         self: HeroUnit,
         selfAttacks: List<CombatResult>
     ): Boolean {
         return true
     }
 
-    final override fun preCombatBestTarget(
+    override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,

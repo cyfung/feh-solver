@@ -8,12 +8,14 @@ import kotlin.math.absoluteValue
 
 object BlazingThunder : AoeSpecial(4) {
     override val damageFactor: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = 150
 
     override fun getTargets(battleState: BattleState, self: HeroUnit, mainTarget: HeroUnit): Sequence<HeroUnit> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return mainTarget.allies(battleState).filter {
+            it.position.x  == mainTarget.position.x &&
+                    (it.position.y - mainTarget.position.y).absoluteValue <= 2
+        } + mainTarget
     }
-
 }
 
 object BlazingLight : AoeSpecial(4) {

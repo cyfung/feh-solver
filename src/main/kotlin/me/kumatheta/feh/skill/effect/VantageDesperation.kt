@@ -1,7 +1,7 @@
 package me.kumatheta.feh.skill.effect
 
-import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.CombatStartSkill
 
-fun belowThreshold(percentage: Int): InCombatSkill<Boolean> = {
-    it.self.heroUnit.hpThreshold(percentage) <= 0
+fun belowThreshold(percentage: Int): CombatStartSkill<Boolean> = {
+    it.self.hpThreshold(percentage) <= 0
 }

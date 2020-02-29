@@ -1,14 +1,8 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.BasicWeapon
-import me.kumatheta.feh.CombatEndSkill
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.DaggerC
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.Skill
-import me.kumatheta.feh.Stat
-import me.kumatheta.feh.combatSkill
+import me.kumatheta.feh.*
 import me.kumatheta.feh.skill.aoeDebuffFoe
+import me.kumatheta.feh.skill.toFollowUpPassive
 
 object Lyfjaberg : BasicWeapon(DaggerC, 14, Stat(res = 3)) {
     override val inCombatStat: CombatStartSkill<Stat>? = { combatStatus ->
@@ -22,9 +16,7 @@ object Lyfjaberg : BasicWeapon(DaggerC, 14, Stat(res = 3)) {
 
     override val foeEffect: CombatStartSkill<Skill?>? = { combatStatus ->
         if (combatStatus.initAttack && combatStatus.self.hpThreshold(50) >= 0) {
-            object : Skill {
-                override val followUp: InCombatSkill<Int>? = combatSkill(-1)
-            }
+            combatStartSkill(-1).toFollowUpPassive()
         } else {
             null
         }

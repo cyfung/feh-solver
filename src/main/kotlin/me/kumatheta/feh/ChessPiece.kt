@@ -41,6 +41,10 @@ class HeroUnit(
             MoveType.INFANTRY -> 2
             MoveType.ARMORED -> 1
             MoveType.FLYING -> 2
+        } + if (withPositiveStatus(PositiveStatus.EXTRA_TRAVEL_POWER)) {
+            1
+        } else {
+            0
         }
 
     var available = true
@@ -63,6 +67,10 @@ class HeroUnit(
 
     fun withNegativeStatus(ns: NegativeStatus): Boolean {
         return negativeStatus.contains(ns)
+    }
+
+    fun withPositiveStatus(ps: PositiveStatus): Boolean {
+        return positiveStatus.contains(ps)
     }
 
     val withPanic: Boolean
@@ -271,7 +279,7 @@ class HeroUnit(
         val cooldownChange = cachedEffect.cooldown
         if (cooldownChange > 0) {
             addCooldown(cooldownChange)
-        } else if(cooldownChange < 0) {
+        } else if (cooldownChange < 0) {
             reduceCooldown(-cooldownChange)
         }
         cachedEffect = CachedEffect()
@@ -298,11 +306,13 @@ class HeroUnit(
 enum class NegativeStatus {
     GRAVITY,
     PANIC,
-    ISOLATION
+    ISOLATION,
+    TRIANGLE
 }
 
 enum class PositiveStatus {
-    MOVEMENT_ORDER
+    MOVEMENT_ORDER,
+    EXTRA_TRAVEL_POWER
 }
 
 class Obstacle(var health: Int, override val position: Position) : ChessPiece() {

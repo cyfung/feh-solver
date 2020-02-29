@@ -1,19 +1,16 @@
 package me.kumatheta.feh.skill.assist
 
-import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Position
-import me.kumatheta.feh.skill.NormalAssist
+import me.kumatheta.feh.*
 
 private const val THRESHOLD = 10
 
-abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
+abstract class RestoreAssist : Heal(10) {
     override fun apply(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState
     ) {
-        applyHeal(self, target, battleState, healAmount(baseHeal, self, target))
+        super.apply(self, target, battleState)
         target.clearPenalty()
     }
 
@@ -26,17 +23,33 @@ abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
         return target.currentHp < target.maxHp || target.debuff.isNotZero()
     }
 
+    override fun isValidPreCombat(self: HeroUnit, selfAttacks: List<CombatResult>): Boolean {
+        return true
+    }
+
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
-        val (noDebuff, hasDebuff) = targets.partition { it.debuff.isZero() }
-        return preCombatNoDebuffBestTarget(self, noDebuff) ?: preCombatHasDebuffBestTarget(hasDebuff)
+        val (noDebuff, hasDebuff) = targets.partition { it.debuff.isZero() && !it.hasNegativeStatus }
+        return preCombatNoDebuffBestTarget(self, noDebuff) ?: withDebuffBestTarget(hasDebuff)
     }
 
-    private fun preCombatHasDebuffBestTarget(
+    override fun postCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
+        foeThreat: Map<Position, Int>,
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        battleState: BattleState
+    ): HeroUnit? {
+        val (noDebuff, withDebuff) = targets.partition { it.debuff.isZero() && !it.hasNegativeStatus }
+        return postCombatNoDebuffBestTarget(self, noDebuff) ?: withDebuffBestTarget(withDebuff)
+    }
+
+    private fun withDebuffBestTarget(
         targets: List<HeroUnit>
     ): HeroUnit? {
         return targets.maxBy { it.id }
@@ -47,10 +60,31 @@ abstract class RestoreAssist(private val baseHeal: Int) : NormalAssist() {
         targets: List<HeroUnit>
     ): HeroUnit? {
         return targets.asSequence().map { target ->
-            target to healAmount(baseHeal, self, target)
+            target to healAmount(self, target)
         }.filter {
             it.second >= THRESHOLD
         }.bestHealTarget()
     }
 
+    private fun postCombatNoDebuffBestTarget(
+        self: HeroUnit,
+        targets: List<HeroUnit>
+    ): HeroUnit? {
+        return targets.asSequence().map { target ->
+            target to healAmount(self, target)
+        }.bestHealTarget()
+    }
+
+}
+
+object Restore: RestoreAssist() {
+    override fun healAmount(self: HeroUnit, target: HeroUnit): Int {
+        return healAmount(8, self, target)
+    }
+}
+
+object RestorePlus: RestoreAssist() {
+    override fun healAmount(self: HeroUnit, target: HeroUnit): Int {
+        return healAmount(maxOf(8, self.visibleStat.atk / 2), self, target)
+    }
 }

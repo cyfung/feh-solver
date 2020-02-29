@@ -18,6 +18,7 @@ val BASE_ASSIST_COMPARATOR = me.kumatheta.feh.util.compareByDescending<HeroUnit>
 val ALL_ASSISTS = sequenceOf(
     "Reciprocal Aid" to ReciprocalAid,
     "Physic+" to HealingPlus(8, true, 0, 8),
+    "Restore+" to RestorePlus,
     "Dance" to Refresh(),
     "Sing" to Refresh(),
     "Play" to Refresh(),

@@ -14,41 +14,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.list
 import kotlinx.serialization.protobuf.ProtoBuf
-import me.kumatheta.feh.Axe
-import me.kumatheta.feh.BasicBattleMap
-import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.Beast
-import me.kumatheta.feh.Bow
-import me.kumatheta.feh.Color
-import me.kumatheta.feh.Dagger
-import me.kumatheta.feh.Dragon
-import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Lance
-import me.kumatheta.feh.Magic
-import me.kumatheta.feh.MoveAndAssist
-import me.kumatheta.feh.MoveAndAttack
-import me.kumatheta.feh.MoveAndBreak
-import me.kumatheta.feh.MoveOnly
+import me.kumatheta.feh.*
 import me.kumatheta.feh.MoveType
-import me.kumatheta.feh.PositionMap
-import me.kumatheta.feh.Staff
-import me.kumatheta.feh.Sword
-import me.kumatheta.feh.Team
 import me.kumatheta.feh.Terrain
-import me.kumatheta.feh.UnitAction
-import me.kumatheta.feh.WeaponType
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
-import me.kumatheta.feh.message.Action
-import me.kumatheta.feh.message.AttackType
-import me.kumatheta.feh.message.BattleMapPosition
-import me.kumatheta.feh.message.MoveSet
-import me.kumatheta.feh.message.SetupInfo
-import me.kumatheta.feh.message.UnitAdded
-import me.kumatheta.feh.message.UnitUpdate
-import me.kumatheta.feh.message.UpdateInfo
-import me.kumatheta.feh.readMap
-import me.kumatheta.feh.readUnits
+import me.kumatheta.feh.message.*
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
@@ -266,11 +237,8 @@ private suspend fun runMcts(
         println("elapsed ${mctsStart.elapsedNow()}")
         val score = mcts.score
         val bestMoves = score.moves ?: throw IllegalStateException()
-        val testState = try {
-            board.tryMoves(bestMoves)
-        } catch (t: Throwable) {
-            throw t
-        }
+        val testState = board.tryMoves(bestMoves)
+
         println(bestMoves.asSequence().map { it.unitAction }.toList())
         println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
 

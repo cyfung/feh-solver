@@ -5,3 +5,6 @@ id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,spec
 8,1,Axe Cavalier,Knight - Axe,,,2,CAVALRY,Wo Gun+Def,,Moonbow,62,51,27,32,33,Sturdy Blow 2,Lunge,Odd Def Wave 3
 9,1,Sword Fighter,Fighter - Sword,,,1,INFANTRY,Slaying Edge+Def,,Sacred Cowl,66,48,34,33,28,Death Blow 3,Guard 3,Infantry Pulse 3
 10,1,Green Mage,Knight - Green Tome,,,2,INFANTRY,Keen Gronnwolf+GEff,,Glimmer,52,46,35,22,31,Fire Boost 3,Poison Strike 3,Res Ploy 3
+11,2,Cleric,Sister - Rod,,,1,INFANTRY,Trilemma+ Dazzling,Restore+,Windfire Balm+,46,43,31,25,38,Spd/Def Solo 3,Live to Serve 3,Atk Ploy 3
+12,2,Sword Knight,Armor - Sword,,,3,ARMORED,Armorsmasher+ Eff,,Draconic Aura,79,56,17,44,21,Death Blow 3,Wary Fighter 3,Armor March 3
+13,2,Axe Knight,Armor - Axe,,,4,ARMORED,Brave Axe+,,Ignis,76,50,12,44,21,Atk/Def Bond 3,Wary Fighter 3,Armor March 3

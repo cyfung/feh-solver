@@ -10,6 +10,8 @@ val ALL_PASSIVES = sequenceOf(
     "Close Counter" to CounterIgnoreRange,
     "Distant Counter" to CounterIgnoreRange,
 
+    "Seal Atk/Def 2" to seal(Stat(def = -5, atk = -5)).toCombatEndPassive(),
+
     "Atk/Def Bond 1" to bond(Stat(atk = 3, def = 3)).toInCombatStatPassive(),
     "Atk/Def Bond 2" to bond(Stat(atk = 4, def = 4)).toInCombatStatPassive(),
     "Atk/Def Bond 3" to bond(Stat(atk = 5, def = 5)).toInCombatStatPassive(),
@@ -19,6 +21,7 @@ val ALL_PASSIVES = sequenceOf(
 
     "Atk/Spd Solo 3" to solo(Stat(atk = 6, spd = 6)).toInCombatStatPassive(),
     "Atk/Def Solo 3" to solo(Stat(atk = 6, def = 6)).toInCombatStatPassive(),
+    "Spd/Def Solo 3" to solo(Stat(spd = 6, def = 6)).toInCombatStatPassive(),
 
     "Death Blow 3" to blow(Stat(atk = 6)).toInCombatStatPassive(),
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)).toInCombatStatPassive(),
@@ -28,6 +31,7 @@ val ALL_PASSIVES = sequenceOf(
     "Fierce Stance 3" to stance(Stat(atk = 6)).toInCombatStatPassive(),
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)).toInCombatStatPassive(),
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)).toInCombatStatPassive(),
+    "Warding Breath" to WardingBreath,
 
     "Spd Tactics 3" to tactics(Stat(spd = 6)).toStartOfTurnPassive(),
     "Def Tactics 3" to tactics(Stat(def = 6)).toStartOfTurnPassive(),
@@ -47,6 +51,8 @@ val ALL_PASSIVES = sequenceOf(
     "B Tome breaker 3" to breaker(MagicB, 50).toFollowUpPassive(),
     "Vantage 3" to belowThreshold(75).toVantagePassive(),
     "Desperation 3" to belowThreshold(75).toDesperationPassive(),
+    "Wary Fighter 3" to WaryFighter(50),
+    "Armor March 3" to armorMarch3().toStartOfTurnPassive(),
 
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
     "Distant Def 3" to rangeDefStat(Stat(def = 6, res = 6)).toInCombatStatPassive(),
@@ -87,6 +93,7 @@ val ALL_PASSIVES = sequenceOf(
     "Wind Boost 3" to boost(Stat(spd = 6)).toInCombatStatPassive(),
     "Fire Boost 3" to boost(Stat(atk = 6)).toInCombatStatPassive(),
 
+    "Live to Serve 3" to LiveToServe3,
     "Null Follow-up 3" to NullFollowUp3,
     "Guard 3" to Guard3,
     "Triangle Adept 3" to TriangleAdept3,
@@ -111,54 +118,46 @@ val ALL_PASSIVES = sequenceOf(
 
 ).toSkillMap()
 
-class VantagePassive(vantage: InCombatSkill<Boolean>) : Passive {
-    override val vantage: InCombatSkill<Boolean>? = vantage
-}
+class VantagePassive(override val vantage: CombatStartSkill<Boolean>) : Passive
 
-fun InCombatSkill<Boolean>.toVantagePassive(): VantagePassive {
+fun CombatStartSkill<Boolean>.toVantagePassive(): VantagePassive {
     return VantagePassive(this)
 }
 
-class DesperationPassive(desperation: InCombatSkill<Boolean>) : Passive {
-    override val desperation: InCombatSkill<Boolean>? = desperation
-}
+class DesperationPassive(override val desperation: CombatStartSkill<Boolean>) : Passive
 
-fun InCombatSkill<Boolean>.toDesperationPassive(): DesperationPassive {
+fun CombatStartSkill<Boolean>.toDesperationPassive(): DesperationPassive {
     return DesperationPassive(this)
 }
 
+class FollowUpPassive( override val followUp: CombatStartSkill<Int>) : Passive
 
-class FollowUpPassive(followUp: InCombatSkill<Int>) : Passive {
-    override val followUp: InCombatSkill<Int>? = followUp
-}
-
-fun InCombatSkill<Int>.toFollowUpPassive(): FollowUpPassive {
+fun CombatStartSkill<Int>.toFollowUpPassive(): FollowUpPassive {
     return FollowUpPassive(this)
 }
 
-class SupportInCombatBuffPassive(supportInCombatBuff: MapSkillWithTarget<Skill?>) : Passive {
-    override val supportInCombatBuff: MapSkillWithTarget<Skill?>? = supportInCombatBuff
+class CounterPassive( override val counter: CombatStartSkill<Int>) : Passive
+
+fun CombatStartSkill<Int>.toCounterPassive(): CounterPassive {
+    return CounterPassive(this)
 }
+
+
+class SupportInCombatBuffPassive(override val supportInCombatBuff: MapSkillWithTarget<Skill?>) : Passive
 
 fun MapSkillWithTarget<Skill?>.toSupportInCombatBuffPassive(): SupportInCombatBuffPassive {
     return SupportInCombatBuffPassive(this)
 }
 
-class StartOfTurnPassive(startOfTurn: MapSkillMethod<Unit>) : Passive {
-    override val startOfTurn: MapSkillMethod<Unit>? = startOfTurn
-}
+class StartOfTurnPassive(override val startOfTurn: MapSkillMethod<Unit>) : Passive
 
 fun MapSkillMethod<Unit>.toStartOfTurnPassive(): StartOfTurnPassive {
     return StartOfTurnPassive(this)
 }
 
-class InCombatStatPassive(inCombatStat: CombatStartSkill<Stat>) : Passive {
-    override val inCombatStat: CombatStartSkill<Stat>? = inCombatStat
-}
+class InCombatStatPassive(override val inCombatStat: CombatStartSkill<Stat>) : Passive
 
-class ExtraStatPassive(extraStat: Stat) : Passive {
-    override val extraStat: Stat? = extraStat
-}
+class ExtraStatPassive(override val extraStat: Stat) : Passive
 
 fun Stat.toExtraStatPassive(): ExtraStatPassive {
     return ExtraStatPassive(this)
@@ -167,3 +166,7 @@ fun Stat.toExtraStatPassive(): ExtraStatPassive {
 fun CombatStartSkill<Stat>.toInCombatStatPassive(): InCombatStatPassive {
     return InCombatStatPassive(this)
 }
+
+class CombatEndPassive(override val combatEnd: CombatEndSkill) : Passive
+
+fun CombatEndSkill.toCombatEndPassive() = CombatEndPassive(this)

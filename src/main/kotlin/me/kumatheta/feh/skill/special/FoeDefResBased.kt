@@ -4,7 +4,7 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.DamagingSpecial
 import me.kumatheta.feh.InCombatStat
 
-class FoeDefResBased(
+open class FoeDefResBased(
     coolDownCount: Int,
     private val multiplier: Int,
     private val divider: Int

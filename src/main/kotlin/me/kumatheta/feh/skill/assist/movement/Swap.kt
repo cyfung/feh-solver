@@ -4,7 +4,6 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.skill.MovementEffect
-import me.kumatheta.feh.skill.MovementEffect.Companion.isValidAndUnoccupied
 import me.kumatheta.feh.skill.ProtectiveMovementAssist
 
 object Swap : ProtectiveMovementAssist(false, SwapEffect)
@@ -26,10 +25,9 @@ object SwapEffect : MovementEffect {
         fromPosition: Position
     ): Boolean {
         val selfEndPosition = target.position
-        return selfEndPosition.isValidAndUnoccupied(battleState, self) && battleState.isValidPosition(
-            target,
-            fromPosition
-        )
+
+        return battleState.isValidPosition(self, selfEndPosition) &&
+                (target.isDead || battleState.isValidPosition(target, fromPosition))
     }
 
     override fun targetEndPosition(
