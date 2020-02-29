@@ -9,6 +9,7 @@ private val FOE_EFFECT: CombatStartSkill<Skill?> = {
 }
 
 class TrilemmaPlus(disableCounter: Boolean, staffAsNormal: Boolean) : BasicWeapon(Staff, 12) {
+    override val specialDebuff: SpecialDebuff? = SpecialDebuff.ALWAYS_AVAILABLE
     override val combatEnd: CombatEndSkill? = negativeStatus(NegativeStatus.TRIANGLE, 2, true)
 
     override val foeEffect: CombatStartSkill<Skill?>? = if (disableCounter) {
