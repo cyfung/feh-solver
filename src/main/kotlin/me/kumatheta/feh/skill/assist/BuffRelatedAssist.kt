@@ -2,19 +2,19 @@ package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.skill.NormalAssist
 import me.kumatheta.feh.WinLoss
 import me.kumatheta.feh.skill.BASE_ASSIST_COMPARATOR
+import me.kumatheta.feh.skill.NormalAssist
 
 abstract class BuffRelatedAssist : NormalAssist() {
     final override fun isValidPreCombat(self: HeroUnit, selfAttacks: List<CombatResult>): Boolean {
-        return if (self.hasSpecialDebuff) {
+        return if (self.specialDebuffer != null) {
             selfAttacks.all {
-                it.potentialDamage < 5 && it.debuffSuccess && it.winLoss == WinLoss.LOSS
+                it.potentialDamage < 5 && !it.debuffSuccess && it.winLoss == WinLoss.LOSS
             }
         } else {
             selfAttacks.all {
-                it.potentialDamage < 5 && it.debuffSuccess
+                it.potentialDamage < 5 && !it.debuffSuccess
             }
         }
     }

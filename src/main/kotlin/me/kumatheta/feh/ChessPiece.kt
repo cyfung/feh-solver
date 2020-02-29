@@ -270,6 +270,7 @@ class HeroUnit(
     }
 
     fun applyCachedEffect() {
+        if (!cachedEffect.updated) return
         val hp = cachedEffect.hp
         if (hp > 0) {
             heal(hp)

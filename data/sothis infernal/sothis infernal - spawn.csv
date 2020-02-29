@@ -10,3 +10,6 @@ id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,spec
 13,2,Axe Knight,Armor - Axe,,,4,ARMORED,Brave Axe+,,Ignis,76,50,12,44,21,Atk/Def Bond 3,Wary Fighter 3,Armor March 3
 14,3,Green Cavalier,Knight - Green Tome,,,3,CAVALRY,Rexcailbur+ Atk,,Iceberg,47,53,28,18,37,Atk/Spd Solo 3,Poison Strike 3,Spd Smoke 3
 15,3,Sword Cavalier,Knight - Sword,,,2,CAVALRY,Zanbato+ Eff,,Reprisal,60,54,30,31,36,Fury 3,Pass 3,Threaten Def 3
+16,4,Bow Cavailer,Knight - Bow,,,3,CAVALRY,Shining Bow+ C Atk,,Draconic Aura,57,51,24,27,25,Def/Res Solo 3,Chill Res 3,Distant Guard 3
+17,4,Axe Fighter,Fighter - Axe,,,3,INFANTRY,Silver Axe+ def,,Bonfire,66,50,34,37,24,Heavy Blade 3,Quick Riposte 3,Pulse Smoke 3
+18,4,Lance Fighter,Fighter - Lance,,,5,INFANTRY,Barrier Lance+ res,Rally Up Atk+,Miracle,66,48,34,33,28,Distant Def 3,Renewal 3,Drive Res 2

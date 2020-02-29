@@ -22,6 +22,7 @@ val ALL_ASSISTS = sequenceOf(
     "Dance" to Refresh(),
     "Sing" to Refresh(),
     "Play" to Refresh(),
+    "Rally Up Atk+" to RallyUp(Stat(atk=6)),
 
     "Gentle Dream" to GentleDream,
     "Rally Atk/Spd" to Rally(Stat(atk = 3, spd = 3)),

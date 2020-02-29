@@ -4,7 +4,6 @@ import me.kumatheta.feh.*
 import me.kumatheta.feh.skill.assist.movement.SwapEffect
 import me.kumatheta.feh.skill.effect.*
 import me.kumatheta.feh.skill.passive.*
-import me.kumatheta.feh.skill.passive.TimePulse3
 
 val ALL_PASSIVES = sequenceOf(
     "Close Counter" to CounterIgnoreRange,
@@ -22,6 +21,7 @@ val ALL_PASSIVES = sequenceOf(
     "Atk/Spd Solo 3" to solo(Stat(atk = 6, spd = 6)).toInCombatStatPassive(),
     "Atk/Def Solo 3" to solo(Stat(atk = 6, def = 6)).toInCombatStatPassive(),
     "Spd/Def Solo 3" to solo(Stat(spd = 6, def = 6)).toInCombatStatPassive(),
+    "Def/Res Solo 3" to solo(Stat(def = 6, res = 6)).toInCombatStatPassive(),
 
     "Death Blow 3" to blow(Stat(atk = 6)).toInCombatStatPassive(),
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)).toInCombatStatPassive(),
@@ -33,7 +33,7 @@ val ALL_PASSIVES = sequenceOf(
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)).toInCombatStatPassive(),
     "Warding Breath" to WardingBreath,
 
-    "Spd Smoke 3" to smoke(Stat(spd=-7)).toCombatEndPassive(),
+    "Spd Smoke 3" to smoke(Stat(spd = -7)).toCombatEndPassive(),
 
     "Spd Tactics 3" to tactics(Stat(spd = 6)).toStartOfTurnPassive(),
     "Def Tactics 3" to tactics(Stat(def = 6)).toStartOfTurnPassive(),
@@ -68,6 +68,9 @@ val ALL_PASSIVES = sequenceOf(
     "Chill Def 3" to chill(Stat(def = -7)) {
         it.visibleStat.def
     }.toStartOfTurnPassive(),
+    "Chill Res 3" to chill(Stat(res = -7)) {
+        it.visibleStat.res
+    }.toStartOfTurnPassive(),
     "Odd Atk Wave 3" to wave(Stat(atk = 6), oddTurn = true).toStartOfTurnPassive(),
     "Odd Spd Wave 3" to wave(Stat(spd = 6), oddTurn = true).toStartOfTurnPassive(),
     "Odd Def Wave 3" to wave(Stat(def = 6), oddTurn = true).toStartOfTurnPassive(),
@@ -77,7 +80,7 @@ val ALL_PASSIVES = sequenceOf(
     "Even Def Wave 3" to wave(Stat(def = 6), oddTurn = false).toStartOfTurnPassive(),
     "Even Res Wave 3" to wave(Stat(res = 6), oddTurn = false).toStartOfTurnPassive(),
     "Infantry Pulse 3" to infantryPulse(minDiff = 1).toStartOfTurnPassive(),
-    "Threaten Def 3" to threaten(Stat(def=-5)).toStartOfTurnPassive(),
+    "Threaten Def 3" to threaten(Stat(def = -5)).toStartOfTurnPassive(),
 
     "Pass 3" to Pass(percentageHp = 25),
     "HP+5" to Stat(hp = 5).toExtraStatPassive(),
@@ -88,14 +91,18 @@ val ALL_PASSIVES = sequenceOf(
     "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStatPassive(),
     "B Duel Flying 3" to Stat(hp = 5).toExtraStatPassive(),
     "Atk/Spd 2" to Stat(atk = 2, spd = 2).toExtraStatPassive(),
-    "Spur Atk/Spd 2" to Spur(Stat(atk = 2, spd = 2)).toSupportInCombatBuffPassive(),
-    "Spur Def/Res 2" to Spur(Stat(def = 3, res = 3)).toSupportInCombatBuffPassive(),
-    "Spur Def 3" to Spur(Stat(def = 4)).toSupportInCombatBuffPassive(),
-    "Spur Res 3" to Spur(Stat(res = 4)).toSupportInCombatBuffPassive(),
-    "Spur Spd 1" to Spur(Stat(spd = 2)).toSupportInCombatBuffPassive(),
+    "Spur Atk/Spd 2" to spur(Stat(atk = 2, spd = 2)).toSupportInCombatBuffPassive(),
+    "Spur Def/Res 2" to spur(Stat(def = 3, res = 3)).toSupportInCombatBuffPassive(),
+    "Spur Def 3" to spur(Stat(def = 4)).toSupportInCombatBuffPassive(),
+    "Spur Res 3" to spur(Stat(res = 4)).toSupportInCombatBuffPassive(),
+    "Spur Spd 1" to spur(Stat(spd = 2)).toSupportInCombatBuffPassive(),
     "Earth Boost 3" to boost(Stat(def = 6)).toInCombatStatPassive(),
     "Wind Boost 3" to boost(Stat(spd = 6)).toInCombatStatPassive(),
     "Fire Boost 3" to boost(Stat(atk = 6)).toInCombatStatPassive(),
+    "Distant Guard 3" to DistantGuard(Stat(def=4, res=4)),
+    "Heavy Blade 3" to HeavyBlade3,
+    "Pulse Smoke 3" to pulseSmoke3.toCombatEndPassive(),
+    "Renewal 3" to Renewal3,
 
     "Live to Serve 3" to LiveToServe3,
     "Null Follow-up 3" to NullFollowUp3,
@@ -113,6 +120,7 @@ val ALL_PASSIVES = sequenceOf(
     "Shield Pulse 3" to ShieldPulse3,
     "Drive Atk 2" to Drive(Stat(atk = 3)),
     "Drive Spd 2" to Drive(Stat(spd = 3)),
+    "Drive Res 2" to Drive(Stat(res = 3)),
     "Goad Cavalry" to GoadCavalry,
     "Flier Formation 3" to FlierFormation3,
     "Air Orders 3" to airOrder3.toStartOfTurnPassive(),
@@ -134,22 +142,22 @@ fun CombatStartSkill<Boolean>.toDesperationPassive(): DesperationPassive {
     return DesperationPassive(this)
 }
 
-class FollowUpPassive( override val followUp: CombatStartSkill<Int>) : Passive
+class FollowUpPassive(override val followUp: CombatStartSkill<Int>) : Passive
 
 fun CombatStartSkill<Int>.toFollowUpPassive(): FollowUpPassive {
     return FollowUpPassive(this)
 }
 
-class CounterPassive( override val counter: CombatStartSkill<Int>) : Passive
+class CounterPassive(override val counter: CombatStartSkill<Int>) : Passive
 
 fun CombatStartSkill<Int>.toCounterPassive(): CounterPassive {
     return CounterPassive(this)
 }
 
 
-class SupportInCombatBuffPassive(override val supportInCombatBuff: MapSkillWithTarget<Skill?>) : Passive
+class SupportInCombatBuffPassive(override val supportInCombatBuff: SupportCombatEffect) : Passive
 
-fun MapSkillWithTarget<Skill?>.toSupportInCombatBuffPassive(): SupportInCombatBuffPassive {
+fun SupportCombatEffect.toSupportInCombatBuffPassive(): SupportInCombatBuffPassive {
     return SupportInCombatBuffPassive(this)
 }
 

@@ -13,7 +13,7 @@ interface Hero {
     val skillSet: SkillSet
     val baseStat: Stat
     val group: Int?
-    val hasSpecialDebuff: Boolean
+    val specialDebuffer: SpecialDebuff?
     val effectiveAgainstMoveType: Set<MoveType>
     val effectiveAgainstWeaponType: Set<WeaponType>
     val neutralizeEffectiveMoveType: Boolean
@@ -31,6 +31,10 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
     }
 }
 
+enum class SpecialDebuff {
+    ALWAYS_AVAILABLE,
+    ONLY_WHEN_ALIVE
+}
 
 open class HeroModel(
     override val name: String,
@@ -50,7 +54,16 @@ open class HeroModel(
     final override val skillSet =
         SkillSet(passives.asSequence().plus(weapon).plusIfNotNull(assist).plusIfNotNull(special).toList())
     final override val debuffer: Boolean = skillSet.skills.any { it.debuffer }
-    final override val hasSpecialDebuff: Boolean = skillSet.skills.any { it.hasSpecialDebuff }
+    final override val specialDebuffer: SpecialDebuff? = skillSet.skills.asSequence().mapNotNull {
+        it.specialDebuff
+    }.maxBy {
+        if (it == SpecialDebuff.ALWAYS_AVAILABLE) {
+            0
+        } else {
+            1
+        }
+    }
+
     final override val effectiveAgainstMoveType = skillSet.groupAsSet(Skill::effectiveAgainstMoveType)
     final override val effectiveAgainstWeaponType = skillSet.groupAsSet(Skill::effectiveAgainstWeaponType)
     final override val neutralizeEffectiveMoveType =

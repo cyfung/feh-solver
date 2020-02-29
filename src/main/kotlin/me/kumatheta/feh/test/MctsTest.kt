@@ -2,16 +2,10 @@ package me.kumatheta.feh.test
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.list
-import me.kumatheta.feh.BasicBattleMap
-import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.MoveAndAssist
-import me.kumatheta.feh.MoveAndAttack
-import me.kumatheta.feh.MoveOnly
+import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.message.UpdateInfo
-import me.kumatheta.feh.readMap
-import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.RecyclableNode
 import me.kumatheta.mcts.RecycleManager
@@ -24,7 +18,7 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main() {
-    val dataSet = "grandmaster 51"
+    val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -39,20 +33,36 @@ fun main() {
     val phraseLimit = 7
     var board = FehBoard(phraseLimit, state, 3)
     val testMoves = listOf(
-        MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 3, attackTargetId = 10),
-        MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 4, attackTargetId = 9),
-        MoveAndAssist(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, assistTargetId = 2),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 5, attackTargetId = 6),
+        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
+        MoveOnly(heroUnitId = 4, moveTargetX = 3, moveTargetY = 0),
+        MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 0),
+        MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1),
 
-        MoveAndAssist(heroUnitId = 2, moveTargetX = 4, moveTargetY = 3, assistTargetId = 1),
-        MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 5, attackTargetId = 9),
-        MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, attackTargetId = 7),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 8),
+        MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 13),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13),
+        MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1),
+        MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 13),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9),
 
-        MoveAndAssist(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3, assistTargetId = 4),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 11),
-            MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 3, attackTargetId = 17),
-        MoveAndAttack(heroUnitId = 4, moveTargetX = 2, moveTargetY = 5, attackTargetId = 12)
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 3, attackTargetId = 12),
+        MoveOnly(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1),
+        MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 2, attackTargetId = 12),
+        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
+
+        MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 2, attackTargetId = 5),
+        MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 1, assistTargetId = 3),
+        MoveOnly(heroUnitId = 3, moveTargetX = 0, moveTargetY = 3),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 2, attackTargetId = 18),
+        MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 4),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 1, moveTargetY = 3, attackTargetId = 11),
+        MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 3),
+        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
+        MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 4, assistTargetId = 3),
+        MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 5, attackTargetId = 16),
+        MoveAndAttack(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2, attackTargetId = 18),
+        MoveAndAttack(heroUnitId = 4, moveTargetX = 2, moveTargetY = 4, attackTargetId = 18),
+        MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 2, attackTargetId = 18),
+        MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 3, attackTargetId = 18)
     ).map {
         FehMove(it)
     }
@@ -107,7 +117,8 @@ fun main() {
         println("average = ${scoreManager.average}")
         println("calculated best score: ${board.calculateScore(testState)}")
         println(
-            "tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
+            "tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}"
+        )
         tries = score.tries
         println("estimatedSize: ${mcts.estimatedSize}")
         println("elapsed ${clockMark.elapsedNow()}")

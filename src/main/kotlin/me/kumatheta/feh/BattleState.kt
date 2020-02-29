@@ -7,7 +7,6 @@ import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.effect.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.util.*
-import java.lang.Exception
 import kotlin.math.max
 import kotlin.math.min
 
@@ -306,44 +305,42 @@ class BattleState private constructor(
     private fun getAttackerSkillSeq(
         attacker: HeroUnit,
         defender: HeroUnit,
-        attackerTeam: List<HeroUnit>,
-        defenderTeam: List<HeroUnit>
+        attackerTeammates: List<SupportCombatInput>,
+        defenderTeammates: List<SupportCombatInput>
     ): Sequence<Skill> {
-        val attackerTeamSkills = attackerTeam.asSequence().filterNot { it == attacker }
-            .map { heroUnit ->
-                heroUnit.skillSet.supportInCombatBuff.asSequence().map {
-                    it.apply(this, heroUnit, attacker)
-                }
-            }.flatMap { it }.filterNotNull()
-        val defenderTeamSkills = defenderTeam.asSequence().map { heroUnit ->
-            heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
-                it.apply(this, heroUnit, attacker)
+        val attackerTeamSkills = attackerTeammates.asSequence().flatMap { supportCombatInput ->
+            supportCombatInput.self.skillSet.supportInCombatBuff.asSequence().map {
+                it(supportCombatInput)
             }
-        }.flatMap { it }.filterNotNull()
+        }.filterNotNull()
+        val defenderTeamSkills = defenderTeammates.asSequence().flatMap { supportCombatInput ->
+            supportCombatInput.self.skillSet.supportInCombatDebuff.asSequence().map {
+                it(supportCombatInput)
+            }
+        }.filterNotNull()
         return attacker.skillSet.skills.asSequence() + attackerTeamSkills + defenderTeamSkills + defender.skillSet.foeEffect.asSequence().map {
-            it(CombatStatus(this, defender, attacker, true))
+            it(CombatStatus(this, defender, attacker, false))
         }.filterNotNull()
     }
 
     private fun getDefenderSkillSeq(
         attacker: HeroUnit,
         defender: HeroUnit,
-        attackerTeam: List<HeroUnit>,
-        defenderTeam: List<HeroUnit>
+        attackerTeammates: List<SupportCombatInput>,
+        defenderTeammates: List<SupportCombatInput>
     ): Sequence<Skill> {
-        val defenderTeamSkills = defenderTeam.asSequence().filterNot { it == defender }
-            .map { heroUnit ->
-                heroUnit.skillSet.supportInCombatBuff.asSequence().map {
-                    it.apply(this, heroUnit, defender)
-                }
-            }.flatMap { it }.filterNotNull()
-        val attackerTeamSkills = attackerTeam.asSequence().map { heroUnit ->
-            heroUnit.skillSet.supportInCombatDebuff.asSequence().map {
-                it.apply(this, heroUnit, defender)
+        val defenderTeamSkills = defenderTeammates.asSequence().flatMap { supportCombatInput ->
+            supportCombatInput.self.skillSet.supportInCombatBuff.asSequence().map {
+                it(supportCombatInput)
             }
-        }.flatMap { it }.filterNotNull()
+        }.filterNotNull()
+        val attackerTeamSkills = attackerTeammates.asSequence().flatMap { supportCombatInput ->
+            supportCombatInput.self.skillSet.supportInCombatDebuff.asSequence().map {
+                it(supportCombatInput)
+            }
+        }.filterNotNull()
         return defender.skillSet.skills.asSequence() + defenderTeamSkills + attackerTeamSkills + attacker.skillSet.foeEffect.asSequence().map {
-            it(CombatStatus(this, attacker, defender, false))
+            it(CombatStatus(this, attacker, defender, true))
         }.filterNotNull()
     }
 
@@ -404,21 +401,25 @@ class BattleState private constructor(
     }
 
     private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): AttackerDefenderPair<InCombatSkillSet> {
-        val attackerTeam = unitsSeq(attacker.team).toList()
-        val defenderTeam = unitsSeq(defender.team).toList()
+        val attackerTeammates = unitsSeq(attacker.team).filterNot { it == attacker }.map {
+            SupportCombatInput(this, it, attacker, defender)
+        }.toList()
+        val defenderTeammates = unitsSeq(defender.team).filterNot { it == defender }.map {
+            SupportCombatInput(this, it, attacker, defender)
+        }.toList()
         val attackerSkills = InCombatSkillSet(
             battleState = this,
             self = attacker,
             foe = defender,
             initAttack = true,
-            skills = getAttackerSkillSeq(attacker, defender, attackerTeam, defenderTeam)
+            skills = getAttackerSkillSeq(attacker, defender, attackerTeammates, defenderTeammates)
         )
         val defenderSkills = InCombatSkillSet(
             battleState = this,
             self = defender,
             foe = attacker,
             initAttack = false,
-            skills = getDefenderSkillSeq(attacker, defender, attackerTeam, defenderTeam)
+            skills = getDefenderSkillSeq(attacker, defender, attackerTeammates, defenderTeammates)
         )
         return AttackerDefenderPair(attackerSkills, defenderSkills)
     }
@@ -528,11 +529,11 @@ class BattleState private constructor(
             val attackerStat = attacker.aoeInCombatStat()
             attacker.special.getTargets(this, attacker, defender).forEach { target ->
                 val skillsPair = getInCombatSkills(attacker, target)
-                val attackerAdaptive = skillsPair.attacker.adaptiveDamage.asSequence().map {
+                val attackerAdaptive = skillsPair.attacker.adaptiveDamage.asSequence().any {
                     it(this, attacker)
-                }.any() && skillsPair.defender.denyAdaptiveDamage.asSequence().map {
+                } && skillsPair.defender.denyAdaptiveDamage.asSequence().none {
                     it(this, attacker)
-                }.none()
+                }
                 val targetStat = target.aoeInCombatStat()
                 val defRes = getDefRes(attacker, attackerAdaptive, targetStat.inCombatStat)
                 val atk = attacker.visibleStat.atk

@@ -1,11 +1,6 @@
 package me.kumatheta.feh.skill.special
 
-import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.DamageDealt
-import me.kumatheta.feh.DefenseSpecial
-import me.kumatheta.feh.InCombatStat
-import me.kumatheta.feh.PerAttackListener
-import me.kumatheta.feh.PerAttackSkill
+import me.kumatheta.feh.*
 
 object IceMirror : DefenseSpecial(2) {
     override fun getReducedDamage(
@@ -30,7 +25,7 @@ object IceMirror : DefenseSpecial(2) {
     }
 
 
-    override val damageIncrease: PerAttackSkill<Int>? = lambda@{ combatStatus, _ ->
+    override val damageIncrease: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)? = lambda@{ combatStatus, _ ->
         val state = combatStatus.self.heroUnit.combatSkillData[IceMirror] as State? ?: return@lambda 0
         val damageReduced = state.damageReduced ?: throw IllegalStateException()
         combatStatus.self.heroUnit.combatSkillData.remove(IceMirror)

@@ -13,3 +13,13 @@ fun smoke(debuff: Stat): CombatEndSkill = { combatStatus, _ ->
         }
     }
 }
+
+val pulseSmoke3: CombatEndSkill = { combatStatus, _ ->
+    if(!combatStatus.self.heroUnit.isDead) {
+        combatStatus.battleState.unitsSeq(combatStatus.self.heroUnit.team.foe).filter {
+            it.position.distanceTo(combatStatus.self.heroUnit.position) <= 2
+        }.forEach {
+            it.cachedEffect.cooldown++
+        }
+    }
+}

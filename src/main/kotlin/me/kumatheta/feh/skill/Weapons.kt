@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.effect.stance
 import me.kumatheta.feh.skill.weapon.*
 
 val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
@@ -26,6 +27,7 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Slaying Edge+ Def" to Sword.slaying(14, Stat(hp = 5, def = 4)),
     "Thoron+" to MagicB.basic(13),
     "Rexcailbur+ Atk" to MagicG.basic(15,extraStat = Stat(hp=2)),
+    "Silver Axe+ Def" to Axe.basic(16,extraStat = Stat(hp=5, def=4)),
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
     "Blarowl+" to MagicB.owl(10),
@@ -34,6 +36,8 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Armorsmasher+ Eff" to Sword.effectiveAndNeutralize(14, MoveType.ARMORED, extraStat = Stat(hp = 3)),
     "Zanbato+ Eff" to Sword.effectiveAndNeutralize(14, MoveType.CAVALRY, extraStat = Stat(hp = 3)),
     "Wo Gun+ Def" to Axe.specialDamage(14, extraStat = Stat(hp = 5, def = 4)),
+    "Shining Bow+C Atk" to BowC.shining(13, Stat(hp=2)),
+    "Barrier Lance+ Res" to Lance.withInCombatStat(14, stance(Stat(res=7)), Stat(hp=5,def=4)),
 
     "Slow+" to SlowPlus,
     "Gravity+" to GravityPlus,

@@ -1,8 +1,6 @@
 package me.kumatheta.feh.util
 
-import me.kumatheta.feh.CombatResult
-import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Position
+import me.kumatheta.feh.*
 
 val attackTargetOrder = compareByDescending<CombatResult>(
     {
@@ -42,10 +40,10 @@ val attackerOrder = compareByDescending<CombatResult>(
         }
     },
     {
-        if (it.heroUnit.hasSpecialDebuff) {
-            1
-        } else {
-            0
+        when (it.heroUnit.specialDebuffer) {
+            SpecialDebuff.ALWAYS_AVAILABLE -> 1
+            SpecialDebuff.ONLY_WHEN_ALIVE -> if (it.winLoss != WinLoss.LOSS) 1 else 0
+            null -> 0
         }
     },
     {

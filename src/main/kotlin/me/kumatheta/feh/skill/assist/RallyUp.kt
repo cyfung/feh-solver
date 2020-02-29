@@ -5,7 +5,7 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.Stat
 
-abstract class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
+class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
     final override fun apply(
         self: HeroUnit,
         target: HeroUnit,

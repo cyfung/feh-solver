@@ -12,8 +12,8 @@ interface Skill {
         get() = 0
     val debuffer: Boolean
         get() = false
-    val hasSpecialDebuff: Boolean
-        get() = false
+    val specialDebuff: SpecialDebuff?
+        get() = null
     val neutralizeEffectiveWeaponType: Set<WeaponType>?
         get() = null
     val neutralizeEffectiveMoveType: Set<MoveType>?
@@ -34,9 +34,9 @@ interface Skill {
         get() = null
     val teleport: MapSkillMethod<Sequence<Position>>?
         get() = null
-    val supportInCombatBuff: MapSkillWithTarget<Skill?>?
+    val supportInCombatBuff: SupportCombatEffect?
         get() = null
-    val supportInCombatDebuff: MapSkillWithTarget<Skill?>?
+    val supportInCombatDebuff: SupportCombatEffect?
         get() = null
     val onHealOthers: ((battleState: BattleState, self: HeroUnit, target: HeroUnit, healAmount: Int) -> Unit)?
         get() = null
@@ -91,11 +91,11 @@ interface Skill {
 
 
     // per attack skill
-    val percentageDamageReduce: PerAttackSkill<Int>?
+    val percentageDamageReduce: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)?
         get() = null
-    val flatDamageReduce: PerAttackSkill<Int>?
+    val flatDamageReduce: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)?
         get() = null
-    val damageIncrease: PerAttackSkill<Int>?
+    val damageIncrease: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)?
         get() = null
 
     // listener
@@ -215,11 +215,11 @@ class InCombatSkillSet(
 
 
     // per attack
-    val percentageDamageReduce: Sequence<PerAttackSkill<Int>>
+    val percentageDamageReduce: Sequence<(CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int>
         get() = methodSeq(Skill::percentageDamageReduce)
-    val flatDamageReduce: Sequence<PerAttackSkill<Int>>
+    val flatDamageReduce: Sequence<(CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int>
         get() = methodSeq(Skill::flatDamageReduce)
-    val damageIncrease: Sequence<PerAttackSkill<Int>>
+    val damageIncrease: Sequence<(CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int>
         get() = methodSeq(Skill::damageIncrease)
 
     // listener
@@ -257,7 +257,9 @@ class InCombatSkillWrapper(
         return map { it(combatStatus) }
     }
 
-    private fun <T> Sequence<PerAttackSkill<T>>.applyAllPerAttack(specialTriggered: Boolean): Sequence<T> {
+    private fun <T> Sequence<(CombatStatus<InCombatStat>, specialTriggered: Boolean) -> T>.applyAllPerAttack(
+        specialTriggered: Boolean
+    ): Sequence<T> {
         return map { it(combatStatus, specialTriggered) }
     }
 
@@ -393,17 +395,35 @@ typealias CombatStartSkill<T> = CombatSkill<T, HeroUnit>
 
 typealias InCombatSkill<T> = CombatSkill<T, InCombatStat>
 
-typealias PerAttackSkill<T> = (CombatStatus<InCombatStat>, specialTriggered: Boolean) -> T
-
 typealias CombatEndSkill = (CombatStatus<InCombatStat>, attacked: Boolean) -> Unit
 
 typealias PerAttackListener<T> = (CombatStatus<InCombatStat>, value: T) -> Unit
 
 typealias MapSkillMethod<T> = (battleState: BattleState, self: HeroUnit) -> T
 
-interface MapSkillWithTarget<T> {
-    fun apply(battleState: BattleState, self: HeroUnit, target: HeroUnit): T
+data class SupportCombatInput(
+    val battleState: BattleState,
+    val self: HeroUnit,
+    val attacker: HeroUnit,
+    val defender: HeroUnit
+) {
+    val allyIsAttacker = self.team == attacker.team
+    val targetAlly
+        get() = if (allyIsAttacker) {
+            attacker
+        } else {
+            defender
+        }
+    val targetFoe
+        get() = if (allyIsAttacker) {
+            defender
+        } else {
+            attacker
+        }
 }
+
+typealias SupportCombatEffect = (SupportCombatInput) -> Skill?
+
 
 interface AssistRelated {
     fun apply(battleState: BattleState, self: HeroUnit, ally: HeroUnit, assist: Assist, useAssist: Boolean)
