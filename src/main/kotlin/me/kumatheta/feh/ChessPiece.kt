@@ -261,7 +261,7 @@ class HeroUnit(
         combatSkillData.clear()
     }
 
-    private fun applyCachedEffect() {
+    fun applyCachedEffect() {
         val hp = cachedEffect.hp
         if (hp > 0) {
             heal(hp)

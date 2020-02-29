@@ -14,7 +14,6 @@ class Owl(weaponType: WeaponType, might: Int, extraStat: Stat = Stat.ZERO) : Bas
     }
 }
 
-
 fun WeaponType.owl(might: Int, extraStat: Stat = Stat.ZERO): Owl {
     return Owl(this, might, extraStat)
 }

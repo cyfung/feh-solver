@@ -23,11 +23,13 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Slaying Bow+ B" to BowB.slaying(12),
     "Slaying Bow+ G" to BowG.slaying(12),
     "Slaying Axe+" to Axe.slaying(14),
+    "Slaying Edge+ Def" to Sword.slaying(14, Stat(hp =5, def=4)),
     "Thoron+" to MagicB.basic(13),
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
     "Blarowl+" to MagicB.owl(10),
     "Blarowl+ Spd" to MagicB.owl(10, Stat(hp = 2, spd = 2)),
+    "Keen Gronnwolf+ G Eff" to WolfEffRefine(MagicG, 12),
     "Wo Gun+ Def" to Axe.specialDamage(14, extraStat = Stat(hp=5, def=4)),
 
     "Slow+" to SlowPlus,
@@ -59,11 +61,11 @@ private fun WeaponType.basic(might: Int): BasicWeapon {
     return BasicWeapon(this, might)
 }
 
-private fun WeaponType.effective(might: Int, vararg moveTypes: MoveType): BasicWeapon {
+private fun WeaponType.effective(might: Int, vararg moveTypes: MoveType, extraStat: Stat = Stat.ZERO): BasicWeapon {
     return if (moveTypes.isEmpty()) {
         BasicWeapon(this, might)
     } else {
-        object : BasicWeapon(this, might) {
+        object : BasicWeapon(this, might, extraStat) {
             override val effectiveAgainstMoveType: Set<MoveType>? = moveTypes.toSet()
         }
     }

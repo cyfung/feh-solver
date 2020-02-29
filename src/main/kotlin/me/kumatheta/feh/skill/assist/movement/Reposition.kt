@@ -4,7 +4,7 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.skill.MovementEffect
-import me.kumatheta.feh.skill.MovementEffect.Companion.isValidPosition
+import me.kumatheta.feh.skill.MovementEffect.Companion.isValidAndUnoccupied
 import me.kumatheta.feh.skill.MovementEffect.Companion.positionTransform
 import me.kumatheta.feh.skill.ProtectiveMovementAssist
 
@@ -33,7 +33,7 @@ object RepositionEffect : MovementEffect {
             fromPosition,
             target.position
         )
-        return isValidPosition(battleState, self, targetEndPosition)
+        return targetEndPosition.isValidAndUnoccupied(battleState, self)
     }
 
     override fun targetEndPosition(

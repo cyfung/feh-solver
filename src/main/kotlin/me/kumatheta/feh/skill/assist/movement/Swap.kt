@@ -3,18 +3,20 @@ package me.kumatheta.feh.skill.assist.movement
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
-import me.kumatheta.feh.skill.MovementAssist
 import me.kumatheta.feh.skill.MovementEffect
 import me.kumatheta.feh.skill.MovementEffect.Companion.isValidAndUnoccupied
-import me.kumatheta.feh.skill.MovementEffect.Companion.positionTransform
+import me.kumatheta.feh.skill.ProtectiveMovementAssist
 
-object Pivot: MovementAssist(false, PivotEffect)
+object Swap : ProtectiveMovementAssist(false, SwapEffect)
 
-object PivotEffect : MovementEffect {
+object SwapEffect : MovementEffect {
     override fun applyMovement(self: HeroUnit, target: HeroUnit, battleState: BattleState) {
-        val endPosition =
-            selfEndPosition(self.position, target.position)
-        battleState.move(self, endPosition)
+        if (target.isDead) {
+            // Lunge
+            battleState.move(self, target.position)
+        } else {
+            battleState.swap(self, target)
+        }
     }
 
     override fun isValidAction(
@@ -23,13 +25,11 @@ object PivotEffect : MovementEffect {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        val endPosition =
-            selfEndPosition(fromPosition, target.position)
-        return endPosition.isValidAndUnoccupied(battleState, self)
-    }
-
-    override fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position {
-        return positionTransform(selfPosition, targetPosition, 2)
+        val selfEndPosition = target.position
+        return selfEndPosition.isValidAndUnoccupied(battleState, self) && battleState.isValidPosition(
+            target,
+            fromPosition
+        )
     }
 
     override fun targetEndPosition(
@@ -38,6 +38,10 @@ object PivotEffect : MovementEffect {
         selfPosition: Position,
         targetPosition: Position
     ): Position {
+        return selfPosition
+    }
+
+    override fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position {
         return targetPosition
     }
 }

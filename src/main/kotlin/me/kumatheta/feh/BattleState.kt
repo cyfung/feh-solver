@@ -7,6 +7,7 @@ import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.effect.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.util.*
+import java.lang.Exception
 import kotlin.math.max
 import kotlin.math.min
 
@@ -109,7 +110,12 @@ class BattleState private constructor(
 
     private fun executeMove(unitAction: UnitAction): Team? {
         check(winningTeam == null)
-        val heroUnit = getUnit(unitAction.heroUnitId)
+        val heroUnit = try {
+            getUnit(unitAction.heroUnitId)
+        } catch (e: Exception) {
+            println("$unitAction failed, heroUnitId not found, $locationMap")
+            throw e
+        }
         check(heroUnit.available) {
             "hero not available"
         }
@@ -133,7 +139,12 @@ class BattleState private constructor(
             }
             is MoveAndAssist -> {
                 val assist = heroUnit.assist ?: throw IllegalStateException()
-                val target = getUnit(unitAction.assistTargetId)
+                val target = try {
+                    getUnit(unitAction.assistTargetId)
+                } catch (e: Exception) {
+                    println("$unitAction failed, assist not found, $locationMap")
+                    throw e
+                }
                 assist.apply(heroUnit, target, this)
                 heroUnit.skillSet.assistRelated.forEach {
                     it.apply(this, heroUnit, target, assist, true)
@@ -195,6 +206,15 @@ class BattleState private constructor(
         startOfTurn(nextTeam)
     }
 
+    internal fun swap(unit1: HeroUnit, unit2: HeroUnit) {
+        val unit1OldPosition = unit1.position
+        val unit2OldPosition = unit2.position
+        require(locationMap.put(unit2OldPosition, unit1) == unit2)
+        require(locationMap.put(unit1OldPosition, unit2) == unit1)
+        unit1.position = unit2OldPosition
+        unit2.position = unit1OldPosition
+    }
+
     internal fun move(heroUnit: HeroUnit, position: Position) {
         val originalPosition = heroUnit.position
         if (originalPosition != position) {
@@ -216,6 +236,7 @@ class BattleState private constructor(
                 it(this, heroUnit)
             }
         }
+        units.forEach(HeroUnit::applyCachedEffect)
         return units
     }
 
@@ -564,9 +585,11 @@ class BattleState private constructor(
         }.firstOrNull()
 
         attacker.actionEnded()
-        val movementEffect = attacker.skillSet.postInitiateMovement
-        if (movementEffect != null && movementEffect.isValidAction(attacker, defender, this, attacker.position)) {
-            movementEffect.applyMovement(attacker, defender, this)
+        if (!attacker.isDead) {
+            val movementEffect = attacker.skillSet.postInitiateMovement
+            if (movementEffect != null && movementEffect.isValidAction(attacker, defender, this, attacker.position)) {
+                movementEffect.applyMovement(attacker, defender, this)
+            }
         }
 
         potentialDamage.attackerInCombat.skills.postCombat(attackerAttacked)

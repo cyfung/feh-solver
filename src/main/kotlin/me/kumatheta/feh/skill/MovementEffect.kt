@@ -2,13 +2,17 @@ package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Position
 
 interface MovementEffect {
     companion object {
-        fun isValidPosition(battleState: BattleState, self: HeroUnit, position: Position): Boolean {
-            if (!battleState.isValidPosition(self, position)) return false
-            val chessPiece = battleState.getChessPiece(position)
+        fun Position.isValidAndUnoccupied(
+            battleState: BattleState,
+            self: HeroUnit
+        ): Boolean {
+            if (!battleState.isValidPosition(self, this)) return false
+            val chessPiece = battleState.getChessPiece(this)
             return chessPiece == null || chessPiece == self
         }
 
@@ -51,3 +55,5 @@ interface MovementEffect {
         targetPosition: Position
     ): Position
 }
+
+class MovementPassive(override val postInitiateMovement: MovementEffect) : Passive

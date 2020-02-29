@@ -183,8 +183,8 @@ private suspend fun getMcts(
     mctsRef: AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>,
     jobRef: AtomicReference<Job?>
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
-    val phraseLimit = 20
-    val board = FehBoard(phraseLimit, state, 3)
+    val phaseLimit = 20
+    val board = FehBoard(phaseLimit, state, 3)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000)
     val mcts = Mcts(board, scoreManager)
     val next = Pair(board, mcts)

@@ -27,8 +27,8 @@ class FehBoard private constructor(
         }
     }
 
-    constructor(phraseLimit: Int, state: BattleState, maxTurnBeforeEngage: Int) : this(
-        phraseLimit,
+    constructor(phaseLimit: Int, state: BattleState, maxTurnBeforeEngage: Int) : this(
+        phaseLimit,
         state,
         null,
         state.unitsSeq(Team.PLAYER).sumBy { it.maxHp },

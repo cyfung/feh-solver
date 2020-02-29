@@ -15,6 +15,6 @@ fun wrathDamage(hpPercentage: Int): PerAttackSkill<Int>? = { combatStatus, speci
 
 fun wrathSpecialCharge(hpPercentage: Int): MapSkillMethod<Unit> = { _: BattleState, self: HeroUnit ->
     if (self.hpThreshold(hpPercentage) <= 0) {
-        self.cachedEffect.cooldown++
+        self.cachedEffect.cooldown--
     }
 }

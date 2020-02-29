@@ -1,24 +1,10 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
-import me.kumatheta.feh.skill.effect.airOrder3
-import me.kumatheta.feh.skill.effect.belowThreshold
-import me.kumatheta.feh.skill.effect.blow
-import me.kumatheta.feh.skill.effect.bond
-import me.kumatheta.feh.skill.effect.boost
-import me.kumatheta.feh.skill.effect.breaker
-import me.kumatheta.feh.skill.effect.chill
-import me.kumatheta.feh.skill.effect.hone
-import me.kumatheta.feh.skill.effect.opening
-import me.kumatheta.feh.skill.effect.ploy
-import me.kumatheta.feh.skill.effect.rangeDefStat
-import me.kumatheta.feh.skill.effect.resBasedPloy3
-import me.kumatheta.feh.skill.effect.solo
-import me.kumatheta.feh.skill.effect.stance
-import me.kumatheta.feh.skill.effect.tactics
-import me.kumatheta.feh.skill.effect.wave
+import me.kumatheta.feh.skill.assist.movement.SwapEffect
+import me.kumatheta.feh.skill.effect.*
 import me.kumatheta.feh.skill.passive.*
-import me.kumatheta.feh.skill.special.TimePulse3
+import me.kumatheta.feh.skill.passive.TimePulse3
 
 val ALL_PASSIVES = sequenceOf(
     "Close Counter" to CounterIgnoreRange,
@@ -69,6 +55,7 @@ val ALL_PASSIVES = sequenceOf(
     "Wrathful Staff 3" to WrathfulStaff3,
     "Wrath 3" to Wrath(75),
     "Time's Pulse 3" to TimePulse3,
+    "Lunge" to MovementPassive(SwapEffect),
 
     "Chill Def 3" to chill(Stat(def = -7)) {
         it.visibleStat.def
@@ -81,6 +68,7 @@ val ALL_PASSIVES = sequenceOf(
     "Even Spd Wave 3" to wave(Stat(spd = 6), oddTurn = false).toStartOfTurnPassive(),
     "Even Def Wave 3" to wave(Stat(def = 6), oddTurn = false).toStartOfTurnPassive(),
     "Even Res Wave 3" to wave(Stat(res = 6), oddTurn = false).toStartOfTurnPassive(),
+    "Infantry Pulse 3" to infantryPulse(minDiff = 1).toStartOfTurnPassive(),
 
     "HP+5" to Stat(hp = 5).toExtraStatPassive(),
     "Res+3" to Stat(res = 3).toExtraStatPassive(),
@@ -97,7 +85,7 @@ val ALL_PASSIVES = sequenceOf(
     "Spur Spd 1" to Spur(Stat(spd = 2)).toSupportInCombatBuffPassive(),
     "Earth Boost 3" to boost(Stat(def = 6)).toInCombatStatPassive(),
     "Wind Boost 3" to boost(Stat(spd = 6)).toInCombatStatPassive(),
-    "Fierce Boost 3" to boost(Stat(atk = 6)).toInCombatStatPassive(),
+    "Fire Boost 3" to boost(Stat(atk = 6)).toInCombatStatPassive(),
 
     "Null Follow-up 3" to NullFollowUp3,
     "Guard 3" to Guard3,
