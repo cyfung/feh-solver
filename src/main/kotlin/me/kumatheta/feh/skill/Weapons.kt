@@ -25,12 +25,14 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Slaying Axe+" to Axe.slaying(14),
     "Slaying Edge+ Def" to Sword.slaying(14, Stat(hp = 5, def = 4)),
     "Thoron+" to MagicB.basic(13),
+    "Rexcailbur+ Atk" to MagicG.basic(15,extraStat = Stat(hp=2)),
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
     "Blarowl+" to MagicB.owl(10),
     "Blarowl+ Spd" to MagicB.owl(10, Stat(hp = 2, spd = 2)),
     "Keen Gronnwolf+ G Eff" to MagicG.effectiveAndNeutralize(12, MoveType.CAVALRY),
     "Armorsmasher+ Eff" to Sword.effectiveAndNeutralize(14, MoveType.ARMORED, extraStat = Stat(hp = 3)),
+    "Zanbato+ Eff" to Sword.effectiveAndNeutralize(14, MoveType.CAVALRY, extraStat = Stat(hp = 3)),
     "Wo Gun+ Def" to Axe.specialDamage(14, extraStat = Stat(hp = 5, def = 4)),
 
     "Slow+" to SlowPlus,
@@ -61,8 +63,8 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Emerald Axe+" to Axe.triangleAdept(12)
 ).toSkillMap()
 
-private fun WeaponType.basic(might: Int): BasicWeapon {
-    return BasicWeapon(this, might)
+private fun WeaponType.basic(might: Int, extraStat: Stat = Stat.ZERO): BasicWeapon {
+    return BasicWeapon(this, might, extraStat)
 }
 
 private fun WeaponType.effective(might: Int, vararg moveTypes: MoveType, extraStat: Stat = Stat.ZERO): BasicWeapon {

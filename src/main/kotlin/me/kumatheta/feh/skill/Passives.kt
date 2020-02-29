@@ -33,6 +33,8 @@ val ALL_PASSIVES = sequenceOf(
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)).toInCombatStatPassive(),
     "Warding Breath" to WardingBreath,
 
+    "Spd Smoke 3" to smoke(Stat(spd=-7)).toCombatEndPassive(),
+
     "Spd Tactics 3" to tactics(Stat(spd = 6)).toStartOfTurnPassive(),
     "Def Tactics 3" to tactics(Stat(def = 6)).toStartOfTurnPassive(),
     "Atk Tactics 3" to tactics(Stat(atk = 6)).toStartOfTurnPassive(),
@@ -75,7 +77,9 @@ val ALL_PASSIVES = sequenceOf(
     "Even Def Wave 3" to wave(Stat(def = 6), oddTurn = false).toStartOfTurnPassive(),
     "Even Res Wave 3" to wave(Stat(res = 6), oddTurn = false).toStartOfTurnPassive(),
     "Infantry Pulse 3" to infantryPulse(minDiff = 1).toStartOfTurnPassive(),
+    "Threaten Def 3" to threaten(Stat(def=-5)).toStartOfTurnPassive(),
 
+    "Pass 3" to Pass(percentageHp = 25),
     "HP+5" to Stat(hp = 5).toExtraStatPassive(),
     "Res+3" to Stat(res = 3).toExtraStatPassive(),
     "Atk/Res 2" to Stat(atk = 2, res = 2).toExtraStatPassive(),

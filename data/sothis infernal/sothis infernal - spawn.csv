@@ -1,5 +1,5 @@
 id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
-5,1,Sothis,,1,,2,INFANTRY,Sublime Surge,,Sirius,66,54,43,35,30,Atk/Spd Solo 3,Wrath 3,Time's Pulse 3
+5,1,Sothis,,,4,2,INFANTRY,Sublime Surge,,Sirius,66,54,43,35,30,Atk/Spd Solo 3,Wrath 3,Time's Pulse 3
 6,1,Blue Mage,Knight - Blue Tome,,,3,INFANTRY,Blarowl+Spd,,Luna,54,45,37,22,31,Wind Boost 3,Null Follow-up 3,Odd Spd Wave 3
 7,1,Bow Fighter,Fighter - Bow,,,3,INFANTRY,Brave Bow+C,,Bonfire,59,42,27,32,17,Atk/Def Solo 3,B Tomebreaker 3,Even Atk Wave 3
 8,1,Axe Cavalier,Knight - Axe,,,2,CAVALRY,Wo Gun+Def,,Moonbow,62,51,27,32,33,Sturdy Blow 2,Lunge,Odd Def Wave 3
@@ -8,3 +8,5 @@ id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,spec
 11,2,Cleric,Sister - Rod,,,1,INFANTRY,Trilemma+ Dazzling,Restore+,Windfire Balm+,46,43,31,25,38,Spd/Def Solo 3,Live to Serve 3,Atk Ploy 3
 12,2,Sword Knight,Armor - Sword,,,3,ARMORED,Armorsmasher+ Eff,,Draconic Aura,79,56,17,44,21,Death Blow 3,Wary Fighter 3,Armor March 3
 13,2,Axe Knight,Armor - Axe,,,4,ARMORED,Brave Axe+,,Ignis,76,50,12,44,21,Atk/Def Bond 3,Wary Fighter 3,Armor March 3
+14,3,Green Cavalier,Knight - Green Tome,,,3,CAVALRY,Rexcailbur+ Atk,,Iceberg,47,53,28,18,37,Atk/Spd Solo 3,Poison Strike 3,Spd Smoke 3
+15,3,Sword Cavalier,Knight - Sword,,,2,CAVALRY,Zanbato+ Eff,,Reprisal,60,54,30,31,36,Fury 3,Pass 3,Threaten Def 3

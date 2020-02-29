@@ -1,8 +1,8 @@
 size,6,8,,,
 R,R,W,W,R11,R
 R,R6,DR5,DR,R7,R
-R8,R,R,R9,R10,R
-R,W,R,R,W,R
+R8.14,R,R,R9,R10,R
+R,W,R,R,W,R15
 R,R,R,R,R,R
 R,W,R,R,W,R
 R,R1,R,R2,R3,R

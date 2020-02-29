@@ -516,8 +516,8 @@ class BattleState private constructor(
                     1 + defenderCooldownIncrease.foeAttack - attackerGuard.unitAttack
                 ),
                 AttackerDefenderPair(
-                    1 + defenderCooldownIncrease.unitAttack - attackerGuard.foeAttack,
-                    1 + attackerCooldownIncrease.foeAttack - defenderGuard.unitAttack
+                    1 + attackerCooldownIncrease.foeAttack - defenderGuard.unitAttack,
+                    1 + defenderCooldownIncrease.unitAttack - attackerGuard.foeAttack
                 )
             )
         }
@@ -680,13 +680,10 @@ class BattleState private constructor(
             damage = 0
         }
 
-        val damageDealt = DamageDealt(damagingSpecialUsed, defenseSpecialUsed, damage, baseDamage - damage)
-        damageDealer.skills.damageDealt(damageDealt)
-        damageReceiver.skills.damageReceived(damageDealt)
+        val hpBefore = damageReceiver.heroUnit.takeDamage(damage)
 
-        val previousHp = damageReceiver.heroUnit.takeDamage(damage)
 
-        if (damageReceiver.heroUnit.isDead && previousHp > 1) {
+        if (damageReceiver.heroUnit.isDead && hpBefore > 1) {
             if (damageReceiver.heroUnit.special == Miracle && damageReceiver.heroUnit.cooldown == 0) {
                 damageReceiver.heroUnit.heal(1)
                 defenseSpecialUsed = true
@@ -699,6 +696,12 @@ class BattleState private constructor(
         } else {
             damageDealer.heroUnit.resetCooldown()
         }
+
+        damage = hpBefore - damageReceiver.heroUnit.currentHp
+        val damageDealt = DamageDealt(damagingSpecialUsed, defenseSpecialUsed, damage, baseDamage - damage)
+
+        damageDealer.skills.damageDealt(damageDealt)
+        damageReceiver.skills.damageReceived(damageDealt)
 
         val dead = damageReceiver.heroUnit.isDead
         if (dead) {

@@ -12,8 +12,8 @@ val ALL_SPECIALS = sequenceOf(
 
     "Aether" to Aether(5),
     "Radiant Aether" to Aether(4),
-    "Luna" to FoeDefResBased(3, 1, 2),
     "Moonbow" to FoeDefResBased(2, 3, 10),
+    "Luna" to FoeDefResBased(3, 1, 2),
     "Sacred Cowl" to SacredCowl,
 
     "Windfire Balm+" to Balm(Stat(atk=6,spd=6)),
@@ -22,6 +22,7 @@ val ALL_SPECIALS = sequenceOf(
     "Heavenly Light" to HeavenlyLight,
     "Miracle" to Miracle,
 
+    "Reprisal" to HpMissingBased(2,3, 10),
     "Bonfire" to SelfStatBased(3) {
         it.def / 2
     },
