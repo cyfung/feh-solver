@@ -5,7 +5,7 @@ import me.kumatheta.feh.Passive
 import me.kumatheta.feh.SpecialDebuff
 
 object PoisonStrike3 : Passive {
-    override val specialDebuff: SpecialDebuff = SpecialDebuff.ONLY_WHEN_ALIVE
+    override val specialDebuff: SpecialDebuff = SpecialDebuff.ALWAYS_AVAILABLE
 
     override val combatEnd: CombatEndSkill? = { combatStatus, _ ->
         if (combatStatus.initAttack && !combatStatus.self.heroUnit.isDead) {

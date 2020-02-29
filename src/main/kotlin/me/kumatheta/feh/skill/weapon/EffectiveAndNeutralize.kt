@@ -2,13 +2,17 @@ package me.kumatheta.feh.skill.weapon
 
 import me.kumatheta.feh.*
 
+private val FOE_EFFECT = object : Skill {
+    override val neutralizeBonus: CombatStartSkill<Stat?>? = combatSkill(Stat.ZERO)
+}
+
 class EffectiveAndNeutralize(weaponType: WeaponType, might: Int, moveType: MoveType, extraStat: Stat = Stat.ZERO) :
     BasicWeapon(weaponType, might, extraStat) {
     override val effectiveAgainstMoveType: Set<MoveType> = setOf(moveType)
 
-    override val neutralizeBonus: CombatStartSkill<Stat?>? = {
+    override val foeEffect: CombatStartSkill<Skill?>? = {
         if (it.foe.moveType == moveType) {
-            Stat.ZERO
+            FOE_EFFECT
         } else {
             null
         }
