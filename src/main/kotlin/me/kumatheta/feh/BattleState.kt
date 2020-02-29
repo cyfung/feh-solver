@@ -1056,7 +1056,8 @@ class BattleState private constructor(
                 possibleMoves,
                 attackTargetPositions,
                 distanceFromAlly,
-                foeThreat
+                foeThreat,
+                obstacles
             )
             if (move != null) {
                 executeMove(move)
@@ -1208,14 +1209,15 @@ class BattleState private constructor(
         possibleMoves: Map<HeroUnit, Map<Position, MoveStep>>,
         attackTargetPositions: Map<HeroUnit, Map<Position, MoveStep>>,
         distanceFromAlly: Map<HeroUnit, Map<Position, Int>>,
-        foeThreat: Map<Position, Int>
+        foeThreat: Map<Position, Int>,
+        obstacles: Map<Position, ChessPiece>
     ): UnitAction? {
         return availableUnits.asSequence().filter { it.engaged }.sortedWith(unitMoveOrder(distanceToClosestFoe))
             .mapNotNull { heroUnit ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
                 val distanceMap = distanceFromAlly[heroUnit] ?: throw IllegalStateException()
                 val targetPositions = attackTargetPositions[heroUnit] ?: throw IllegalStateException()
-                getMoveAction(heroUnit, distanceMap, moves, targetPositions, foeThreat)
+                getMoveAction(heroUnit, distanceMap, moves, targetPositions, foeThreat, obstacles)
             }.firstOrNull()
     }
 
@@ -1241,9 +1243,10 @@ class BattleState private constructor(
         distanceMap: Map<Position, Int>,
         moves: Map<Position, MoveStep>,
         attackTargetPositions: Map<Position, MoveStep>,
-        foeThreat: Map<Position, Int>
+        foeThreat: Map<Position, Int>,
+        obstacles: Map<Position, ChessPiece>
     ): UnitAction? {
-        val chaseTarget = getChaseTarget(heroUnit, distanceMap) ?: getClosestAlly(heroUnit, distanceMap) ?: return null
+        val chaseTarget = getChaseTarget(heroUnit, distanceMap, obstacles) ?: getClosestAlly(heroUnit, distanceMap) ?: return null
 
         val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
         val okToStay = if (chaseTarget.team == heroUnit.team) {
@@ -1588,12 +1591,21 @@ class BattleState private constructor(
 
     private fun getChaseTarget(
         heroUnit: HeroUnit,
-        distanceTo: Map<Position, Int>
+        distanceTo: Map<Position, Int>,
+        obstacles: Map<Position, ChessPiece>
     ): HeroUnit? {
         return if (heroUnit.isEmptyHanded) {
             null
         } else {
-            val chaseTargets = distanceTo.asSequence().flatMap { (position, distance) ->
+            val distanceToSeq = if (heroUnit.skillSet.pass.any { it(this, heroUnit) }) {
+                distanceTo.asSequence().filter {
+                    val chessPiece = obstacles[it.key]
+                    chessPiece == null || (chessPiece is HeroUnit && chessPiece.team == heroUnit.team)
+                }
+            } else {
+                distanceTo.asSequence()
+            }
+            val chaseTargets = distanceToSeq.flatMap { (position, distance) ->
                 attackTargetPositions(heroUnit, position, maxPosition).map {
                     it to distance
                 }
