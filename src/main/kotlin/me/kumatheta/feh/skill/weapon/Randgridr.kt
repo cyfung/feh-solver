@@ -5,7 +5,7 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.*
 
-private val FOE_EFFECT = combatStartSkill(Stat(atk = -6, def = -6)).toInCombatStatPassive()
+private val FOE_EFFECT = BasicSkill(inCombatStat = combatStartSkill(Stat(atk = -6, def = -6)))
 
 val Randgridr = BasicWeapon(
     BowB, BasicSkill(

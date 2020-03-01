@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill.effect
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.BasicSkill
 import me.kumatheta.feh.skill.CombatStatus
 import me.kumatheta.feh.skill.InCombatStat
 import me.kumatheta.feh.skill.MapSkillMethod
@@ -18,3 +19,8 @@ fun wrathSpecialCharge(hpPercentage: Int): MapSkillMethod<Unit> = { _: BattleSta
         self.cachedEffect.cooldown--
     }
 }
+
+fun wrath(hpPercentage: Int)= BasicSkill(
+    startOfTurn = wrathSpecialCharge(hpPercentage),
+    damageIncrease = wrathDamage(hpPercentage)
+)

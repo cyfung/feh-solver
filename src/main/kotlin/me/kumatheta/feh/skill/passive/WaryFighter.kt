@@ -2,7 +2,7 @@ package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.skill.*
 
-private val FOE_EFFECT = combatStartSkill(-1).toFollowUpPassive()
+private val FOE_EFFECT = BasicSkill(followUp = combatStartSkill(-1))
 
 fun waryFighter(percentageHp: Int) = BasicSkill(
     followUp = {

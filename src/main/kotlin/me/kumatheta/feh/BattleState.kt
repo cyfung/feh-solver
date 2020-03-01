@@ -2,7 +2,7 @@ package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.*
 import me.kumatheta.feh.skill.assist.movement.Pivot
-import me.kumatheta.feh.skill.effect.MOVE_ORDER_EFFECT
+import me.kumatheta.feh.skill.effect.startofturn.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.util.*
 import kotlin.math.max

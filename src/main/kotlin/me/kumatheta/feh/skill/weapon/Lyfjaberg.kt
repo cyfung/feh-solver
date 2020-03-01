@@ -5,6 +5,9 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.*
 
 private const val ID = "Lyfjaberg"
+
+private val DEBUFF = BasicSkill(followUp = combatStartSkill(-1))
+
 val Lyfjaberg = BasicWeapon(DaggerC,
     BasicSkill(extraStat = weaponStat(14, res = 3),
         inCombatStat = { combatStatus ->
@@ -16,7 +19,7 @@ val Lyfjaberg = BasicWeapon(DaggerC,
             }
         }, foeEffect = { combatStatus ->
             if (combatStatus.initAttack && combatStatus.self.hpThreshold(50) >= 0) {
-                combatStartSkill(-1).toFollowUpPassive()
+                DEBUFF
             } else {
                 null
             }

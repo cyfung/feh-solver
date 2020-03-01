@@ -1,12 +1,10 @@
 package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.BasicSkill
 import me.kumatheta.feh.skill.CooldownChange
-import me.kumatheta.feh.skill.effect.stance
+import me.kumatheta.feh.skill.effect.incombatstat.stance
 
-val WardingBreath = BasicSkill(
-    inCombatStat = stance(Stat(res = 4)),
+val WardingBreath = stance(Stat(res = 4)).copy(
     cooldownBuff = {
         if (it.initAttack) {
             CooldownChange(0, 0)

@@ -2,8 +2,8 @@ package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
 import me.kumatheta.feh.skill.effect.dealSpecialDamage
-import me.kumatheta.feh.skill.effect.rangeDefStat
-import me.kumatheta.feh.skill.effect.stance
+import me.kumatheta.feh.skill.effect.incombatstat.rangeDefStat
+import me.kumatheta.feh.skill.effect.incombatstat.stance
 import me.kumatheta.feh.skill.weapon.*
 
 val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
@@ -37,9 +37,9 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Keen Gronnwolf+ G Eff" to MagicG.effective(12, MoveType.CAVALRY, neutralizeBonus = true),
     "Armorsmasher+ Eff" to Sword.effective(14, MoveType.ARMORED, neutralizeBonus = true, hp = 3),
     "Zanbato+ Eff" to Sword.effective(14, MoveType.CAVALRY, neutralizeBonus = true, hp = 3),
-    "Wo Gun+ Def" to Axe.specialDamage(14, hp = 5, def = 4),
+    "Wo Gun+ Def" to Axe.withSkill(14, dealSpecialDamage, hp = 5, def = 4),
     "Shining Bow+C Atk" to BowC.shining(13, hp = 2),
-    "Barrier Lance+ Res" to Lance.withInCombatStat(14, stance(Stat(res = 7)), hp = 5, def = 4),
+    "Barrier Lance+ Res" to Lance.withSkill(14, stance(Stat(res = 7)), hp = 5, def = 4),
 
     "Slow+" to slowPlus,
     "Gravity+" to gravityPlus,
@@ -62,11 +62,20 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Brave Sword+" to Sword.brave(8),
     "Brave Lance+" to Lance.brave(8),
     "Brave Axe+" to Axe.brave(8),
-    "Blarserpent+ atk" to MagicB.withInCombatStat(13, rangeDefStat(Stat(def = 6, res = 6)), hp = 2),
-    "Guard Bow+C" to BowC.withInCombatStat(12, rangeDefStat(Stat(def = 6, res = 6))),
-    "Guard Bow+G" to BowG.withInCombatStat(12, rangeDefStat(Stat(def = 6, res = 6))),
-    "Gronnraven+" to MagicG.withRaven(11, inCombatSkillTrue),
-    "Emerald Axe+" to Axe.withTriangleAdept(12, combatSkill(20))
+    "Blarserpent+ atk" to MagicB.withSkill(
+        13,
+        rangeDefStat(Stat(def = 6, res = 6)), hp = 2
+    ),
+    "Guard Bow+C" to BowC.withSkill(
+        12,
+        rangeDefStat(Stat(def = 6, res = 6))
+    ),
+    "Guard Bow+G" to BowG.withSkill(
+        12,
+        rangeDefStat(Stat(def = 6, res = 6))
+    ),
+    "Gronnraven+" to MagicG.withSkill(11, BasicSkill(raven = inCombatSkillTrue)),
+    "Emerald Axe+" to Axe.withSkill(12, BasicSkill(triangleAdept = combatSkill(20)))
 ).toSkillMap()
 
 fun weaponStat(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): Stat {
@@ -89,7 +98,7 @@ private fun WeaponType.effective(
     res: Int = 0
 ): BasicWeapon {
     val foeEffect = if (neutralizeBonus) {
-        val neutralizeEffect = combatStartSkill(Stat.ZERO).toNeutralizeBonusPassive()
+        val neutralizeEffect = BasicSkill(neutralizeBonus = combatStartSkill(Stat.ZERO))
         val effect: CombatStartSkill<Skill?>? = {
             if (it.foe.moveType == moveType) {
                 neutralizeEffect
@@ -115,14 +124,6 @@ private fun WeaponType.slaying(might: Int, hp: Int = 0, spd: Int = 0, def: Int =
         this, BasicSkill(
             extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res),
             coolDownCountAdj = -1
-        )
-    )
-
-private fun WeaponType.specialDamage(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): BasicWeapon =
-    BasicWeapon(
-        this, BasicSkill(
-            extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res),
-            damageIncrease = dealSpecialDamage
         )
     )
 

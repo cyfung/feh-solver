@@ -4,10 +4,9 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.assist.*
 import me.kumatheta.feh.skill.assist.movement.DrawBack
-import me.kumatheta.feh.skill.assist.movement.DrawBackEffect
 import me.kumatheta.feh.skill.assist.movement.Reposition
 import me.kumatheta.feh.skill.assist.movement.ToChangeFate
-import me.kumatheta.feh.skill.passive.GentleDream
+import me.kumatheta.feh.skill.assist.GentleDream
 
 val BASE_ASSIST_COMPARATOR = me.kumatheta.feh.util.compareByDescending<HeroUnit>({
     it.currentStatTotal
