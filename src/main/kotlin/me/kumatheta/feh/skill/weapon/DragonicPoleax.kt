@@ -1,15 +1,17 @@
 package me.kumatheta.feh.skill.weapon
 
 import me.kumatheta.feh.Axe
-import me.kumatheta.feh.BasicWeapon
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.MapSkillMethod
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.combatSkill
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.BasicWeapon
+import me.kumatheta.feh.skill.combatSkill
 import me.kumatheta.feh.skill.effect.tactics
+import me.kumatheta.feh.skill.weaponStat
 
-object DraconicPoleaxEff : BasicWeapon(Axe, 16, Stat(hp = 3)) {
-    override val triangleAdept: InCombatSkill<Int>? = combatSkill(20)
-
-    override val startOfTurn: MapSkillMethod<Unit>? = tactics(Stat(res = 6))
-}
+val DraconicPoleaxEff = BasicWeapon(
+    Axe, BasicSkill(
+        extraStat = weaponStat(16, hp = 3),
+        triangleAdept = combatSkill(20),
+        startOfTurn = tactics(Stat(res = 6))
+    )
+)

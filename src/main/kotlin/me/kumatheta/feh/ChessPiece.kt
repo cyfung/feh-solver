@@ -1,5 +1,7 @@
 package me.kumatheta.feh
 
+import me.kumatheta.feh.skill.Skill
+
 sealed class ChessPiece {
     abstract val position: Position
     abstract fun copy(): ChessPiece
@@ -109,7 +111,7 @@ class HeroUnit(
     val isDead
         get() = currentHp == 0
 
-    val combatSkillData = mutableMapOf<Skill, Any>()
+    val combatSkillData = mutableMapOf<String, Any>()
 
     override fun copy(): HeroUnit {
         val newUnit = HeroUnit(id, heroModel, team, position)

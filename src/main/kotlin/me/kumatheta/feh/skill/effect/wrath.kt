@@ -1,6 +1,9 @@
 package me.kumatheta.feh.skill.effect
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.CombatStatus
+import me.kumatheta.feh.skill.InCombatStat
+import me.kumatheta.feh.skill.MapSkillMethod
 
 fun wrathDamage(hpPercentage: Int): ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)? = { combatStatus, specialTriggered ->
     if (specialTriggered && combatStatus.self.heroUnit.hpThreshold(hpPercentage) <= 0) {

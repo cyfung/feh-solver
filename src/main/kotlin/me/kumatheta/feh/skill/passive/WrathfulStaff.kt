@@ -1,9 +1,6 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.Passive
-import me.kumatheta.feh.inCombatSkillTrue
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.inCombatSkillTrue
 
-object WrathfulStaff3 : Passive {
-    override val staffAsNormal: InCombatSkill<Boolean>? = inCombatSkillTrue
-}
+val WrathfulStaff3 = BasicSkill(staffAsNormal = inCombatSkillTrue)

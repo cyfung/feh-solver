@@ -1,9 +1,7 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.CombatStatus
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.InCombatStat
 import me.kumatheta.feh.Stat
 
 fun aoeDebuffFoe(

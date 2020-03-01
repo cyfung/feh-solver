@@ -1,14 +1,11 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.CooldownChange
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.Passive
-import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.effect.blowOrStance
-import me.kumatheta.feh.skill.effect.stance
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.CooldownChange
+import me.kumatheta.feh.skill.InCombatSkill
+import me.kumatheta.feh.skill.Passive
 
-object HeavyBlade3 : Passive {
+object HeavyBlade3 : BasicSkill() {
     override val cooldownBuff: InCombatSkill<CooldownChange<Int>>? = {
         if (it.self.inCombatStat.atk > it.foe.inCombatStat.atk) {
             CooldownChange(1, 0)

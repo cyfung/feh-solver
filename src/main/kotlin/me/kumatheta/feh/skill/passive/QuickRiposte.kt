@@ -1,7 +1,6 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.skill.CombatStartSkill
 
 fun quickRiposte(percentage: Int): CombatStartSkill<Int> {
     return {

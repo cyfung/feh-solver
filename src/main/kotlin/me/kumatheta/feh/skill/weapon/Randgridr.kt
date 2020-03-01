@@ -1,30 +1,29 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.BasicWeapon
 import me.kumatheta.feh.BowB
-import me.kumatheta.feh.CombatStartSkill
 import me.kumatheta.feh.MoveType
-import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.combatStartSkill
-import me.kumatheta.feh.skill.toInCombatStatPassive
+import me.kumatheta.feh.skill.*
 
 private val FOE_EFFECT = combatStartSkill(Stat(atk = -6, def = -6)).toInCombatStatPassive()
 
-object Randgridr : BasicWeapon(BowB, 14, Stat(atk = 3)) {
-    override val effectiveAgainstMoveType: Set<MoveType>? = setOf(MoveType.FLYING, MoveType.ARMORED)
-    override val neutralizePenalty: CombatStartSkill<Stat?>? = {combatStatus ->
-        if (combatStatus.foe.currentHp == combatStatus.foe.maxHp) {
-            Stat.ZERO
-        } else {
-            null
+val Randgridr = BasicWeapon(
+    BowB, BasicSkill(
+        extraStat = weaponStat(17),
+        effectiveAgainstMoveType = setOf(MoveType.FLYING, MoveType.ARMORED),
+        neutralizePenalty = { combatStatus ->
+            if (combatStatus.foe.currentHp == combatStatus.foe.maxHp) {
+                Stat.ZERO
+            } else {
+                null
+            }
+        },
+        foeEffect = { combatStatus ->
+            if (combatStatus.foe.currentHp == combatStatus.foe.maxHp) {
+                FOE_EFFECT
+            } else {
+                null
+            }
         }
-    }
-    override val foeEffect: CombatStartSkill<Skill?>? = {combatStatus ->
-        if (combatStatus.foe.currentHp == combatStatus.foe.maxHp) {
-            FOE_EFFECT
-        } else {
-            null
-        }
-    }
-}
+    )
+)

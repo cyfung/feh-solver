@@ -1,9 +1,9 @@
 package me.kumatheta.feh.skill.effect
 
-import me.kumatheta.feh.CombatStatus
-import me.kumatheta.feh.InCombatStat
+import me.kumatheta.feh.skill.CombatStatus
+import me.kumatheta.feh.skill.InCombatStat
 
-val specialDamage: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)? = { _, specialTriggered ->
+val dealSpecialDamage: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)? = { _: CombatStatus<InCombatStat>, specialTriggered: Boolean ->
     if (specialTriggered) {
         10
     } else {

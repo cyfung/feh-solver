@@ -1,8 +1,6 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.MovementAssist
-import me.kumatheta.feh.skill.NormalAssist
-import me.kumatheta.feh.skill.ProtectiveMovementAssist
+import me.kumatheta.feh.skill.*
 import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.effect.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.special.Miracle
@@ -371,8 +369,16 @@ class BattleState private constructor(
         val skillsPair = getInCombatSkills(attacker, defender)
         val attackerInCombatStat = attacker.basicStat(skillsPair.attacker)
         val defenderInCombatStat = defender.basicStat(skillsPair.defender)
-        val attackerSkillWrapper = InCombatSkillWrapper(attackerInCombatStat, defenderInCombatStat, skillsPair.attacker)
-        val defenderSkillWrapper = InCombatSkillWrapper(defenderInCombatStat, attackerInCombatStat, skillsPair.defender)
+        val attackerSkillWrapper = InCombatSkillWrapper(
+            attackerInCombatStat,
+            defenderInCombatStat,
+            skillsPair.attacker
+        )
+        val defenderSkillWrapper = InCombatSkillWrapper(
+            defenderInCombatStat,
+            attackerInCombatStat,
+            skillsPair.defender
+        )
         attackerInCombatStat.inCombatStat += attackerSkillWrapper.additionalInCombatStat.fold(Stat.ZERO) { acc, stat ->
             acc + stat
         }
@@ -699,7 +705,12 @@ class BattleState private constructor(
         }
 
         damage = hpBefore - damageReceiver.heroUnit.currentHp
-        val damageDealt = DamageDealt(damagingSpecialUsed, defenseSpecialUsed, damage, baseDamage - damage)
+        val damageDealt = DamageDealt(
+            damagingSpecialUsed,
+            defenseSpecialUsed,
+            damage,
+            baseDamage - damage
+        )
 
         damageDealer.skills.damageDealt(damageDealt)
         damageReceiver.skills.damageReceived(damageDealt)

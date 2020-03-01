@@ -1,6 +1,6 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.Assist
+import me.kumatheta.feh.skill.*
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 
 interface Hero {
@@ -52,7 +52,11 @@ open class HeroModel(
     final override val isEmptyHanded: Boolean = weapon is EmptyWeapon
     final override val weaponType = weapon.weaponType
     final override val skillSet =
-        SkillSet(passives.asSequence().plus(weapon).plusIfNotNull(assist).plusIfNotNull(special).toList())
+        SkillSet(
+            passives.asSequence().plus(weapon).plusIfNotNull(assist).plusIfNotNull(
+                special
+            ).toList()
+        )
     final override val debuffer: Boolean = skillSet.skills.any { it.debuffer }
     final override val specialDebuffer: SpecialDebuff? = skillSet.skills.asSequence().mapNotNull {
         it.specialDebuff

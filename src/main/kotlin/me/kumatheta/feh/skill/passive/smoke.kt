@@ -1,6 +1,6 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.CombatEndSkill
+import me.kumatheta.feh.skill.CombatEndSkill
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.foe
 

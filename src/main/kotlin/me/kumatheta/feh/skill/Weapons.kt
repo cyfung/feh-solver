@@ -1,6 +1,8 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.effect.dealSpecialDamage
+import me.kumatheta.feh.skill.effect.rangeDefStat
 import me.kumatheta.feh.skill.effect.stance
 import me.kumatheta.feh.skill.weapon.*
 
@@ -24,23 +26,23 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Slaying Bow+ B" to BowB.slaying(12),
     "Slaying Bow+ G" to BowG.slaying(12),
     "Slaying Axe+" to Axe.slaying(14),
-    "Slaying Edge+ Def" to Sword.slaying(14, Stat(hp = 5, def = 4)),
+    "Slaying Edge+ Def" to Sword.slaying(14, hp = 5, def = 4),
     "Thoron+" to MagicB.basic(13),
-    "Rexcailbur+ Atk" to MagicG.basic(15,extraStat = Stat(hp=2)),
-    "Silver Axe+ Def" to Axe.basic(16,extraStat = Stat(hp=5, def=4)),
+    "Rexcailbur+ Atk" to MagicG.basic(15, hp = 2),
+    "Silver Axe+ Def" to Axe.basic(16, hp = 5, def = 4),
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
     "Blarowl+" to MagicB.owl(10),
-    "Blarowl+ Spd" to MagicB.owl(10, Stat(hp = 2, spd = 2)),
-    "Keen Gronnwolf+ G Eff" to MagicG.effectiveAndNeutralize(12, MoveType.CAVALRY),
-    "Armorsmasher+ Eff" to Sword.effectiveAndNeutralize(14, MoveType.ARMORED, extraStat = Stat(hp = 3)),
-    "Zanbato+ Eff" to Sword.effectiveAndNeutralize(14, MoveType.CAVALRY, extraStat = Stat(hp = 3)),
-    "Wo Gun+ Def" to Axe.specialDamage(14, extraStat = Stat(hp = 5, def = 4)),
-    "Shining Bow+C Atk" to BowC.shining(13, Stat(hp=2)),
-    "Barrier Lance+ Res" to Lance.withInCombatStat(14, stance(Stat(res=7)), Stat(hp=5,def=4)),
+    "Blarowl+ Spd" to MagicB.owl(10, hp = 2, spd = 2),
+    "Keen Gronnwolf+ G Eff" to MagicG.effective(12, MoveType.CAVALRY, neutralizeBonus = true),
+    "Armorsmasher+ Eff" to Sword.effective(14, MoveType.ARMORED, neutralizeBonus = true, hp = 3),
+    "Zanbato+ Eff" to Sword.effective(14, MoveType.CAVALRY, neutralizeBonus = true, hp = 3),
+    "Wo Gun+ Def" to Axe.specialDamage(14, hp = 5, def = 4),
+    "Shining Bow+C Atk" to BowC.shining(13, hp = 2),
+    "Barrier Lance+ Res" to Lance.withInCombatStat(14, stance(Stat(res = 7)), hp = 5, def = 4),
 
-    "Slow+" to SlowPlus,
-    "Gravity+" to GravityPlus,
+    "Slow+" to slowPlus,
+    "Gravity+" to gravityPlus,
 
     "Draconic Poleax Eff" to DraconicPoleaxEff,
     "Lyfjaberg" to Lyfjaberg,
@@ -53,31 +55,96 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Ragnarok" to Ragnarok,
     "Sublime Surge" to SublimeSurge,
     "Ragnell" to Ragnell,
-    "Trilemma+ Dazzling" to TrilemmaPlus(disableCounter = true, staffAsNormal = false),
+    "Trilemma+ Dazzling" to trilemmaPlus(disableCounter = true, staffAsNormal = false),
 
     "Brave Bow+C" to BowC.brave(7),
     "Brave Bow+R" to BowR.brave(7),
     "Brave Sword+" to Sword.brave(8),
     "Brave Lance+" to Lance.brave(8),
     "Brave Axe+" to Axe.brave(8),
-    "Blarserpent+ atk" to MagicB.serpent(12, Stat(hp = 2, atk = 1)),
-    "Guard Bow+C" to BowC.serpent(12),
-    "Guard Bow+G" to BowG.serpent(12),
-    "Gronnraven+" to MagicG.raven(11),
-    "Emerald Axe+" to Axe.triangleAdept(12)
+    "Blarserpent+ atk" to MagicB.withInCombatStat(13, rangeDefStat(Stat(def = 6, res = 6)), hp = 2),
+    "Guard Bow+C" to BowC.withInCombatStat(12, rangeDefStat(Stat(def = 6, res = 6))),
+    "Guard Bow+G" to BowG.withInCombatStat(12, rangeDefStat(Stat(def = 6, res = 6))),
+    "Gronnraven+" to MagicG.withRaven(11, inCombatSkillTrue),
+    "Emerald Axe+" to Axe.withTriangleAdept(12, combatSkill(20))
 ).toSkillMap()
 
-private fun WeaponType.basic(might: Int, extraStat: Stat = Stat.ZERO): BasicWeapon {
-    return BasicWeapon(this, might, extraStat)
+fun weaponStat(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): Stat {
+    return Stat(hp = hp, atk = might, spd = spd, def = def, res = res)
 }
 
-private fun WeaponType.effective(might: Int, vararg moveTypes: MoveType, extraStat: Stat = Stat.ZERO): BasicWeapon {
-    return if (moveTypes.isEmpty()) {
-        BasicWeapon(this, might)
-    } else {
-        object : BasicWeapon(this, might, extraStat) {
-            override val effectiveAgainstMoveType: Set<MoveType>? = moveTypes.toSet()
+private fun WeaponType.basic(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): BasicWeapon =
+    BasicWeapon(
+        this,
+        BasicSkill(extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res))
+    )
+
+private fun WeaponType.effective(
+    might: Int,
+    moveType: MoveType,
+    neutralizeBonus: Boolean = false,
+    hp: Int = 0,
+    spd: Int = 0,
+    def: Int = 0,
+    res: Int = 0
+): BasicWeapon {
+    val foeEffect = if (neutralizeBonus) {
+        val neutralizeEffect = combatStartSkill(Stat.ZERO).toNeutralizeBonusPassive()
+        val effect: CombatStartSkill<Skill?>? = {
+            if (it.foe.moveType == moveType) {
+                neutralizeEffect
+            } else {
+                null
+            }
         }
+        effect
+    } else {
+        null
     }
+    return BasicWeapon(
+        this, BasicSkill(
+            extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res),
+            effectiveAgainstMoveType = setOf(moveType),
+            foeEffect = foeEffect
+        )
+    )
 }
 
+private fun WeaponType.slaying(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): BasicWeapon =
+    BasicWeapon(
+        this, BasicSkill(
+            extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res),
+            coolDownCountAdj = -1
+        )
+    )
+
+private fun WeaponType.specialDamage(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): BasicWeapon =
+    BasicWeapon(
+        this, BasicSkill(
+            extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res),
+            damageIncrease = dealSpecialDamage
+        )
+    )
+
+private fun WeaponType.bladeTome(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): BasicWeapon =
+    BasicWeapon(
+        this, BasicSkill(
+            extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res),
+            coolDownCountAdj = 1,
+            additionalInCombatStat = {
+                Stat(atk = it.self.bonus.totalExceptHp)
+            }
+        )
+    )
+
+private fun WeaponType.owl(might: Int, hp: Int = 0, spd: Int = 0, def: Int = 0, res: Int = 0): BasicWeapon =
+    BasicWeapon(
+        this, BasicSkill(
+            extraStat = weaponStat(might = might, hp = hp, spd = spd, def = def, res = res),
+            inCombatStat = { combatStatus ->
+                val (battleState, self) = combatStatus
+                val buff = self.adjacentAllies(battleState).count() * 2
+                Stat(atk = buff, spd = buff, def = buff, res = buff)
+            }
+        )
+    )

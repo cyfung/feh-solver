@@ -1,10 +1,6 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.Passive
-import me.kumatheta.feh.inCombatSkillTrue
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.inCombatSkillTrue
 
-object CounterIgnoreRange : Passive {
-    override val counterIgnoreRange: InCombatSkill<Boolean>?
-        get() = inCombatSkillTrue
-}
+val CounterIgnoreRange = BasicSkill(counterIgnoreRange = inCombatSkillTrue)

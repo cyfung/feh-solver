@@ -1,6 +1,6 @@
 package me.kumatheta.feh.skill.effect
 
-import me.kumatheta.feh.CombatEndSkill
+import me.kumatheta.feh.skill.CombatEndSkill
 import me.kumatheta.feh.Stat
 
 fun seal(stat: Stat): CombatEndSkill = { combatStatus, _ ->

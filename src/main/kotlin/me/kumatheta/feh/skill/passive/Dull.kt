@@ -1,16 +1,11 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.Passive
-import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.combatStartSkill
+import me.kumatheta.feh.skill.*
 
-private val ZERO = object : Skill {
-    override val neutralizeBonus: CombatStartSkill<Stat?>? = combatStartSkill(Stat.ZERO)
-}
+private val ZERO = BasicSkill(neutralizeBonus = combatStartSkill(Stat.ZERO))
 
-object DullClose3 : Passive {
+object DullClose3 : BasicSkill() {
     override val foeEffect: CombatStartSkill<Skill?>? = {
         if (it.foe.weaponType.isRanged) {
             null
@@ -20,7 +15,7 @@ object DullClose3 : Passive {
     }
 }
 
-object DullRange3 : Passive {
+object DullRange3 : BasicSkill() {
     override val foeEffect: CombatStartSkill<Skill?>? = {
         if (it.foe.weaponType.isRanged) {
             ZERO

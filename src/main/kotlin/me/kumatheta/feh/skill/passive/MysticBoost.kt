@@ -1,12 +1,8 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.CombatEndSkill
-import me.kumatheta.feh.InCombatSkill
-import me.kumatheta.feh.MapSkillMethod
-import me.kumatheta.feh.Passive
-import me.kumatheta.feh.inCombatSkillTrue
+import me.kumatheta.feh.skill.*
 
-object MysticBoost3 : Passive {
+object MysticBoost3 : BasicSkill() {
     override val denyAdaptiveDamage: MapSkillMethod<Boolean>? = { _, _ ->
         true
     }

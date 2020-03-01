@@ -1,24 +1,24 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.Passive
-import me.kumatheta.feh.Skill
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.combatStartSkill
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.CombatStartSkill
+import me.kumatheta.feh.skill.Skill
+import me.kumatheta.feh.skill.combatStartSkill
 
 
-class Lull(stat: Stat) : Passive {
-    private val _foeEffect = object : Skill {
-        override val neutralizeBonus: CombatStartSkill<Stat?>? = combatStartSkill(
+class Lull(stat: Stat) : BasicSkill() {
+    private val _foeEffect = BasicSkill(
+        neutralizeBonus =
+        combatStartSkill(
             Stat(
                 atk = if (stat.atk > 0) 0 else 1,
                 spd = if (stat.spd > 0) 0 else 1,
                 def = if (stat.def > 0) 0 else 1,
                 res = if (stat.res > 0) 0 else 1
             )
-        )
-        override val inCombatStat = combatStartSkill(stat)
-    }
+        ), inCombatStat = combatStartSkill(stat)
+    )
     override val foeEffect: CombatStartSkill<Skill?>? = {
         _foeEffect
     }

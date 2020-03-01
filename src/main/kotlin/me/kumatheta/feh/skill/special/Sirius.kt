@@ -1,10 +1,10 @@
 package me.kumatheta.feh.skill.special
 
 import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.DamageDealt
-import me.kumatheta.feh.DamagingSpecial
-import me.kumatheta.feh.InCombatStat
-import me.kumatheta.feh.PerAttackListener
+import me.kumatheta.feh.skill.DamageDealt
+import me.kumatheta.feh.skill.DamagingSpecial
+import me.kumatheta.feh.skill.InCombatStat
+import me.kumatheta.feh.skill.PerAttackListener
 
 object Sirius : DamagingSpecial(2) {
     override val damageDealtListener: PerAttackListener<DamageDealt>? = { combatStatus, damageDealt ->

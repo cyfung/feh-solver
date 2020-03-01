@@ -1,7 +1,6 @@
 package me.kumatheta.feh.skill.effect
 
-import me.kumatheta.feh.CombatStartSkill
-import me.kumatheta.feh.InCombatSkill
+import me.kumatheta.feh.skill.CombatStartSkill
 import me.kumatheta.feh.WeaponType
 
 fun breaker(weaponType: WeaponType, percentage: Int): CombatStartSkill<Int> {

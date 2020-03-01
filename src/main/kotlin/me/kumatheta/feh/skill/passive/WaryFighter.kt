@@ -1,11 +1,10 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.*
-import me.kumatheta.feh.skill.toFollowUpPassive
+import me.kumatheta.feh.skill.*
 
 private val FOE_EFFECT = combatStartSkill(-1).toFollowUpPassive()
 
-class WaryFighter(percentageHp: Int) : Passive {
+class WaryFighter(percentageHp: Int) : BasicSkill() {
     override val followUp: CombatStartSkill<Int>? = {
         if (it.self.hpThreshold(percentageHp) >= 0) {
             -1

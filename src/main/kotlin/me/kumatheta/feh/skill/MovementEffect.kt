@@ -2,7 +2,6 @@ package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Passive
 import me.kumatheta.feh.Position
 
 interface MovementEffect {
@@ -55,5 +54,3 @@ interface MovementEffect {
         targetPosition: Position
     ): Position
 }
-
-class MovementPassive(override val postInitiateMovement: MovementEffect) : Passive

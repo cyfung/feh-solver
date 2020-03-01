@@ -1,8 +1,8 @@
 package me.kumatheta.feh.skill.special
 
 import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.DefenseSpecial
-import me.kumatheta.feh.InCombatStat
+import me.kumatheta.feh.skill.DefenseSpecial
+import me.kumatheta.feh.skill.InCombatStat
 
 object Miracle : DefenseSpecial(5) {
     override fun getReducedDamage(

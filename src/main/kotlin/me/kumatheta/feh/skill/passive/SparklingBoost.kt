@@ -2,10 +2,11 @@ package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.MapSkillMethod
-import me.kumatheta.feh.Passive
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.MapSkillMethod
+import me.kumatheta.feh.skill.Passive
 
-object SparklingBoost : Passive {
+object SparklingBoost : BasicSkill() {
     override val startOfTurn: MapSkillMethod<Unit>? = { battleState: BattleState, self: HeroUnit ->
         val allyWithHighestHpLost = battleState.unitsSeq(self.team).filterNot { it == self }.map {
             val hpLost = it.maxHp - it.currentHp

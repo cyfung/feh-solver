@@ -1,11 +1,14 @@
 package me.kumatheta.feh.skill.weapon
 
-import me.kumatheta.feh.BasicWeapon
-import me.kumatheta.feh.InCombatSkill
 import me.kumatheta.feh.Lance
-import me.kumatheta.feh.inCombatSkillTrue
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.BasicWeapon
+import me.kumatheta.feh.skill.inCombatSkillTrue
+import me.kumatheta.feh.skill.weaponStat
 
-object Leiptr : BasicWeapon(Lance, 16) {
-    override val counterIgnoreRange: InCombatSkill<Boolean>?
-        get() = inCombatSkillTrue
-}
+val Leiptr = BasicWeapon(
+    Lance, BasicSkill(
+        extraStat = weaponStat(16),
+        counterIgnoreRange = inCombatSkillTrue
+    )
+)

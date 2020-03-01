@@ -1,6 +1,6 @@
 package me.kumatheta.feh.skill.special
 
-import me.kumatheta.feh.AoeSpecial
+import me.kumatheta.feh.skill.AoeSpecial
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.skill.allies

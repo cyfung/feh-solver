@@ -1,7 +1,5 @@
 package me.kumatheta.feh.skill
 
-import me.kumatheta.feh.Skill
-
 class SkillMap<T : Skill>(seq: Sequence<Pair<String, T>>) {
     private val map = seq.associate {
         it.first.normalize() to it.second

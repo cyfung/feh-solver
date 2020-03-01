@@ -1,16 +1,18 @@
 package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.skill.Assist
-import me.kumatheta.feh.AssistRelated
+import me.kumatheta.feh.skill.AssistRelated
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.Passive
+import me.kumatheta.feh.skill.Passive
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.foe
+import me.kumatheta.feh.skill.BasicSkill
 import me.kumatheta.feh.skill.assist.BuffRelatedAssist
 
-object DefFeint3 : Passive {
-    override val assistRelated: AssistRelated? = object : AssistRelated {
+object DefFeint3 : BasicSkill() {
+    override val assistRelated: AssistRelated? = object :
+        AssistRelated {
         override fun apply(
             battleState: BattleState,
             self: HeroUnit,

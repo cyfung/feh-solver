@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill.effect
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.MapSkillMethod
 import me.kumatheta.feh.skill.adjacentAllies
 
 fun armorMarch3(): MapSkillMethod<Unit> = { battleState: BattleState, self: HeroUnit ->
