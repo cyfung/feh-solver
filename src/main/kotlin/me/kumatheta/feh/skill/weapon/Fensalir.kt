@@ -8,7 +8,8 @@ import me.kumatheta.feh.skill.effect.startofturn.threaten
 import me.kumatheta.feh.skill.weaponStat
 
 object Fensalir : BasicWeapon(
-    Lance, threaten(Stat(atk = -4)).copy(
-        extraStat = weaponStat(16)
+    Lance, BasicSkill(
+        extraStat = weaponStat(16),
+        startOfTurn = threaten(Stat(atk = -4)).startOfTurn!!
     )
 )

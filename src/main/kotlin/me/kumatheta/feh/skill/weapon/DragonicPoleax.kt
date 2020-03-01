@@ -9,8 +9,9 @@ import me.kumatheta.feh.skill.effect.startofturn.tactics
 import me.kumatheta.feh.skill.weaponStat
 
 val DraconicPoleaxEff = BasicWeapon(
-    Axe, tactics(Stat(res = 6)).copy(
+    Axe, BasicSkill(
         extraStat = weaponStat(16, hp = 3),
-        triangleAdept = combatSkill(20)
+        triangleAdept = combatSkill(20),
+        startOfTurn = tactics(Stat(res = 6)).startOfTurn!!
     )
 )

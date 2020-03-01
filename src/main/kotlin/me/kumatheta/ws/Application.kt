@@ -58,7 +58,6 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-//    val dataSet = "bhb morgan morgan"
     val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
@@ -77,7 +76,6 @@ fun Application.module(testing: Boolean = false) {
     val mctsRef =
         AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>(null)
     val jobRef = AtomicReference<Job?>(null)
-    val oldSolutions = ConcurrentHashMap<String, Boolean>()
 
     routing {
         get("/start") {
@@ -156,7 +154,7 @@ private suspend fun getMcts(
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
     val phaseLimit = 20
     val board = FehBoard(phaseLimit, state, 3)
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000)
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
     val mcts = Mcts(board, scoreManager)
     val next = Pair(board, mcts)
     do {
