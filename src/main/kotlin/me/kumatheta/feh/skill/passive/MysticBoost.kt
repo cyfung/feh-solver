@@ -1,14 +1,13 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.skill.*
+import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.inCombatSkillTrue
 
-object MysticBoost3 : BasicSkill() {
-    override val denyAdaptiveDamage: MapSkillMethod<Boolean>? = { _, _ ->
+val MysticBoost3 = BasicSkill(
+    denyAdaptiveDamage = { _, _ ->
         true
-    }
-    override val denyStaffAsNormal: InCombatSkill<Boolean>?
-        get() = inCombatSkillTrue
-    override val combatEnd: CombatEndSkill? = { combatStatus, _ ->
+    }, denyStaffAsNormal = inCombatSkillTrue,
+    combatEnd = { combatStatus, _ ->
         combatStatus.self.heroUnit.cachedEffect.heal(6)
     }
-}
+)

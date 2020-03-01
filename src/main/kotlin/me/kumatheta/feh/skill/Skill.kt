@@ -71,7 +71,7 @@ interface Weapon : Skill {
 open class BasicWeapon(override val weaponType: WeaponType, basicSkill: BasicSkill) :
     Weapon, Skill by basicSkill
 
-abstract class Special(val coolDownCount: Int) : BasicSkill()
+abstract class Special(val coolDownCount: Int, basicSkill: BasicSkill = EmptySkill) : Skill by basicSkill
 
 abstract class AoeSpecial(coolDownCount: Int) : Special(coolDownCount) {
     abstract val damageFactor: Int
@@ -142,6 +142,7 @@ typealias CombatEndSkill = (CombatStatus<InCombatStat>, attacked: Boolean) -> Un
 typealias PerAttackListener<T> = (CombatStatus<InCombatStat>, value: T) -> Unit
 
 typealias MapSkillMethod<T> = (battleState: BattleState, self: HeroUnit) -> T
+typealias TeleportEffect = MapSkillMethod<Sequence<Position>>
 
 data class SupportCombatInput(
     val battleState: BattleState,

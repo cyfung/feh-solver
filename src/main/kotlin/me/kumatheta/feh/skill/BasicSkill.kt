@@ -2,7 +2,9 @@ package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
 
-open class BasicSkill(
+val EmptySkill = BasicSkill()
+
+class BasicSkill(
     override val postInitiateMovement: MovementEffect? = null,
     override val extraStat: Stat? = null,
     override val coolDownCountAdj: Int = 0,

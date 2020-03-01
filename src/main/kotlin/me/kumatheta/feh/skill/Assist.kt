@@ -2,7 +2,7 @@ package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
 
-sealed class Assist(val isRange: Boolean) : BasicSkill() {
+sealed class Assist(val isRange: Boolean, basicSkill: BasicSkill=EmptySkill) : Skill by basicSkill {
     abstract fun apply(
         self: HeroUnit,
         target: HeroUnit,

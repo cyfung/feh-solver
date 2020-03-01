@@ -4,19 +4,19 @@ import me.kumatheta.feh.skill.*
 
 private val FOE_EFFECT = combatStartSkill(-1).toFollowUpPassive()
 
-class WaryFighter(percentageHp: Int) : BasicSkill() {
-    override val followUp: CombatStartSkill<Int>? = {
+fun waryFighter(percentageHp: Int) = BasicSkill(
+    followUp = {
         if (it.self.hpThreshold(percentageHp) >= 0) {
             -1
         } else {
             0
         }
-    }
-    override val foeEffect: CombatStartSkill<Skill?>? = {
+    },
+    foeEffect = {
         if (it.self.hpThreshold(percentageHp) >= 0) {
             FOE_EFFECT
         } else {
             null
         }
     }
-}
+)

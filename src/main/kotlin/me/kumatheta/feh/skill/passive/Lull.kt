@@ -7,8 +7,8 @@ import me.kumatheta.feh.skill.Skill
 import me.kumatheta.feh.skill.combatStartSkill
 
 
-class Lull(stat: Stat) : BasicSkill() {
-    private val _foeEffect = BasicSkill(
+fun lull(stat: Stat): BasicSkill {
+    val foeEffect = BasicSkill(
         neutralizeBonus =
         combatStartSkill(
             Stat(
@@ -19,9 +19,7 @@ class Lull(stat: Stat) : BasicSkill() {
             )
         ), inCombatStat = combatStartSkill(stat)
     )
-    override val foeEffect: CombatStartSkill<Skill?>? = {
-        _foeEffect
-    }
-
-
+    return BasicSkill(foeEffect = {
+        foeEffect
+    })
 }

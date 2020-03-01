@@ -53,7 +53,7 @@ val ALL_PASSIVES = sequenceOf(
     "B Tome breaker 3" to breaker(MagicB, 50).toFollowUpPassive(),
     "Vantage 3" to belowThreshold(75).toVantagePassive(),
     "Desperation 3" to belowThreshold(75).toDesperationPassive(),
-    "Wary Fighter 3" to WaryFighter(50),
+    "Wary Fighter 3" to waryFighter(50),
     "Armor March 3" to armorMarch3().toStartOfTurnPassive(),
 
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)).toStartOfTurnPassive(),
@@ -61,8 +61,8 @@ val ALL_PASSIVES = sequenceOf(
     "Hone Atk 3" to hone(Stat(atk = 4)).toStartOfTurnPassive(),
     "Fortify Res 4" to hone(Stat(res = 7)).toStartOfTurnPassive(),
     "Wrathful Staff 3" to WrathfulStaff3,
-    "Wrath 3" to Wrath(75),
-    "Time's Pulse 3" to TimePulse3,
+    "Wrath 3" to wrath(75),
+    "Time's Pulse 3" to TimePulse3.toStartOfTurnPassive(),
     "Lunge" to BasicSkill(postInitiateMovement = SwapEffect),
 
     "Chill Def 3" to chill(Stat(def = -7)) {
@@ -82,7 +82,7 @@ val ALL_PASSIVES = sequenceOf(
     "Infantry Pulse 3" to infantryPulse(minDiff = 1).toStartOfTurnPassive(),
     "Threaten Def 3" to threaten(Stat(def = -5)).toStartOfTurnPassive(),
 
-    "Pass 3" to Pass(percentageHp = 25),
+    "Pass 3" to pass(percentageHp = 25),
     "HP+5" to Stat(hp = 5).toExtraStatPassive(),
     "Res+3" to Stat(res = 3).toExtraStatPassive(),
     "Atk/Res 2" to Stat(atk = 2, res = 2).toExtraStatPassive(),
@@ -99,30 +99,30 @@ val ALL_PASSIVES = sequenceOf(
     "Earth Boost 3" to boost(Stat(def = 6)).toInCombatStatPassive(),
     "Wind Boost 3" to boost(Stat(spd = 6)).toInCombatStatPassive(),
     "Fire Boost 3" to boost(Stat(atk = 6)).toInCombatStatPassive(),
-    "Distant Guard 3" to distantGuard(Stat(def=4, res=4)).toSupportInCombatBuffPassive(),
-    "Heavy Blade 3" to HeavyBlade3,
+    "Distant Guard 3" to distantGuard(Stat(def = 4, res = 4)).toSupportInCombatBuffPassive(),
+    "Heavy Blade 3" to HeavyBlade3.toCooldownBuff(),
     "Pulse Smoke 3" to pulseSmoke3.toCombatEndPassive(),
-    "Renewal 3" to Renewal3,
+    "Renewal 3" to renewal(2).toStartOfTurnPassive(),
 
     "Live to Serve 3" to LiveToServe3,
     "Null Follow-up 3" to NullFollowUp3,
-    "Guard 3" to Guard3,
-    "Triangle Adept 3" to TriangleAdept3,
-    "Poison Strike 3" to PoisonStrike3,
+    "Guard 3" to Guard3.toCooldownDebuff(),
+    "Triangle Adept 3" to inCombatSkill(20).toTriangleAdeptPassive(),
+    "Poison Strike 3" to poisonStrike(10),
     "Fury 3" to Fury3,
-    "Aerobatics 3" to Aerobatics3,
     "Dull Close 3" to DullClose3,
     "Dull Range 3" to DullRange3,
-    "Iote's Shield" to IoteShield,
+    "Iote's Shield" to MoveType.CAVALRY.toNeutralizeEffectivePassive(),
     "Def Feint 3" to DefFeint3,
     "Mystic Boost 3" to MysticBoost3,
-    "Sparkling Boost" to SparklingBoost,
+    "Sparkling Boost" to SparklingBoost.toStartOfTurnPassive(),
     "Shield Pulse 3" to ShieldPulse3,
-    "Drive Atk 2" to Drive(Stat(atk = 3)),
-    "Drive Spd 2" to Drive(Stat(spd = 3)),
-    "Drive Res 2" to Drive(Stat(res = 3)),
-    "Goad Cavalry" to GoadCavalry,
-    "Flier Formation 3" to FlierFormation3,
+    "Drive Atk 2" to drive(Stat(atk = 3)).toSupportInCombatBuffPassive(),
+    "Drive Spd 2" to drive(Stat(spd = 3)).toSupportInCombatBuffPassive(),
+    "Drive Res 2" to drive(Stat(res = 3)).toSupportInCombatBuffPassive(),
+    "Goad Cavalry" to drive(Stat(atk = 4, spd = 4), MoveType.CAVALRY).toSupportInCombatBuffPassive(),
+    "Aerobatics 3" to Aerobatics3.toTeleportPassive(),
+    "Flier Formation 3" to FlierFormation3.toTeleportPassive(),
     "Air Orders 3" to airOrder3.toStartOfTurnPassive(),
     "Atk Opening 3" to opening(Stat(atk = 6)) {
         it.startOfTurnStat.atk
@@ -133,6 +133,7 @@ val ALL_PASSIVES = sequenceOf(
 fun CombatStartSkill<Boolean>.toVantagePassive(): Passive = BasicSkill(vantage = this)
 fun CombatStartSkill<Boolean>.toDesperationPassive(): Passive = BasicSkill(desperation = this)
 fun CombatStartSkill<Int>.toFollowUpPassive(): Passive = BasicSkill(followUp = this)
+fun InCombatSkill<Int>.toTriangleAdeptPassive(): Passive = BasicSkill(triangleAdept = this)
 fun CombatStartSkill<Int>.toCounterPassive(): Passive = BasicSkill(counter = this)
 fun SupportCombatEffect.toSupportInCombatBuffPassive(): Passive = BasicSkill(supportInCombatBuff = this)
 fun MapSkillMethod<Unit>.toStartOfTurnPassive(): Passive = BasicSkill(startOfTurn = this)
@@ -140,3 +141,8 @@ fun Stat.toExtraStatPassive(): Passive = BasicSkill(extraStat = this)
 fun CombatStartSkill<Stat>.toInCombatStatPassive(): Passive = BasicSkill(inCombatStat = this)
 fun CombatStartSkill<Stat>.toNeutralizeBonusPassive(): Passive = BasicSkill(neutralizeBonus = this)
 fun CombatEndSkill.toCombatEndPassive() = BasicSkill(combatEnd = this)
+fun MapSkillMethod<Sequence<Position>>.toTeleportPassive() = BasicSkill(teleport = this)
+fun InCombatSkill<CooldownChange<Int>>.toCooldownBuff() = BasicSkill(cooldownBuff = this)
+fun InCombatSkill<CooldownChange<Int>>.toCooldownDebuff() = BasicSkill(cooldownDebuff = this)
+fun Set<MoveType>.toNeutralizeEffectivePassive() = BasicSkill(neutralizeEffectiveMoveType = this)
+fun MoveType.toNeutralizeEffectivePassive() = setOf(this).toNeutralizeEffectivePassive()

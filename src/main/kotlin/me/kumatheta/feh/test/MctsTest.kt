@@ -30,50 +30,48 @@ fun main() {
             playerMap
         )
     )
-    val phaseLimit = 20
-    var board = FehBoard(phaseLimit, state, 3)
-    val testMoves = listOf(
-        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
-        MoveOnly(heroUnitId = 4, moveTargetX = 3, moveTargetY = 0),
-        MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 0),
-        MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1),
-
-        MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 13),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13),
-        MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1),
-        MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 13),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9),
-
-        MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 12),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 3, attackTargetId = 12),
-        MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 0, assistTargetId = 3),
-        MoveOnly(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0),
-        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
-
-        MoveOnly(heroUnitId = 2, moveTargetX = 4, moveTargetY = 3),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 18),
-        MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 18),
-        MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 2, attackTargetId = 5),
-
-        MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 1, attackTargetId = 16),
-        MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 1, assistTargetId = 3),
-        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 3, attackTargetId = 17),
-        MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 3),
-        MoveOnly(heroUnitId = 3, moveTargetX = 3, moveTargetY = 1),
-
-        MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 4, attackTargetId = 11),
-        MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 3, assistTargetId = 2),
-        MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 4, attackTargetId = 11)
-    ).map {
-        FehMove(it)
-    }
-    val testResult = board.tryMoves(testMoves, false)
-    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
-
-    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
+    val phraseLimit = 20
+    var board = FehBoard(phraseLimit, state, 3)
+//    val testMoves = listOf(
+//        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
+//        MoveOnly(heroUnitId = 4, moveTargetX = 3, moveTargetY = 0),
+//        MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 0),
+//        MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1),
 //
-//    testMoves.forEach { move ->
+//        MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 13),
+//        MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13),
+//        MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1),
+//        MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 13),
+//        MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9),
+//
+//        MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 3, attackTargetId = 12),
+//        MoveOnly(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1),
+//        MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 2, attackTargetId = 12),
+//        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
+//
+//        MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 2, attackTargetId = 5),
+//        MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 1, assistTargetId = 3),
+//        MoveOnly(heroUnitId = 3, moveTargetX = 0, moveTargetY = 3),
+//        MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 2, attackTargetId = 18),
+//        MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 4),
+//        MoveAndAttack(heroUnitId = 1, moveTargetX = 1, moveTargetY = 3, attackTargetId = 11),
+//        MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 3),
+//        MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3),
+//        MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 4, assistTargetId = 3),
+//        MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 5, attackTargetId = 16),
+//        MoveAndAttack(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2, attackTargetId = 18),
+//        MoveAndAttack(heroUnitId = 4, moveTargetX = 2, moveTargetY = 4, attackTargetId = 18),
+//        MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 2, attackTargetId = 18),
+//        MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 3, attackTargetId = 18)
+//    ).map {
+//        FehMove(it)
+//    }
+//    val testResult = board.tryMoves(testMoves, false)
+//    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
+//
+//    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
+//
+//    testMoves.take(8).forEach { move ->
 //        val exists = board.moves.any {
 //            it == move
 //        }
@@ -82,7 +80,7 @@ fun main() {
 //        }
 //        board = board.applyMove(move)
 //    }
-//    println(board.suggestedOrder(board.moves).map { it.unitAction }.toList())
+    println(board.suggestedOrder(board.moves).map { it.unitAction }.toList())
     val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.0)
     val mcts = Mcts(board, scoreManager)
     var tries = 0
