@@ -16,7 +16,7 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main() {
-    val dataSet = "sothis abyssal"
+    val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -30,20 +30,20 @@ fun main() {
     )
     val phraseLimit = 20
     var board = FehBoard(phraseLimit, state, 3)
-    val testMoves = listOf(
-        Rearrange(listOf(1, 4, 3, 2)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
-        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 5, moveTargetY = 0)),
-        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 0)),
-        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1)),
-        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13)),
-        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 5, moveTargetY = 1, assistTargetId = 3)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1, attackTargetId = 13)),
-        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 0, attackTargetId = 13)),
-        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0, attackTargetId = 12))
-    )
-    val testResult = board.tryMoves(testMoves, false)
-    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
+//    val testMoves = listOf(
+//        Rearrange(listOf(1, 4, 3, 2)),
+//        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
+//        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 5, moveTargetY = 0)),
+//        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 0)),
+//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1)),
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13)),
+//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 5, moveTargetY = 1, assistTargetId = 3)),
+//        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1, attackTargetId = 13)),
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 0, attackTargetId = 13)),
+//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0, attackTargetId = 12))
+//    )
+//    val testResult = board.tryMoves(testMoves, false)
+//    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 //
 //    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 //

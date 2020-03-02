@@ -19,8 +19,6 @@ data class BasicSkill(
     override val startOfTurn: MapSkillMethod<Unit>? = null,
     override val pass: MapSkillMethod<Boolean>? = null,
     override val obstruct: MapSkillMethod<Boolean>? = null,
-    override val adaptiveDamage: MapSkillMethod<Boolean>? = null,
-    override val denyAdaptiveDamage: MapSkillMethod<Boolean>? = null,
     override val teleport: MapSkillMethod<Sequence<Position>>? = null,
     override val supportInCombatBuff: SupportCombatEffect? = null,
     override val supportInCombatDebuff: SupportCombatEffect? = null,
@@ -29,6 +27,8 @@ data class BasicSkill(
     override val assistRelated: AssistRelated? = null,
 
     // very beginning of combat
+    override val adaptiveDamage: CombatStartSkill<Boolean>? = null,
+    override val denyAdaptiveDamage: CombatStartSkill<Boolean>? = null,
     override val foeEffect: CombatStartSkill<Skill?>? = null,
     override val neutralizeFollowUp: CombatStartSkill<Boolean>? = null,
     override val neutralizeBonus: CombatStartSkill<Stat?>? = null,

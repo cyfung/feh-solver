@@ -20,14 +20,11 @@ class InCombatSkillSet(
         return map { it.invoke(combatStatus) }
     }
 
-    val adaptiveDamage: Sequence<MapSkillMethod<Boolean>>
-        get() = methodSeq(Skill::adaptiveDamage)
-    val denyAdaptiveDamage: Sequence<MapSkillMethod<Boolean>>
-        get() = methodSeq(Skill::denyAdaptiveDamage)
+    val adaptiveDamage: Boolean = methodSeq(Skill::adaptiveDamage).applyAll().any { it }
+    val denyAdaptiveDamage: Boolean = methodSeq(Skill::denyAdaptiveDamage).applyAll().any { it }
 
-
-    val neutralizeFollowUp: Sequence<CombatStartSkill<Boolean>>
-        get() = methodSeq(Skill::neutralizeFollowUp)
+    val neutralizeFollowUp: Sequence<Boolean>
+        get() = methodSeq(Skill::neutralizeFollowUp).applyAll()
     val neutralizeBonus: Sequence<Stat?>
         get() = methodSeq(Skill::neutralizeBonus).applyAll()
     val neutralizePenalty: Sequence<Stat?>

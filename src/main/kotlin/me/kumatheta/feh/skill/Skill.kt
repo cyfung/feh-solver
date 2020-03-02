@@ -17,8 +17,6 @@ interface Skill {
     val startOfTurn: MapSkillMethod<Unit>?
     val pass: MapSkillMethod<Boolean>?
     val obstruct: MapSkillMethod<Boolean>?
-    val adaptiveDamage: MapSkillMethod<Boolean>?
-    val denyAdaptiveDamage: MapSkillMethod<Boolean>?
     val teleport: MapSkillMethod<Sequence<Position>>?
     val supportInCombatBuff: SupportCombatEffect?
     val supportInCombatDebuff: SupportCombatEffect?
@@ -27,6 +25,8 @@ interface Skill {
     val assistRelated: AssistRelated?
 
     // very beginning of combat
+    val adaptiveDamage: CombatStartSkill<Boolean>?
+    val denyAdaptiveDamage: CombatStartSkill<Boolean>?
     val foeEffect: CombatStartSkill<Skill?>?
     val neutralizeFollowUp: CombatStartSkill<Boolean>?
     val neutralizeBonus: CombatStartSkill<Stat?>?

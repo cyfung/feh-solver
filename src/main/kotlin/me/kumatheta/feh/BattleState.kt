@@ -272,21 +272,19 @@ class BattleState private constructor(
         val neutralizeFollowUp = skillWrappers.attacker.neutralizeFollowUp || skillWrappers.defender.neutralizeFollowUp
 
         // check adaptive
-        val attackerAdaptive = skillWrappers.attacker.adaptiveDamage.any { it } &&
-                skillWrappers.defender.denyAdaptiveDamage.none { it }
-        val defenderAdaptive = skillWrappers.defender.adaptiveDamage.any { it } &&
-                skillWrappers.attacker.denyAdaptiveDamage.none { it }
+        val attackerAdaptive = skillWrappers.attacker.adaptiveDamage &&
+                !skillWrappers.defender.denyAdaptiveDamage
+        val defenderAdaptive = skillWrappers.defender.adaptiveDamage &&
+                !skillWrappers.attacker.denyAdaptiveDamage
 
         // check staff damage
         val attackerReducedStaffDamage = if (attacker.weaponType == Staff) {
-            skillWrappers.attacker.staffAsNormal.none { it } ||
-                    skillWrappers.defender.denyStaffAsNormal.any { it }
+            !skillWrappers.attacker.staffAsNormal || skillWrappers.defender.denyStaffAsNormal
         } else {
             false
         }
         val defenderReducedStaffDamage = if (defender.weaponType == Staff) {
-            skillWrappers.defender.staffAsNormal.none { it } ||
-                    skillWrappers.attacker.denyStaffAsNormal.any { it }
+            !skillWrappers.defender.staffAsNormal || skillWrappers.attacker.denyStaffAsNormal
         } else {
             false
         }
@@ -397,12 +395,8 @@ class BattleState private constructor(
             attackerInCombatStat,
             skillsPair.defender
         )
-        attackerInCombatStat.inCombatStat += attackerSkillWrapper.additionalInCombatStat.fold(Stat.ZERO) { acc, stat ->
-            acc + stat
-        }
-        defenderInCombatStat.inCombatStat += defenderSkillWrapper.additionalInCombatStat.fold(Stat.ZERO) { acc, stat ->
-            acc + stat
-        }
+        attackerInCombatStat.inCombatStat += attackerSkillWrapper.additionalInCombatStat
+        defenderInCombatStat.inCombatStat += defenderSkillWrapper.additionalInCombatStat
 
         if (battleMap.getTerrain(attacker.position).isDefenseTile) {
             attackerInCombatStat.inCombatStat = attackerInCombatStat.inCombatStat.copy(
@@ -451,11 +445,11 @@ class BattleState private constructor(
     private fun getColorAdvantage(
         skillWrappers: AttackerDefenderPair<InCombatSkillWrapper>
     ): Int {
-        val attackerRaven = skillWrappers.attacker.raven.any { it }
-        val defenderRaven = skillWrappers.defender.raven.any { it }
-        val defender = skillWrappers.defender.inCombatStat.heroUnit
+        val attackerRaven = skillWrappers.attacker.raven
+        val defenderRaven = skillWrappers.defender.raven
+        val defender = skillWrappers.defender.heroUnit
         val advantage = attackerRaven && defender.weaponType.color == Color.COLORLESS
-        val attacker = skillWrappers.attacker.inCombatStat.heroUnit
+        val attacker = skillWrappers.attacker.heroUnit
         val disadvantage = defenderRaven && attacker.weaponType.color == Color.COLORLESS
         val colorAdvantage = when {
             advantage ->
@@ -470,10 +464,8 @@ class BattleState private constructor(
         if (colorAdvantage == 0) {
             return 0
         }
-        val attackerCancelAffinity =
-            skillWrappers.attacker.cancelAffinity.max() ?: 0
-        val defenderCancelAffinity =
-            skillWrappers.defender.cancelAffinity.max() ?: 0
+        val attackerCancelAffinity = skillWrappers.attacker.cancelAffinity
+        val defenderCancelAffinity = skillWrappers.defender.cancelAffinity
         if (attackerCancelAffinity > 0 && defenderCancelAffinity > 0) {
             return colorAdvantage
         }
@@ -483,11 +475,11 @@ class BattleState private constructor(
                 2 -> if (colorAdvantage < 0) {
                     colorAdvantage
                 } else {
-                    val bonus = skillWrappers.defender.triangleAdept.max() ?: 0
+                    val bonus = skillWrappers.defender.triangleAdept
                     colorAdvantage + bonus
                 }
                 3 -> {
-                    val bonus = skillWrappers.defender.triangleAdept.max() ?: 0
+                    val bonus = skillWrappers.defender.triangleAdept
                     colorAdvantage + bonus
                 }
                 else -> throw IllegalStateException("unknown value for attackerCancelAffinity: $attackerCancelAffinity")
@@ -499,17 +491,17 @@ class BattleState private constructor(
                 2 -> if (colorAdvantage > 0) {
                     colorAdvantage
                 } else {
-                    val bonus = skillWrappers.attacker.triangleAdept.max() ?: 0
+                    val bonus = skillWrappers.attacker.triangleAdept
                     colorAdvantage - bonus
                 }
                 3 -> {
-                    val bonus = skillWrappers.attacker.triangleAdept.max() ?: 0
+                    val bonus = skillWrappers.attacker.triangleAdept
                     colorAdvantage - bonus
                 }
                 else -> throw IllegalStateException("unknown value for attackerCancelAffinity: $attackerCancelAffinity")
             }
         }
-        val bonus = (skillWrappers.attacker.triangleAdept + skillWrappers.defender.triangleAdept).max() ?: 0
+        val bonus = maxOf(skillWrappers.attacker.triangleAdept, skillWrappers.defender.triangleAdept)
         return if (colorAdvantage > 0) {
             colorAdvantage + bonus
         } else {
@@ -518,22 +510,13 @@ class BattleState private constructor(
 
     }
 
-    private fun Sequence<CooldownChange<Int>>.max(): CooldownChange<Int> {
-        return fold(CooldownChange(0, 0)) { acc, cooldownChange ->
-            CooldownChange(
-                max(acc.unitAttack, cooldownChange.foeAttack),
-                max(acc.foeAttack, cooldownChange.unitAttack)
-            )
-        }
-    }
-
     private val PotentialDamage.cooldownAmount: CooldownChange<AttackerDefenderPair<Int>>
         get() {
-            val attackerCooldownIncrease = attackerInCombat.skills.cooldownBuff.max()
-            val attackerGuard = attackerInCombat.skills.cooldownDebuff.max()
+            val attackerCooldownIncrease = attackerInCombat.skills.cooldownBuff
+            val attackerGuard = attackerInCombat.skills.cooldownDebuff
 
-            val defenderCooldownIncrease = defenderInCombat.skills.cooldownBuff.max()
-            val defenderGuard = defenderInCombat.skills.cooldownDebuff.max()
+            val defenderCooldownIncrease = defenderInCombat.skills.cooldownBuff
+            val defenderGuard = defenderInCombat.skills.cooldownDebuff
 
             return CooldownChange(
                 AttackerDefenderPair(
@@ -553,11 +536,7 @@ class BattleState private constructor(
             val attackerStat = attacker.aoeInCombatStat()
             attacker.special.getTargets(this, attacker, defender).forEach { target ->
                 val skillsPair = getInCombatSkills(attacker, target)
-                val attackerAdaptive = skillsPair.attacker.adaptiveDamage.asSequence().any {
-                    it(this, attacker)
-                } && skillsPair.defender.denyAdaptiveDamage.asSequence().none {
-                    it(this, attacker)
-                }
+                val attackerAdaptive = skillsPair.attacker.adaptiveDamage && !skillsPair.defender.denyAdaptiveDamage
                 val targetStat = target.aoeInCombatStat()
                 val defRes = getDefRes(attacker, attackerAdaptive, targetStat.inCombatStat)
                 val atk = attacker.visibleStat.atk
@@ -695,11 +674,11 @@ class BattleState private constructor(
             }
         }
 
-        damageReceiver.skills.getPercentageDamageReduce(defenseSpecialUsed).filterNot { it == 0 }.forEach {
+        damageReceiver.skills.getPercentageDamageReduce(defenseSpecialUsed).forEach {
             damage -= damage * it / 100
         }
 
-        damage -= damageReceiver.skills.getFlatDamageReduce(defenseSpecialUsed).sum()
+        damage -= damageReceiver.skills.getFlatDamageReduce(defenseSpecialUsed)
 
         if (damage < 0) {
             damage = 0
@@ -758,7 +737,7 @@ class BattleState private constructor(
         defenderInCombat: FullInCombatStat,
         spdDiff: Int,
         neutralizeFollowUp: Boolean
-    ): MutableList<Boolean> {
+    ): List<Boolean> {
         val attacker = attackerInCombat.heroUnit
         val defender = defenderInCombat.heroUnit
         val attackerSkillSet = attackerInCombat.skills
@@ -767,13 +746,13 @@ class BattleState private constructor(
         val rangeMatch = when {
             defender.isEmptyHanded -> false
             attacker.weaponType.isRanged == defender.weaponType.isRanged -> true
-            else -> defenderSkillSet.counterIgnoreRange.any { it }
+            else -> defenderSkillSet.counterIgnoreRange
         }
 
-        val canCounter = rangeMatch && defenderSkillSet.counter.sum() >= 0
+        val canCounter = rangeMatch && defenderSkillSet.canCounter
 
-        val disablePriorityChange = attackerSkillSet.disablePriorityChange.any { it } ||
-                defenderSkillSet.disablePriorityChange.any { it }
+        val disablePriorityChange = attackerSkillSet.disablePriorityChange ||
+                defenderSkillSet.disablePriorityChange
 
         val desperation: Boolean
         val vantage: Boolean
@@ -781,8 +760,8 @@ class BattleState private constructor(
             desperation = false
             vantage = false
         } else {
-            desperation = attackerSkillSet.desperation.any { it }
-            vantage = defenderSkillSet.vantage.any { it }
+            desperation = attackerSkillSet.desperation
+            vantage = defenderSkillSet.vantage
         }
 
         val attackerFollowup: Boolean
@@ -804,20 +783,20 @@ class BattleState private constructor(
             }
         } else {
             attackerFollowup = when (val guarantee =
-                attackerSkillSet.followUp.sum()) {
+                attackerSkillSet.followUp) {
                 0 -> spdDiff >= 5
                 else -> guarantee > 0
             }
             defenderFollowup = when (val guarantee =
-                defenderSkillSet.followUp.sum()) {
+                defenderSkillSet.followUp) {
                 0 -> spdDiff <= -5
                 else -> guarantee > 0
             }
         }
 
         val attackOrder = mutableListOf<Boolean>()
-        val attackerBrave = attackerSkillSet.brave.any { it }
-        val defenderBrave = defenderSkillSet.brave.any { it }
+        val attackerBrave = attackerSkillSet.brave
+        val defenderBrave = defenderSkillSet.brave
         val addAttacker = {
             attackOrder.add(true)
             if (attackerBrave) {
@@ -861,7 +840,7 @@ class BattleState private constructor(
         if (defenderFollowup && !vantage) {
             addDefender()
         }
-        return attackOrder
+        return attackOrder.toList()
     }
 
     private fun calculateBaseDamage(
@@ -889,7 +868,7 @@ class BattleState private constructor(
             damage /= 2
         }
 
-        damage += damageDealer.skills.getDamageIncrease(damagingSpecial != null).sum()
+        damage += damageDealer.skills.getDamageIncrease(damagingSpecial != null)
         return damage to (damagingSpecial != null)
     }
 
