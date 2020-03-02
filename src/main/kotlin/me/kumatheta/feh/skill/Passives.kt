@@ -12,7 +12,7 @@ import me.kumatheta.feh.skill.effect.teleport.Aerobatics3
 import me.kumatheta.feh.skill.effect.teleport.FlierFormation3
 import me.kumatheta.feh.skill.passive.*
 
-val ALL_PASSIVES = sequenceOf<Pair<String,Passive>>(
+val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Close Counter" to CounterIgnoreRange,
     "Distant Counter" to CounterIgnoreRange,
 
@@ -24,6 +24,9 @@ val ALL_PASSIVES = sequenceOf<Pair<String,Passive>>(
     "Atk/Res Bond 1" to bond(Stat(atk = 3, res = 3)),
     "Atk/Res Bond 2" to bond(Stat(atk = 4, res = 4)),
     "Atk/Res Bond 3" to bond(Stat(atk = 5, res = 5)),
+    "Atk/Spd Bond 1" to solo(Stat(atk = 3, spd = 3)),
+    "Atk/Spd Bond 2" to solo(Stat(atk = 4, spd = 4)),
+    "Atk/Spd Bond 3" to solo(Stat(atk = 5, spd = 5)),
 
     "Atk/Spd Solo 3" to solo(Stat(atk = 6, spd = 6)),
     "Atk/Def Solo 3" to solo(Stat(atk = 6, def = 6)),
@@ -75,6 +78,8 @@ val ALL_PASSIVES = sequenceOf<Pair<String,Passive>>(
     "Wrathful Staff 3" to WrathfulStaff3,
     "Wrath 3" to wrath(75),
     "Time's Pulse 3" to TimePulse3,
+    "Quickened Pulse" to QuickenedPulse,
+    "Hardy Bearing 3" to HardyBearing3,
     "Lunge" to BasicSkill(postInitiateMovement = SwapEffect),
 
     "Chill Def 3" to chill(Stat(def = -7)) {
@@ -119,6 +124,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String,Passive>>(
     "Threaten Def 3" to threaten(Stat(def = -5)),
 
     "Pass 3" to pass(percentageHp = 25),
+    "Obstruct 3" to obstruct(percentageHp = 25),
     "HP+5" to Stat(hp = 5).toExtraStatPassive(),
     "Res+3" to Stat(res = 3).toExtraStatPassive(),
     "Atk/Res 2" to Stat(atk = 2, res = 2).toExtraStatPassive(),
@@ -142,6 +148,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String,Passive>>(
         )
     ),
     "Heavy Blade 3" to HeavyBlade3,
+    "Flashing Blade 3" to FlashingBlade3,
     "Pulse Smoke 3" to pulseSmoke3,
     "Renewal 3" to renewal(2),
 
@@ -182,6 +189,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String,Passive>>(
 //fun SupportCombatEffect.toSupportInCombatBuffPassive(): Passive = BasicSkill(supportInCombatBuff = this)
 //fun MapSkillMethod<Unit>.toStartOfTurnPassive(): Passive = BasicSkill(startOfTurn = this)
 fun Stat.toExtraStatPassive(): Passive = BasicSkill(extraStat = this)
+
 //fun CombatStartSkill<Stat>.toInCombatStatPassive(): Passive = BasicSkill(inCombatStat = this)
 //fun CombatStartSkill<Stat>.toNeutralizeBonusPassive(): Passive = BasicSkill(neutralizeBonus = this)
 //fun CombatEndSkill.toCombatEndPassive(): Passive = BasicSkill(combatEnd = this)
@@ -189,4 +197,5 @@ fun Stat.toExtraStatPassive(): Passive = BasicSkill(extraStat = this)
 //fun InCombatSkill<CooldownChange<Int>>.toCooldownBuff(): Passive = BasicSkill(cooldownBuff = this)
 //fun InCombatSkill<CooldownChange<Int>>.toCooldownDebuff(): Passive = BasicSkill(cooldownDebuff = this)
 fun Set<MoveType>.toNeutralizeEffectivePassive(): Passive = BasicSkill(neutralizeEffectiveMoveType = this)
+
 fun MoveType.toNeutralizeEffectivePassive(): Passive = setOf(this).toNeutralizeEffectivePassive()

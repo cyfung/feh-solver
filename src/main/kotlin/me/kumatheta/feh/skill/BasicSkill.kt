@@ -18,6 +18,7 @@ data class BasicSkill(
     // outside of combat
     override val startOfTurn: MapSkillMethod<Unit>? = null,
     override val pass: MapSkillMethod<Boolean>? = null,
+    override val obstruct: MapSkillMethod<Boolean>? = null,
     override val adaptiveDamage: MapSkillMethod<Boolean>? = null,
     override val denyAdaptiveDamage: MapSkillMethod<Boolean>? = null,
     override val teleport: MapSkillMethod<Sequence<Position>>? = null,

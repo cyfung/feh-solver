@@ -935,8 +935,9 @@ class BattleState private constructor(
             val lazyAllyThreat = lazyThreat(obstacles, myTeam)
 
             val availableUnits = unitsSeq(myTeam).filter { it.available }.toList()
+            val obstruct = foeTeam.obstruct()
             val possibleMoves = availableUnits.asSequence().associateWith { heroUnit ->
-                moveTargets(heroUnit).sortedWith(attackPositionOrder(heroUnit, foeThreat))
+                moveTargets(heroUnit, obstruct).sortedWith(attackPositionOrder(heroUnit, foeThreat))
                     .associateBy { it.position }
             }
 
@@ -1047,7 +1048,7 @@ class BattleState private constructor(
                 }.filterNot {
                     it.weaponType.isRanged
                 }.flatMap { enemy ->
-                    moveTargets(enemy, obstaclesOnly)
+                    moveTargets(enemy, emptySet(), obstaclesOnly)
                 }.map {
                     it.position
                 }
@@ -1257,7 +1258,8 @@ class BattleState private constructor(
         foeThreat: Map<Position, Int>,
         obstacles: Map<Position, ChessPiece>
     ): UnitAction? {
-        val chaseTarget = getChaseTarget(heroUnit, distanceMap, obstacles) ?: getClosestAlly(heroUnit, distanceMap) ?: return null
+        val chaseTarget =
+            getChaseTarget(heroUnit, distanceMap, obstacles) ?: getClosestAlly(heroUnit, distanceMap) ?: return null
 
         val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
         val okToStay = if (chaseTarget.team == heroUnit.team) {
@@ -1502,11 +1504,12 @@ class BattleState private constructor(
 
     private fun moveTargets(
         heroUnit: HeroUnit,
+        obstruct: Set<Position>,
         obstacles: Map<Position, ChessPiece> = locationMap
     ): Sequence<MoveStep> {
         val pass = heroUnit.skillSet.pass.any { it(this, heroUnit) }
         val travelPower = heroUnit.travelPower
-        val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass)
+        val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass, obstruct)
         calculateDistance(heroUnit, distanceReceiver)
         val teleportSkills = heroUnit.skillSet.teleport.asSequence()
         if (heroUnit.withMoveOrder) {
@@ -1555,16 +1558,27 @@ class BattleState private constructor(
         }
     }
 
+
+
     fun getAllPlayerMovements(): Sequence<UnitAction> {
+        val obstruct = Team.ENEMY.obstruct()
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
             val teammates = teammates(heroUnit).toList()
-            moveTargets(heroUnit).map { it.position }.flatMap { move ->
+            moveTargets(heroUnit, obstruct).map { it.position }.flatMap { move ->
                 attackMoves(heroUnit, move) + assistMoves(teammates, heroUnit, move) + MoveOnly(
                     heroUnitId = heroUnit.id,
                     moveTarget = move
                 )
             }
         }
+    }
+
+    private fun Team.obstruct(): Set<Position> {
+        return unitsSeq(this).filter { foe ->
+            foe.skillSet.obstruct.any { it(this@BattleState, foe) }
+        }.flatMap {
+            it.position.surroundings(maxPosition)
+        }.toSet()
     }
 
     private fun assistMoves(teammates: List<HeroUnit>, heroUnit: HeroUnit, move: Position): Sequence<MoveAndAssist> {
@@ -1654,7 +1668,8 @@ class DistanceReceiverRealMovement(
     private val travelPower: Int,
     private val obstacles: Map<Position, ChessPiece>,
     private val self: HeroUnit,
-    private val pass: Boolean
+    private val pass: Boolean,
+    private val obstruct: Set<Position>
 ) : DistanceReceiver {
     private val resultMap = mutableMapOf<Position, MoveStep>()
     override fun isOverMaxDistance(distance: Int): Boolean {
@@ -1668,6 +1683,14 @@ class DistanceReceiverRealMovement(
 
     private val withGravity = self.withNegativeStatus(NegativeStatus.GRAVITY)
 
+    private fun MoveStep.obstruct(): Boolean {
+        return if (pass || teleportRequired || distanceTravel == 0) {
+            true
+        } else {
+            !obstruct.contains(position)
+        }
+    }
+
     override fun receive(moveStep: MoveStep): Boolean {
         val position = moveStep.position
         if (resultMap[position] != null) {
@@ -1679,7 +1702,7 @@ class DistanceReceiverRealMovement(
         return when (val obstacle = obstacles[position]) {
             self, null -> {
                 resultMap[position] = moveStep
-                true
+                moveStep.obstruct()
             }
 
             is Obstacle -> {
@@ -1689,7 +1712,7 @@ class DistanceReceiverRealMovement(
             is HeroUnit -> {
                 if (obstacle.team == self.team) {
                     resultMap[position] = moveStep.copy(distanceTravel = -1)
-                    true
+                    moveStep.obstruct()
                 } else {
                     resultMap[position] = moveStep.copy(distanceTravel = -1)
                     pass

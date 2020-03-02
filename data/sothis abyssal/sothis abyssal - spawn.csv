@@ -1,0 +1,15 @@
+id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,,
+5,1,Sothis,,,4,2,INFANTRY,Sublime Surge,,Sirius,82,62,51,43,37,Atk/Spd Solo 3,Wrath 3,Time's Pulse 3,Hardy Bearing 3
+6,1,Blue Mage,Knight - Blue Tome,,,3,INFANTRY,Blarowl+Spd,,Luna,75,48,40,24,33,Wind Boost 3,Null Follow-up 3,Odd Spd Wave 3,Flashing Blade 3
+7,1,Bow Fighter,Fighter - Bow,,,3,INFANTRY,Brave Bow+C,,Bonfire,80,45,29,34,19,Atk/Def Solo 3,B Tomebreaker 3,Even Atk Wave 3,
+8,1,Axe Cavalier,Knight - Axe,,,2,CAVALRY,Wo Gun+Def,,Moonbow,82,55,29,34,35,Sturdy Blow 2,Lunge,Odd Def Wave 3,
+9,1,Sword Fighter,Fighter - Sword,,,1,INFANTRY,Slaying Edge+Def,,Sacred Cowl,86,51,37,35,31,Death Blow 3,Guard 3,Infantry Pulse 3,
+10,1,Green Mage,Knight - Green Tome,,,2,INFANTRY,Keen Gronnwolf+GEff,,Glimmer,73,49,38,24,33,Fire Boost 3,Poison Strike 3,Res Ploy 3,Quickened Pulse
+11,2,Cleric,Sister - Rod,,,1,INFANTRY,Trilemma+ Dazzling,Restore+,Windfire Balm+,70,45,33,28,42,Spd/Def Solo 3,Live to Serve 3,Atk Ploy 3,Panic Ploy 3
+12,2,Sword Knight,Armor - Sword,,,3,ARMORED,Armorsmasher+ Eff,,Draconic Aura,97,60,19,48,23,Death Blow 3,Wary Fighter 3,Armor March 3,Obstruct 3
+13,2,Axe Knight,Armor - Axe,,,4,ARMORED,Brave Axe+,,Ignis,94,54,14,48,23,Atk/Def Bond 3,Wary Fighter 3,Armor March 3,
+14,3,Green Cavalier,Knight - Green Tome,,,3,CAVALRY,Rexcailbur+ Atk,,Iceberg,47,53,28,18,37,Atk/Spd Solo 3,Poison Strike 3,Spd Smoke 3,
+15,3,Sword Cavalier,Knight - Sword,,,2,CAVALRY,Zanbato+ Eff,,Reprisal,60,54,30,31,36,Fury 3,Pass 3,Threaten Def 3,
+16,4,Bow Cavailer,Knight - Bow,,,3,CAVALRY,Shining Bow+C Atk,,Draconic Aura,57,51,24,27,25,Def/Res Solo 3,Chill Res 3,Distant Guard 3,
+17,4,Axe Fighter,Fighter - Axe,,,3,INFANTRY,Silver Axe+ def,,Bonfire,66,50,34,37,24,Heavy Blade 3,Quick Riposte 3,Pulse Smoke 3,
+18,4,Lance Fighter,Fighter - Lance,,,5,INFANTRY,Barrier Lance+ res,Rally Up Atk+,Miracle,66,48,34,33,28,Distant Def 3,Renewal 3,Drive Res 2,

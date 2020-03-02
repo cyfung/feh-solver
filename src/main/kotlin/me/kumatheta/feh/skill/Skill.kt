@@ -16,6 +16,7 @@ interface Skill {
     // outside of combat
     val startOfTurn: MapSkillMethod<Unit>?
     val pass: MapSkillMethod<Boolean>?
+    val obstruct: MapSkillMethod<Boolean>?
     val adaptiveDamage: MapSkillMethod<Boolean>?
     val denyAdaptiveDamage: MapSkillMethod<Boolean>?
     val teleport: MapSkillMethod<Sequence<Position>>?
