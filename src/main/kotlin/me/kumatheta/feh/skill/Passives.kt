@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.assist.movement.HitAndRunEffect
 import me.kumatheta.feh.skill.assist.movement.SwapEffect
 import me.kumatheta.feh.skill.effect.*
 import me.kumatheta.feh.skill.effect.incombatstat.*
@@ -14,8 +15,11 @@ import me.kumatheta.feh.skill.effect.teleport.FlierFormation3
 import me.kumatheta.feh.skill.passive.*
 
 val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
+    "Upheaval" to Upheaval,
     "Close Counter" to CounterIgnoreRange,
     "Distant Counter" to CounterIgnoreRange,
+
+    "Bold Fighter 3" to BoldFighter3,
 
     "Seal Atk/Def 2" to seal(Stat(def = -5, atk = -5)),
 
@@ -36,6 +40,8 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Def/Res Solo 3" to solo(Stat(def = 6, res = 6)),
 
     "Death Blow 3" to blow(Stat(atk = 6)),
+    "Darting Blow 3" to blow(Stat(spd = 6)),
+    "Armored Blow 3" to blow(Stat(def = 6)),
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)),
     "Sturdy Blow 2" to blow(Stat(atk = 4, def = 4)),
     "Mirror Strike 2" to blow(Stat(atk = 4, res = 4)),
@@ -44,6 +50,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)),
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)),
     "Warding Breath" to WardingBreath,
+    "Guidance 3" to Guidance3,
 
     "Spd Smoke 3" to smoke(Stat(spd = -7)),
 
@@ -61,6 +68,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Quick Riposte 3" to quickRiposte(70),
     "Quick Riposte 2" to quickRiposte(80),
     "Quick Riposte 1" to quickRiposte(90),
+    "Sword Breaker 3" to breaker(Sword, 50),
     "Bow Breaker 3" to breaker(BowC, 50),
     "B Tome breaker 3" to breaker(MagicB, 50),
     "Vantage 3" to vantage(75),
@@ -77,12 +85,14 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     ),
     "Hone Atk 3" to hone(Stat(atk = 4)),
     "Fortify Res 4" to hone(Stat(res = 7)),
+    "Fortify Fliers" to hone(Stat(def = 6, res = 6), MoveType.FLYING),
     "Wrathful Staff 3" to WrathfulStaff3,
     "Wrath 3" to wrath(75),
     "Time's Pulse 3" to TimePulse3,
     "Quickened Pulse" to QuickenedPulse,
     "Hardy Bearing 3" to HardyBearing3,
     "Lunge" to BasicSkill(postInitiateMovement = SwapEffect),
+    "Hit and Run" to BasicSkill(postInitiateMovement = HitAndRunEffect),
 
     "Chill Def 3" to chill(Stat(def = -7)) {
         it.visibleStat.def

@@ -11,9 +11,7 @@ import me.kumatheta.feh.skill.weaponStat
 val SublimeSurge = BasicWeapon(
     DragonR, BasicSkill(
         extraStat = weaponStat(16),
-        adaptiveDamage = {
-            it.foe.weaponType.isRanged
-        },
+        adaptiveDamage = DragonAdaptive.adaptiveDamage!!,
         counterIgnoreRange = inCombatSkillTrue,
         neutralizeEffectiveWeaponType = setOf(DragonR)
     )

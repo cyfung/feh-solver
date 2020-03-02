@@ -81,9 +81,9 @@ class InCombatSkillWrapper(
     val triangleAdept: Int
         get() = baseSkillSet.triangleAdept.applyAll().max() ?: 0
     val cooldownBuff: CooldownChange<Int>
-        get() = baseSkillSet.cooldownBuff.applyAll().max()
+        get() = baseSkillSet.cooldownBuff.applyAll().filterNotNull().max()
     val cooldownDebuff: CooldownChange<Int>
-        get() = baseSkillSet.cooldownDebuff.applyAll().max()
+        get() = baseSkillSet.cooldownDebuff.applyAll().filterNotNull().max()
     val counterIgnoreRange: Boolean
         get() = baseSkillSet.counterIgnoreRange.applyAll().any { it }
     val brave: Boolean

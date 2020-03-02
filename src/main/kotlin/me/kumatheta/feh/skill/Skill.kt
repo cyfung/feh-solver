@@ -43,8 +43,8 @@ interface Skill {
     val counterIgnoreRange: InCombatSkill<Boolean>?
     val brave: InCombatSkill<Boolean>?
     val disablePriorityChange: InCombatSkill<Boolean>?
-    val cooldownBuff: InCombatSkill<CooldownChange<Int>>?
-    val cooldownDebuff: InCombatSkill<CooldownChange<Int>>?
+    val cooldownBuff: InCombatSkill<CooldownChange<Int>?>?
+    val cooldownDebuff: InCombatSkill<CooldownChange<Int>?>?
     val triangleAdept: InCombatSkill<Int>?
     val cancelAffinity: InCombatSkill<Int>?
     val raven: InCombatSkill<Boolean>?

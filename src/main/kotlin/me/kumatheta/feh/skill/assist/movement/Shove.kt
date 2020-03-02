@@ -8,17 +8,17 @@ import me.kumatheta.feh.skill.MovementEffect.Companion.isValidAndUnoccupied
 import me.kumatheta.feh.skill.MovementEffect.Companion.positionTransform
 import me.kumatheta.feh.skill.ProtectiveMovementAssist
 
-object DrawBack : ProtectiveMovementAssist(true, DrawBackEffect)
+object Shove : ProtectiveMovementAssist(true, ShoveEffect)
 
-object DrawBackEffect : MovementEffect {
+object ShoveEffect : MovementEffect {
     override fun applyMovement(self: HeroUnit, target: HeroUnit, battleState: BattleState) {
-        val startPosition = self.position
-        val endPosition =
-            selfEndPosition(startPosition, target.position)
-        battleState.move(self, endPosition)
-        if (!target.isDead) {
-            battleState.move(target, startPosition)
-        }
+        val targetEndPosition = targetEndPosition(
+            battleState,
+            self,
+            self.position,
+            target.position
+        )
+        battleState.move(target, targetEndPosition)
     }
 
     override fun isValidAction(
@@ -27,11 +27,13 @@ object DrawBackEffect : MovementEffect {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        val selfEndPosition = selfEndPosition(fromPosition, target.position)
-        return selfEndPosition.isValidAndUnoccupied(battleState, self) && (target.isDead || battleState.isValidPosition(
-            target,
-            fromPosition
-        ))
+        val targetEndPosition = targetEndPosition(
+            battleState,
+            self,
+            fromPosition,
+            target.position
+        )
+        return targetEndPosition.isValidAndUnoccupied(battleState, self)
     }
 
     override fun targetEndPosition(
@@ -40,10 +42,10 @@ object DrawBackEffect : MovementEffect {
         selfPosition: Position,
         targetPosition: Position
     ): Position {
-        return selfPosition
+        return positionTransform(selfPosition, targetPosition, 2)
     }
 
     override fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position {
-        return positionTransform(selfPosition, targetPosition, -1)
+        return selfPosition
     }
 }

@@ -3,5 +3,5 @@ id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,spec
 6,1,Lance Cavalier,Knight - Lance,,,2,INFANTRY,Ridersbane+ Eff,,Escutcheon,60,51,27,28,33,Armored Blow 3,Lunge,Odd Def Wave 3
 7,1,Red Mage,Knight - Red Tome,,,4,INFANTRY,Raudrblade+,,Vengeance,52,47,35,22,31,Mirror Strike 2,Renewal 3,Odd Def Wave 3
 8,1,Blue Flier,Pegasus Knight - Blue Tome,,,4,FLYING,Thoron+ Spd,,Blazing Thunder,48,46,43,17,35,Iote's Shield,Sword Breaker 3,Fortify Fliers
-9,1,Red Fafnir,Manakete Winged - Red,,,2,FLYING,Flametongue+ Atk,,Moonbow,59,50,39,35,30,Darting Blow 3,Flier Formation 3,Guidance 3
-10,1,Green Fafnir,Manakete Winged - Green,,,5,FLYING,Dark Breath+ Res,Shove,Miracle,59,49,42,38,37,Fury 3,Hit and Run,Odd Spd Wave 3
+9,1,Red Fafnir,Manakete Winged - Red,,,2,FLYING,Flametongue+R Atk,,Moonbow,59,50,39,35,30,Darting Blow 3,Flier Formation 3,Guidance 3
+10,1,Green Fafnir,Manakete Winged - Green,,,5,FLYING,Dark Breath+G Res,Shove,Miracle,59,49,42,38,37,Fury 3,Hit and Run,Odd Spd Wave 3

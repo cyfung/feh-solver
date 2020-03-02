@@ -5,9 +5,16 @@ import me.kumatheta.feh.skill.CooldownChange
 
 private val COOLDOWN_CHANGE = CooldownChange(1, 0)
 
-val HeavyBlade3 = BasicSkill(
+val BoldFighter3 = BasicSkill(
+    followUp = {
+        if (it.initAttack) {
+            1
+        } else {
+            0
+        }
+    },
     cooldownBuff = {
-        if (it.self.inCombatStat.atk > it.foe.inCombatStat.atk) {
+        if (it.initAttack) {
             COOLDOWN_CHANGE
         } else {
             null

@@ -58,7 +58,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-    val dataSet = "sothis infernal"
+    val dataSet = "duma infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))

@@ -5,12 +5,14 @@ import me.kumatheta.feh.skill.BasicSkill
 import me.kumatheta.feh.skill.CooldownChange
 import me.kumatheta.feh.skill.effect.incombatstat.stance
 
+private val COOLDOWN_CHANGE = CooldownChange(1, 1)
+
 val WardingBreath = BasicSkill(
     cooldownBuff = {
         if (it.initAttack) {
-            CooldownChange(0, 0)
+            null
         } else {
-            CooldownChange(1, 1)
+            COOLDOWN_CHANGE
         }
     },
     inCombatStat = stance(Stat(res = 4)).inCombatStat!!

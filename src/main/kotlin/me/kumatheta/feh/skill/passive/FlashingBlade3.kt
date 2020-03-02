@@ -3,12 +3,14 @@ package me.kumatheta.feh.skill.passive
 import me.kumatheta.feh.skill.BasicSkill
 import me.kumatheta.feh.skill.CooldownChange
 
+private val COOLDOWN_CHANGE = CooldownChange(1, 0)
+
 val FlashingBlade3 = BasicSkill(
     cooldownBuff = {
         if (it.self.inCombatStat.spd > it.foe.inCombatStat.spd) {
-            CooldownChange(1, 0)
+            COOLDOWN_CHANGE
         } else {
-            CooldownChange(0, 0)
+            null
         }
     }
 )

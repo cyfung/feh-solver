@@ -3,10 +3,8 @@ package me.kumatheta.feh.skill
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.assist.*
-import me.kumatheta.feh.skill.assist.movement.DrawBack
-import me.kumatheta.feh.skill.assist.movement.Reposition
-import me.kumatheta.feh.skill.assist.movement.ToChangeFate
 import me.kumatheta.feh.skill.assist.GentleDream
+import me.kumatheta.feh.skill.assist.movement.*
 
 val BASE_ASSIST_COMPARATOR = me.kumatheta.feh.util.compareByDescending<HeroUnit>({
     it.currentStatTotal
@@ -29,5 +27,7 @@ val ALL_ASSISTS = sequenceOf(
     "Rally Atk/Spd" to Rally(Stat(atk = 3, spd = 3)),
     "Reposition" to Reposition,
     "Draw Back" to DrawBack,
+    "Shove" to Shove,
+    "Smite" to Smite,
     "To Change Fate!" to ToChangeFate
 ).toSkillMap()
