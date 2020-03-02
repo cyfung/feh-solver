@@ -19,6 +19,7 @@ class SkillSet(skills: Sequence<Skill>) {
     val pass = this.skills.mapNotNull(Skill::pass)
     val obstruct = this.skills.mapNotNull(Skill::obstruct)
     val teleport = this.skills.mapNotNull(Skill::teleport)
+    val guidance = this.skills.mapNotNull(Skill::guidance)
 
     val foeEffect = this.skills.mapNotNull(Skill::foeEffect)
 

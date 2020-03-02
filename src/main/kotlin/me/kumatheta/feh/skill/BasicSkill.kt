@@ -20,6 +20,7 @@ data class BasicSkill(
     override val pass: MapSkillMethod<Boolean>? = null,
     override val obstruct: MapSkillMethod<Boolean>? = null,
     override val teleport: MapSkillMethod<Sequence<Position>>? = null,
+    override val guidance: ((battleState: BattleState, self: HeroUnit, target: HeroUnit) -> Boolean)? = null,
     override val supportInCombatBuff: SupportCombatEffect? = null,
     override val supportInCombatDebuff: SupportCombatEffect? = null,
     override val onHealOthers: ((battleState: BattleState, self: HeroUnit, target: HeroUnit, healAmount: Int) -> Unit)? = null,

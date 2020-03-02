@@ -18,6 +18,7 @@ interface Skill {
     val pass: MapSkillMethod<Boolean>?
     val obstruct: MapSkillMethod<Boolean>?
     val teleport: MapSkillMethod<Sequence<Position>>?
+    val guidance: ((battleState: BattleState, self: HeroUnit, target: HeroUnit) -> Boolean)?
     val supportInCombatBuff: SupportCombatEffect?
     val supportInCombatDebuff: SupportCombatEffect?
     val onHealOthers: ((battleState: BattleState, self: HeroUnit, target: HeroUnit, healAmount: Int) -> Unit)?

@@ -1511,19 +1511,27 @@ class BattleState private constructor(
         val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass, obstruct)
         calculateDistance(heroUnit, distanceReceiver)
         val teleportSkills = heroUnit.skillSet.teleport.asSequence()
-        if (heroUnit.withMoveOrder) {
+        val teleportLocations = if (heroUnit.withMoveOrder) {
             teleportSkills + MOVE_ORDER_EFFECT
         } else {
             teleportSkills
         }.flatMap {
             it(this, heroUnit)
-        }.filter {
+        } + heroUnit.allies(this).filter { ally ->
+            ally.skillSet.guidance.any {
+                it(this, ally, heroUnit)
+            }
+        }.flatMap {
+            it.position.surroundings(maxPosition)
+        }
+        teleportLocations.distinct().filter {
             locationMap[it] == null && battleMap.getTerrain(it).moveCost(heroUnit.moveType) != null
         }.map {
             MoveStep(it, battleMap.getTerrain(it), true, 0)
         }.forEach {
             distanceReceiver.receive(it)
         }
+
 
         return distanceReceiver.result
     }

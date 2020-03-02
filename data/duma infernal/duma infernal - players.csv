@@ -1,0 +1,5 @@
+id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,,
+1,,Eir,,,,,FLYING,Lyfjaberg,,Iceberg,35,46,37,14,34,SwiftSparrow2,MysticBoost3,SparklingBoost,
+2,,Ike,Ike - Legendary,,,,INFANTRY,Ragnell,,Aether,41,52,30,35,21,Warding Breath ,Seal Atk/Def 2,Def Tactics 3,Quick Riposte 3
+3,,Veronica,,,,,CAVALRY,Hidskjalf,Recover+,Windfire Balm+,36,46,36,21,19,Wrathful Staff 3,Close Guard 3,,
+4,,Peony,,,,,FLYING,Flower of Joy,Gentle Dream,,43,45,36,16,27,B Duel Flying 3,Aerobatics 3,Fortify Res 4,
