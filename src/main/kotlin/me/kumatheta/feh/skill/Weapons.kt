@@ -55,6 +55,8 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Ragnarok" to Ragnarok,
     "Sublime Surge" to SublimeSurge,
     "Ragnell" to Ragnell,
+    "Hidskjalf" to Hidskjalf,
+
     "Trilemma+ Dazzling" to trilemmaPlus(disableCounter = true, staffAsNormal = false),
 
     "Brave Bow+C" to BowC.brave(7),

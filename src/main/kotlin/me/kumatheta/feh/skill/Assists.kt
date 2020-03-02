@@ -18,6 +18,8 @@ val ALL_ASSISTS = sequenceOf(
     "Reciprocal Aid" to ReciprocalAid,
     "Physic+" to HealingPlus(8, true, 0, 8),
     "Restore+" to RestorePlus,
+    "Recover+" to RecoverPlus,
+    "Recover" to Recover,
     "Dance" to Refresh(),
     "Sing" to Refresh(),
     "Play" to Refresh(),

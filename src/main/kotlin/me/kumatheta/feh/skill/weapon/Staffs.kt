@@ -8,7 +8,7 @@ import me.kumatheta.feh.skill.*
 import me.kumatheta.feh.skill.effect.aoeDebuff
 import me.kumatheta.feh.skill.effect.aoeNegativeStatus
 
-private val DISABLE_COUNTER_EFFECT: CombatStartSkill<Skill?> =
+val DISABLE_COUNTER_EFFECT: CombatStartSkill<Skill?> =
     combatStartSkill(BasicSkill(counter = combatStartSkill(-1)))
 
 private fun staff(

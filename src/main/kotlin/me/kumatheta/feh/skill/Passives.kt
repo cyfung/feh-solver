@@ -5,6 +5,7 @@ import me.kumatheta.feh.skill.assist.movement.SwapEffect
 import me.kumatheta.feh.skill.effect.*
 import me.kumatheta.feh.skill.effect.incombatstat.*
 import me.kumatheta.feh.skill.effect.startofturn.*
+import me.kumatheta.feh.skill.effect.supportincombat.closeGuard
 import me.kumatheta.feh.skill.effect.supportincombat.distantGuard
 import me.kumatheta.feh.skill.effect.supportincombat.drive
 import me.kumatheta.feh.skill.effect.supportincombat.spur
@@ -141,12 +142,8 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Earth Boost 3" to boost(Stat(def = 6)),
     "Wind Boost 3" to boost(Stat(spd = 6)),
     "Fire Boost 3" to boost(Stat(atk = 6)),
-    "Distant Guard 3" to distantGuard(
-        Stat(
-            def = 4,
-            res = 4
-        )
-    ),
+    "Distant Guard 3" to distantGuard(Stat(def = 4, res = 4)),
+    "Close Guard 3" to closeGuard(Stat(def = 4, res = 4)),
     "Heavy Blade 3" to HeavyBlade3,
     "Flashing Blade 3" to FlashingBlade3,
     "Pulse Smoke 3" to pulseSmoke3,
