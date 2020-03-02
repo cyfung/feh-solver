@@ -1,7 +1,7 @@
 id,spawn time,name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
-5,START,Titania,1,,0,CAVALRY,Draconic Poleax Eff,Reciprocal Aid,Luna,63,47,37,28,33,SwiftSparrow2,Guard3,SpdTactics3
-6,START,Fighter - Blue Bow,1,,1,INFANTRY,Slaying Bow+ B,,Moonbow,59,47,32,32,17,TriangleAdept3,PoisonStrike3,PanicPloy3
-7,START,Pegasus Knight - Red Tome,1,,4,FLYING,Raudrblade+,,Iceberg,46,48,44,20,38,Fury3,Aerobatics3,AtkTactics3
-8,START,Wyvern Knight - Sword,1,,3,FLYING,Armorsmasher+,,Bonfire,57,52,30,39,21,Iote's Shield,DullClose3,DefTactics3
-9,START,Mist,1,,1,INFANTRY,Slow+,Physics+,Miracle,63,42,31,22,40,Res3,SabotageAtk3,SpurDefRes2
-10,START,Knight - Blue Tome,1,,3,CAVALRY,Thoron+,,DraconicAura,45,51,28,18,37,DeathBlow3,DefFeint3,ResPloy3
+5,1,Titania,,1,,0,CAVALRY,Draconic Poleax Eff,Reciprocal Aid,Luna,63,47,37,28,33,SwiftSparrow2,Guard3,SpdTactics3
+6,1,Fighter - Blue Bow,,1,,1,INFANTRY,Slaying Bow+ B,,Moonbow,59,47,32,32,17,TriangleAdept3,PoisonStrike3,PanicPloy3
+7,1,Pegasus Knight - Red Tome,,1,,4,FLYING,Raudrblade+,,Iceberg,46,48,44,20,38,Fury3,Aerobatics3,AtkTactics3
+8,1,Wyvern Knight - Sword,,1,,3,FLYING,Armorsmasher+,,Bonfire,57,52,30,39,21,Iote's Shield,DullClose3,DefTactics3
+9,1,Mist,,1,,1,INFANTRY,Slow+,Physic+,Miracle,63,42,31,22,40,Res+3,SabotageAtk3,SpurDefRes2
+10,1,Knight - Blue Tome,,1,,3,CAVALRY,Thoron+,,DraconicAura,45,51,28,18,37,DeathBlow3,DefFeint3,ResPloy3

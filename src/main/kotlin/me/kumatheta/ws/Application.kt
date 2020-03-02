@@ -237,7 +237,7 @@ private suspend fun runMcts(
         val bestMoves = score.moves ?: throw IllegalStateException()
         val testState = board.tryMoves(bestMoves)
 
-        println(bestMoves.asSequence().map { it.unitAction }.toList())
+        println(bestMoves)
         println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
 
         println("best score: ${score.bestScore}")

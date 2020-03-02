@@ -179,8 +179,7 @@ class HeroUnit(
         val cooldown = cooldown ?: return
         this.cooldown = when {
             count <= 0 -> return
-            count >= cooldown -> 0
-            else -> cooldown - count
+            else -> maxOf(cooldown - count, 0)
         }
     }
 
@@ -189,8 +188,7 @@ class HeroUnit(
         val cooldownCount = heroModel.cooldownCount ?: return
         this.cooldown = when {
             count <= 0 -> return
-            count + cooldown >= cooldownCount -> cooldownCount
-            else -> cooldown + count
+            else -> minOf(cooldownCount, cooldown + count)
         }
     }
 

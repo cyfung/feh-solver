@@ -22,7 +22,7 @@ open class Refresh : NormalAssist() {
         battleState: BattleState,
         fromPosition: Position
     ): Boolean {
-        return !target.available
+        return !target.available && target.assist !is Refresh
     }
 
     final override fun isValidPreCombat(

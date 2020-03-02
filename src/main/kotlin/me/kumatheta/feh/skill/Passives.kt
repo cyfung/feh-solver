@@ -25,9 +25,10 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Atk/Res Bond 1" to bond(Stat(atk = 3, res = 3)),
     "Atk/Res Bond 2" to bond(Stat(atk = 4, res = 4)),
     "Atk/Res Bond 3" to bond(Stat(atk = 5, res = 5)),
-    "Atk/Spd Bond 1" to solo(Stat(atk = 3, spd = 3)),
-    "Atk/Spd Bond 2" to solo(Stat(atk = 4, spd = 4)),
-    "Atk/Spd Bond 3" to solo(Stat(atk = 5, spd = 5)),
+    "Atk/Spd Bond 1" to bond(Stat(atk = 3, spd = 3)),
+    "Atk/Spd Bond 2" to bond(Stat(atk = 4, spd = 4)),
+    "Atk/Spd Bond 3" to bond(Stat(atk = 5, spd = 5)),
+    "Spd/Res Bond 1" to bond(Stat(spd = 3, res = 3)),
 
     "Atk/Spd Solo 3" to solo(Stat(atk = 6, spd = 6)),
     "Atk/Def Solo 3" to solo(Stat(atk = 6, def = 6)),

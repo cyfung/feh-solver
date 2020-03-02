@@ -212,6 +212,24 @@ class BattleState private constructor(
         unit2.position = unit1OldPosition
     }
 
+    internal fun rearrange(order: List<Int>) {
+        if (order.size != playerCount || order.any { it < 1 || it > playerCount }) {
+            throw IllegalArgumentException("invalid order $order")
+        }
+        val units = (1..playerCount).map {
+            getUnit(it)
+        }
+        val positions = units.map {
+            it.position
+        }
+        order.forEachIndexed { index, id ->
+            val heroUnit = units[id - 1]
+            val position = positions[index]
+            locationMap[position] = heroUnit
+            heroUnit.position = position
+        }
+    }
+
     internal fun move(heroUnit: HeroUnit, position: Position) {
         val originalPosition = heroUnit.position
         if (originalPosition != position) {
@@ -896,7 +914,9 @@ class BattleState private constructor(
     }
 
     fun playerMove(unitAction: UnitAction): MovementResult {
-        require(isPlayerPhrase)
+        require(isPlayerPhrase) {
+            "not player phase"
+        }
         val deadTeam = executeMove(unitAction)
         if (winningTeam != null) {
             return MovementResult(true, deadTeam, false)
@@ -1557,7 +1577,6 @@ class BattleState private constructor(
             assist.isValidAction(heroUnit, target, this@BattleState, position)
         }
     }
-
 
 
     fun getAllPlayerMovements(): Sequence<UnitAction> {
