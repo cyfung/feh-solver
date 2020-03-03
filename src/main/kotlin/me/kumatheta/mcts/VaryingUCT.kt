@@ -34,6 +34,9 @@ class VaryingUCT<T : Move>(
 
     override fun updateScore(oldScore: MyScore<T>, newScore: Long, movesCreator: () -> List<T>?): MyScore<T> {
         val totalScore = oldScore.totalScore + newScore
+        if(totalScore < 0) {
+            throw IllegalStateException()
+        }
         val tries = oldScore.tries + 1
         return if (newScore > oldScore.bestScore) {
             MyScore(

@@ -25,7 +25,8 @@ class BattleState private constructor(
     playerDied: Int,
     enemyDied: Int,
     winningTeam: Team?,
-    engaged: Boolean
+    engaged: Boolean,
+    private val endOnPlayerDeath: Boolean
 ) {
     val enemyCount
         get() = battleMap.enemyCount
@@ -65,7 +66,8 @@ class BattleState private constructor(
             playerDied = playerDied,
             enemyDied = enemyDied,
             winningTeam = winningTeam,
-            engaged = engaged
+            engaged = engaged,
+            endOnPlayerDeath = endOnPlayerDeath
         )
     }
 
@@ -79,18 +81,20 @@ class BattleState private constructor(
             playerDied = playerDied,
             enemyDied = enemyDied,
             winningTeam = winningTeam,
-            engaged = engaged
+            engaged = engaged,
+            endOnPlayerDeath = endOnPlayerDeath
         )
     }
 
-    constructor(battleMap: BattleMap) : this(
+    constructor(battleMap: BattleMap, endOnPlayerDeath: Boolean = true) : this(
         battleMap = FixedBattleMap(battleMap),
         locationMap = battleMap.toChessPieceMap().toMutableMap(),
         phase = 0,
         playerDied = 0,
         enemyDied = 0,
         winningTeam = null,
-        engaged = false
+        engaged = false,
+        endOnPlayerDeath = endOnPlayerDeath
     ) {
         startOfTurn(Team.PLAYER)
     }
@@ -718,6 +722,9 @@ class BattleState private constructor(
             val teamDied = damageReceiver.heroUnit.team
             if (teamDied == Team.PLAYER) {
                 playerDied++
+                if (endOnPlayerDeath) {
+                    winningTeam = Team.ENEMY
+                }
             } else {
                 enemyDied++
             }
@@ -935,18 +942,9 @@ class BattleState private constructor(
 
             val availableUnits = unitsSeq(myTeam).filter { it.available }.toList()
             val obstruct = foeTeam.obstruct()
-            val possibleMoves = availableUnits.asSequence().associateWith { heroUnit ->
-                moveTargets(heroUnit, obstruct).sortedWith(attackPositionOrder(heroUnit, foeThreat))
-                    .associateBy { it.position }
-            }
+            val possibleMoves = possibleMoves(obstruct, foeThreat, availableUnits.asSequence())
 
-            val attackTargetPositions = possibleMoves.mapValues { (heroUnit, moves) ->
-                moves.values.asSequence().flatMap { moveStep ->
-                    attackTargetPositions(heroUnit, moveStep.position, maxPosition).mapNotNull {
-                        it to moveStep
-                    }
-                }.distinctBy { it.first }.associate { it }
-            }
+            val attackTargetPositions = attackTargetPositions(possibleMoves)
 
             val possibleAttacks = attackTargetPositions.mapValues { (heroUnit, targetPositions) ->
                 autoBattleAttacks(heroUnit, targetPositions)
@@ -1084,6 +1082,32 @@ class BattleState private constructor(
 
         turnEnd()
         return movements
+    }
+
+    fun dangerAreas(): Map<HeroUnit, Map<Position, MoveStep>> {
+        val possibleMoves = possibleMoves(emptySet(), emptyMap(), unitsSeq(Team.ENEMY))
+        return attackTargetPositions(possibleMoves)
+    }
+
+    private fun attackTargetPositions(possibleMoves: Map<HeroUnit, Map<Position, MoveStep>>): Map<HeroUnit, Map<Position, MoveStep>> {
+        return possibleMoves.mapValues { (heroUnit, moves) ->
+            moves.values.asSequence().flatMap { moveStep ->
+                attackTargetPositions(heroUnit, moveStep.position, maxPosition).mapNotNull {
+                    it to moveStep
+                }
+            }.distinctBy { it.first }.associate { it }
+        }
+    }
+
+    private fun possibleMoves(
+        obstruct: Set<Position>,
+        foeThreat: Map<Position, Int>,
+        availableUnits: Sequence<HeroUnit>
+    ): Map<HeroUnit, Map<Position, MoveStep>> {
+        return availableUnits.associateWith { heroUnit ->
+            moveTargets(heroUnit, obstruct).sortedWith(attackPositionOrder(heroUnit, foeThreat))
+                .associateBy { it.position }
+        }
     }
 
     private fun getProtectiveMovementAssist(

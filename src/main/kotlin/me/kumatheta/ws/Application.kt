@@ -17,8 +17,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.*
 import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Terrain
-import me.kumatheta.feh.mcts.FehBoard
-import me.kumatheta.feh.mcts.FehMove
+import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.VaryingUCT
@@ -58,7 +57,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-    val dataSet = "duma infernal"
+    val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -69,7 +68,8 @@ fun Application.module(testing: Boolean = false) {
         playerMap
     )
     val state = BattleState(
-        battleMap
+        battleMap,
+        false
     )
     val setupInfo = buildSetupInfo(positionMap, battleMap, state)
     val protoBuf = ProtoBuf()
@@ -130,7 +130,7 @@ fun toUpdateInfoList(
     board: FehBoard,
     moves: List<FehMove>
 ): Pair<BattleState, List<UpdateInfo>> {
-    var lastState = board.stateCopy
+    var lastState = board.getStateCopy()
     val details = board.tryAndGetDetails(moves)
     val list = details.map { (unitAction, state) ->
         val action = unitAction?.toMsgAction()
@@ -153,7 +153,7 @@ private suspend fun getMcts(
     jobRef: AtomicReference<Job?>
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
     val phaseLimit = 20
-    val board = FehBoard(phaseLimit, state, 3)
+    val board = newFehBoard(phaseLimit, state, 3, false)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
     val mcts = Mcts(board, scoreManager)
     val next = Pair(board, mcts)

@@ -1,10 +1,7 @@
 package me.kumatheta.feh.test
 
 import me.kumatheta.feh.*
-import me.kumatheta.feh.mcts.FehBoard
-import me.kumatheta.feh.mcts.FehMove
-import me.kumatheta.feh.mcts.NormalMove
-import me.kumatheta.feh.mcts.Rearrange
+import me.kumatheta.feh.mcts.*
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.RecyclableNode
 import me.kumatheta.mcts.RecycleManager
@@ -29,7 +26,7 @@ fun main() {
         )
     )
     val phraseLimit = 20
-    var board = FehBoard(phraseLimit, state, 3)
+    var board = newFehBoard(phraseLimit, state, 3)
 //    val testMoves = listOf(
 //        Rearrange(listOf(1, 4, 3, 2)),
 //        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
@@ -90,7 +87,6 @@ fun main() {
         scoreManager.high = score.bestScore
         scoreManager.average = score.totalScore / score.tries
         println("average = ${scoreManager.average}")
-        println("calculated best score: ${board.calculateScore(testState)}")
         println(
             "tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}"
         )
