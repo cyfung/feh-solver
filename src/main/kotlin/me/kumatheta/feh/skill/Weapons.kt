@@ -14,7 +14,7 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Steel Sword" to Sword.basic(8),
     "Silver Sword" to Sword.basic(11),
     "Flametongue+G" to DragonG.basic(15),
-    "Flametongue+R Atk" to DragonG.withSkill(18, DragonAdaptive, hp = 5),
+    "Flametongue+R Atk" to DragonR.withSkill(18, DragonAdaptive, hp = 5),
     "Armorsmasher+" to Sword.effective(14, MoveType.ARMORED),
     "Iron Axe" to Axe.basic(6),
     "Steel Axe" to Axe.basic(8),
