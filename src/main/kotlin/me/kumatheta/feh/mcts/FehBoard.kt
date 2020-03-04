@@ -37,15 +37,17 @@ fun newFehBoard(
     canRearrange: Boolean = true,
     bossId: Int = 5
 ): FehBoard {
-    val totalPlayerHp = state.unitsSeq(Team.PLAYER).sumBy { it.maxHp }
-    val assistMap = state.unitsSeq(Team.PLAYER).associate {
+    val internalState = state.copy()
+    val totalPlayerHp = internalState.unitsSeq(Team.PLAYER).sumBy { it.maxHp }
+    val assistMap = internalState.unitsSeq(Team.PLAYER).associate {
         it.id to it.assist
     }
     val config = FehBoardConfig(phaseLimit, totalPlayerHp, maxTurnBeforeEngage, assistMap, bossId)
     return if (canRearrange) {
-        RearrangeFehBoard(config, state)
+        RearrangeFehBoard(config, internalState)
     } else {
-        newInternalBoardChain(config, state)
+        internalState.rearrange((1..internalState.playerCount).toList())
+        newInternalBoardChain(config, internalState)
     }
 }
 
@@ -359,10 +361,16 @@ class StandardFehBoard(
         @Suppress("UNCHECKED_CAST")
         nextMoves as List<NormalMove>
         return nextMoves.asSequence().sortedBy {
+            val assist = state.getUnit(it.unitAction.heroUnitId).assist
+            if (assist is Refresh) {
+                when (it.unitAction) {
+                    is MoveAndAssist -> 0
+                    else -> 3
+                }
+            }
             when (it.unitAction) {
                 is MoveAndAttack -> 1
-                is MoveAndAssist -> when (state.getUnit(it.unitAction.heroUnitId).assist) {
-                    is Refresh -> 0
+                is MoveAndAssist -> when (assist) {
                     is Heal -> 1
                     else -> 2
                 }
@@ -372,11 +380,7 @@ class StandardFehBoard(
     }
 
     override fun getPlayOutMove(random: Random): FehMove {
-        return if (random.nextBoolean()) {
-            super.getPlayOutMove(random)
-        } else {
-            suggestedOrder(moves.shuffled()).first()
-        }
+        return suggestedOrder(moves.shuffled()).first()
     }
 
 }

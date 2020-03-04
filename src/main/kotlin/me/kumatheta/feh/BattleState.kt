@@ -95,9 +95,7 @@ class BattleState private constructor(
         winningTeam = null,
         engaged = false,
         endOnPlayerDeath = endOnPlayerDeath
-    ) {
-        startOfTurn(Team.PLAYER)
-    }
+    )
 
     fun isValidPosition(heroUnit: HeroUnit, position: Position): Boolean {
         if (position.x < 0 || position.y < 0 || position.x > maxPosition.x || position.y >= maxPosition.y) {
@@ -244,6 +242,7 @@ class BattleState private constructor(
             locationMap[position] = heroUnit
             heroUnit.position = position
         }
+        startOfTurn(Team.PLAYER)
     }
 
     internal fun move(heroUnit: HeroUnit, position: Position) {

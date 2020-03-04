@@ -34,25 +34,29 @@ fun main() {
     val phraseLimit = 20
     var board = newFehBoard(phraseLimit, state, 3)
     val testMoves = listOf(
-        Rearrange(listOf(1, 4, 3, 2)),
+        Rearrange(listOf(1, 4, 2, 3)),
         NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 3, attackTargetId = 10)),
-        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
-        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 2, assistTargetId = 1)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 10)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 3, attackTargetId = 8)),
-        NormalMove(MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
-        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 4, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
-        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 4, moveTargetY = 2)),
-        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 4, moveTargetY = 0)),
-        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 5, moveTargetY = 2, attackTargetId = 7)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
-        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 1, assistTargetId = 3)),
-        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 1, attackTargetId = 9)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 2)),
         NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 3, attackTargetId = 9))
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 2, assistTargetId = 1)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 3, attackTargetId = 10)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 3, attackTargetId = 8)),
+        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 2, moveTargetY = 1)),
+        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0, obstacleX = 3, obstacleY = 1)),
+        NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1, attackTargetId = 9)),
+        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 4, moveTargetY = 2)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 6)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 3, assistTargetId = 1)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 2, attackTargetId = 12)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 6)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0)),
+        NormalMove(MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 4, attackTargetId = 11)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 3, attackTargetId = 13)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0))
     )
     val testResult = board.tryMoves(testMoves, false)
     println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")

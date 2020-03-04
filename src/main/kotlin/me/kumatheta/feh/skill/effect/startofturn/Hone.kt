@@ -7,12 +7,12 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.BasicSkill
 import me.kumatheta.feh.skill.adjacentAllies
 
-fun hone(stat: Stat, moveType: MoveType? = null) =
+fun hone(buff: Stat, moveType: MoveType? = null) =
     if (moveType == null) {
         BasicSkill(
             startOfTurn = { battleState: BattleState, self: HeroUnit ->
                 self.adjacentAllies(battleState).forEach {
-                    it.applyBuff(stat)
+                    it.applyBuff(buff)
                 }
             }
         )
@@ -20,7 +20,7 @@ fun hone(stat: Stat, moveType: MoveType? = null) =
         BasicSkill(
             startOfTurn = { battleState: BattleState, self: HeroUnit ->
                 self.adjacentAllies(battleState).filter { it.moveType == moveType }.forEach {
-                    it.applyBuff(stat)
+                    it.applyBuff(buff)
                 }
             }
         )

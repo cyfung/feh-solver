@@ -1,10 +1,16 @@
 id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
 5,1,Duma,,,,3,ARMORED,Fell Breath,,Draconic Aura,76,63,23,37,34,Def/Res Solo 3,Bold Fighter 3,Upheaval
 6,1,Lance Cavalier,Knight - Lance,,,2,CAVALRY,Ridersbane+ Eff,,Escutcheon,60,51,27,28,33,Armored Blow 3,Lunge,Odd Def Wave 3
-7,1,Red Mage,Knight - Red Tome,,,4,INFANTRY,Raudrblade+,,Vengeance,52,47,35,22,31,Mirror Strike 2,Renewal 3,Odd Def Wave 3
+7,1,Red Mage,Knight - Red Tome,,3,4,INFANTRY,Raudrblade+,,Vengeance,52,47,35,22,31,Mirror Strike 2,Renewal 3,Odd Def Wave 3
 8,1,Blue Flier,Pegasus Knight - Blue Tome,,,4,FLYING,Thoron+ *S,,Blazing Thunder,48,46,43,17,35,Iote's Shield,Sword Breaker 3,Fortify Fliers
 9,1,Red Fafnir,Manakete Winged - Red,,,2,FLYING,Flametongue+ *A @R,,Moonbow,59,50,39,35,30,Darting Blow 3,Flier Formation 3,Guidance 3
 10,1,Green Fafnir,Manakete Winged - Green,,,5,FLYING,Dark Breath+ *R @G,Shove,Miracle,59,49,42,38,37,Fury 3,Hit and Run,Odd Spd Wave 3
 11,2,Red Bow,Fighter - Red Bow,,,2,INFANTRY,Shining Bow+ *A @R,,Glimmer,61,48,32,32,17,Triangle Adept 3,Sword Breaker 3,Drive Atk 2
 12,2,Bow Cavalier,Knight - Bow,,,3,CAVALRY,Slaying Bow+*A @C,,Astra,57,51,24,27,25,Atk/Spd Bond 3,Quick Riposte 3,Def Smoke 3
-13,2,Lance Fighter,Fighter - Lance,,,1,INFANTRY,Slaying Lance+ *D,,Sacred Cowl,66,48,34,33,28,Atk/Def Solo 3,Vantage 3,Res Smoke 3
+13,2,Lance Fighter,Fighter - Lance,,2,1,INFANTRY,Slaying Lance+ *D,,Sacred Cowl,66,48,34,33,28,Atk/Def Solo 3,Vantage 3,Res Smoke 3
+14,3,Axe Cavalier,Knight - Axe,,,3,CAVALRY,Brave Axe+,,Iceberg,57,48,25,31,36,Fury 3,Guard 3,Distant Guard 3
+15,3,Axe Knight,Armor - Axe,,,3,ARMORED,Slaying Axe+ *A,,Ignis,81,58,17,44,21,Death Blow 3,Wary Fighter 3,Armor March 3
+16,3,Blue Fafnir,Manakete Winged - Blue,,,4,FLYING,Water Breath+ *S,,Dragon Fang,59,46,42,35,30,Bracing Stance 2,Aerobatics 3,Guidance 3
+17,4,Blue Flier,Pegasus Knight - Blue Tome,,,4,FLYING,Blarserpent+ *D,,Growing Thunder,48,44,41,17,38,Distant Def 3,Quick Riposte 3,Even Atk Wave 3
+18,4,Green Cavalier,Knight - Green Tome,,,4,CAVALRY,Rexcailbur+ *S,,Blazing Wind,47,52,30,18,37,Swift Strike 2,Windsweep 3,Atk Opening 3
+19,4,Sword Dragon,Wyvern Knight - Sword,,,2,FLYING,Slaying Edge+ *D,,Bonfire,62,52,30,43,21,Steady Stance 3,Flier Formation 3,Drive Def 2
