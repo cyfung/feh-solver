@@ -1,9 +1,11 @@
 package me.kumatheta.mcts
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
+@ExperimentalCoroutinesApi
 class CountableNodeManager<T : Move, S : Score<T>>(
     private val random: Random,
     private val scoreManager: ScoreManager<T, S>
@@ -12,6 +14,7 @@ class CountableNodeManager<T : Move, S : Score<T>>(
     override val estimatedSize
         get() = sizeRef.get()
 
+    @ExperimentalCoroutinesApi
     fun getDelegateNode(countableNode: CountableNode<T, S>): Node<T, S> {
         while (true) {
             val delegate = countableNode.delegate.get()
@@ -76,6 +79,7 @@ class CountableNodeManager<T : Move, S : Score<T>>(
     }
 }
 
+@ExperimentalCoroutinesApi
 class CountableNode<T : Move, S : Score<T>>(
     private val countableNodeManager: CountableNodeManager<T, S>,
     val board: Board<T>,

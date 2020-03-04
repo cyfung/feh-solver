@@ -38,8 +38,15 @@ fun newFehBoard(
     return if (canRearrange) {
         RearrangeFehBoard(config, state)
     } else {
-        UnitActionTypeGrouping(config, state.copy(), state.getAllPlayerMovements())
+        newInternalBoardChain(config, state)
     }
+}
+
+private fun newInternalBoardChain(
+    config: FehBoardConfig,
+    state: BattleState
+): FehBoard {
+    return StandardFehBoard(config, state)
 }
 
 class RearrangeFehBoard(
@@ -56,9 +63,9 @@ class RearrangeFehBoard(
 
     override fun applyMove(move: FehMove): Board<FehMove> {
         move as Rearrange
-        val stateCopy = state.copy()
+        val stateCopy = getStateCopy()
         stateCopy.rearrange(move.order)
-        return UnitActionTypeGrouping(config, stateCopy, stateCopy.getAllPlayerMovements())
+        return newInternalBoardChain(config, stateCopy)
     }
 
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
@@ -282,7 +289,7 @@ class UnitActionTypeGrouping(
 class StandardFehBoard(
     private val config: FehBoardConfig,
     private val state: BattleState,
-    private val playerMoves: Sequence<UnitAction>
+    private val playerMoves: Sequence<UnitAction> = state.getAllPlayerMovements()
 ) : FehBoard {
 
     override val moves: List<FehMove> by lazy {
@@ -313,7 +320,7 @@ class StandardFehBoard(
         }
 
         return if (score == null) {
-            UnitActionTypeGrouping(config, state, state.getAllPlayerMovements())
+            newInternalBoardChain(config, state)
         } else {
             ScoreFehBoard(score)
         }
@@ -334,7 +341,18 @@ class StandardFehBoard(
 
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
         @Suppress("UNCHECKED_CAST")
-        return nextMoves.asSequence()
+        nextMoves as List<NormalMove>
+        return nextMoves.asSequence().sortedBy {
+            when (it.unitAction) {
+                is MoveAndAttack -> 1
+                is MoveAndAssist -> when (state.getUnit(it.unitAction.heroUnitId).assist) {
+                    is Refresh -> 0
+                    is Heal -> 1
+                    else -> 2
+                }
+                else -> 2
+            }
+        }
     }
 
 }

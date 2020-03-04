@@ -1,17 +1,15 @@
 package me.kumatheta.mcts
 
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.*
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
+import kotlin.time.TimeSource
 
+@ExperimentalCoroutinesApi
 class Mcts<T : Move, S : Score<T>>(
     board: Board<T>,
     private val scoreManager: ScoreManager<T, S>
@@ -39,7 +37,7 @@ class Mcts<T : Move, S : Score<T>>(
         if (rootNode.noMoreChild()) {
             throw RuntimeException("no solution")
         }
-        val clockMark = MonoClock.markNow()
+        val clockMark = TimeSource.Monotonic.markNow()
         val count = AtomicInteger(0)
         runBlocking {
             supervisorScope {

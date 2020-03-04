@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
+@ExperimentalCoroutinesApi
 class ThreadSafeNode<T : Move, S : Score<T>>(
     private val board: Board<T>,
     private val random: Random,

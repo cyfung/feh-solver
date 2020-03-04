@@ -6,10 +6,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.get
 import io.ktor.routing.routing
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.list
@@ -22,10 +19,9 @@ import me.kumatheta.feh.message.*
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
+import kotlin.time.TimeSource
 
 typealias MsgTerrain = me.kumatheta.feh.message.Terrain
 typealias MsgBattleMap = me.kumatheta.feh.message.BattleMap
@@ -53,11 +49,11 @@ private fun MoveType.toMsgMoveType(): MsgMoveType {
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+@ExperimentalCoroutinesApi
 @ExperimentalTime
 @Suppress("unused") // Referenced in application.conf
-@kotlin.jvm.JvmOverloads
-fun Application.module(testing: Boolean = false) {
-    val dataSet = "sothis infernal"
+fun Application.module() {
+    val dataSet = "duma infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -79,7 +75,7 @@ fun Application.module(testing: Boolean = false) {
 
     routing {
         get("/start") {
-            val (board, mcts) = getMcts(state, mctsRef, jobRef)
+            getMcts(state, mctsRef, jobRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), setupInfo))
         }
         get("/moveset") {
@@ -146,6 +142,7 @@ fun toUpdateInfoList(
     return lastState to list
 }
 
+@ExperimentalCoroutinesApi
 @ExperimentalTime
 private suspend fun getMcts(
     state: BattleState,
@@ -153,7 +150,7 @@ private suspend fun getMcts(
     jobRef: AtomicReference<Job?>
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
     val phaseLimit = 20
-    val board = newFehBoard(phaseLimit, state, 3, false)
+    val board = newFehBoard(phaseLimit, state, 3)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
     val mcts = Mcts(board, scoreManager)
     val next = Pair(board, mcts)
@@ -201,6 +198,7 @@ private fun UnitAction.toMsgAction(): Action {
     }
 }
 
+@ExperimentalCoroutinesApi
 private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>>): VaryingUCT.MyScore<FehMove> {
     repeat(10) {
         val score = mcts.resetRecentScore()
@@ -214,6 +212,7 @@ private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<F
     return mcts.resetRecentScore()
 }
 
+@ExperimentalCoroutinesApi
 @ExperimentalTime
 private suspend fun runMcts(
     mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>>,
@@ -221,8 +220,8 @@ private suspend fun runMcts(
     scoreManager: VaryingUCT<FehMove>
 ) {
     var tries = 0
-    val mctsStart = MonoClock.markNow()
-    var lastFixMove = MonoClock.markNow()
+    val mctsStart = TimeSource.Monotonic.markNow()
+    var lastFixMove = TimeSource.Monotonic.markNow()
 
     val json = Json(JsonConfiguration.Stable)
 
@@ -230,7 +229,7 @@ private suspend fun runMcts(
         mcts.run(5, parallelCount = 5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
-            lastFixMove = MonoClock.markNow()
+            lastFixMove = TimeSource.Monotonic.markNow()
         }
         println("elapsed ${mctsStart.elapsedNow()}")
         val score = mcts.score

@@ -2,6 +2,7 @@ package me.kumatheta.mcts
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.RemovalCause
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
@@ -57,6 +58,7 @@ class RecyclableNode<T : Move, S : Score<T>>(
         return recycleManager.getDelegateNode(this).getBestChild()
     }
 
+    @ExperimentalCoroutinesApi
     internal fun createActualNode(
         random: Random,
         scoreManager: ScoreManager<T, S>

@@ -1,7 +1,14 @@
 package me.kumatheta.feh.test
 
-import me.kumatheta.feh.*
-import me.kumatheta.feh.mcts.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import me.kumatheta.feh.BasicBattleMap
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.mcts.FehBoard
+import me.kumatheta.feh.mcts.FehMove
+import me.kumatheta.feh.mcts.newFehBoard
+import me.kumatheta.feh.mcts.tryMoves
+import me.kumatheta.feh.readMap
+import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.RecyclableNode
 import me.kumatheta.mcts.RecycleManager
@@ -9,8 +16,9 @@ import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
+import kotlin.time.TimeSource
 
+@ExperimentalCoroutinesApi
 @ExperimentalTime
 fun main() {
     val dataSet = "sothis infernal"
@@ -57,15 +65,15 @@ fun main() {
     val mcts = Mcts(board, scoreManager)
     var tries = 0
     val fixedMoves = mutableListOf<FehMove>()
-    val clockMark = MonoClock.markNow()
-    var lastFixMove = MonoClock.markNow()
+    val clockMark = TimeSource.Monotonic.markNow()
+    var lastFixMove = TimeSource.Monotonic.markNow()
 
 
     repeat(10000) {
         mcts.run(5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
-            lastFixMove = MonoClock.markNow()
+            lastFixMove = TimeSource.Monotonic.markNow()
         }
         println("elapsed ${clockMark.elapsedNow()}")
         val score = mcts.score

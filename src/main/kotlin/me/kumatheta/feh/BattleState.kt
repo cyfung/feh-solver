@@ -1595,6 +1595,9 @@ class BattleState private constructor(
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
             val teammates = teammates(heroUnit).toList()
             moveTargets(heroUnit, obstruct).map { it.position }.flatMap { move ->
+                if(locationMap[move] is Obstacle) {
+                    throw IllegalStateException()
+                }
                 attackMoves(heroUnit, move) + assistMoves(teammates, heroUnit, move) + MoveOnly(
                     heroUnitId = heroUnit.id,
                     moveTarget = move
@@ -1714,7 +1717,7 @@ class DistanceReceiverRealMovement(
     private val withGravity = self.withNegativeStatus(NegativeStatus.GRAVITY)
 
     private fun MoveStep.obstruct(): Boolean {
-        return if (pass || teleportRequired || distanceTravel == 0) {
+        return if (pass || teleportRequired) {
             true
         } else {
             !obstruct.contains(position)
@@ -1730,11 +1733,14 @@ class DistanceReceiverRealMovement(
             return false
         }
         return when (val obstacle = obstacles[position]) {
-            self, null -> {
+            self -> {
+                resultMap[position] = moveStep
+                true
+            }
+            null -> {
                 resultMap[position] = moveStep
                 moveStep.obstruct()
             }
-
             is Obstacle -> {
                 resultMap[position] = moveStep.copy(distanceTravel = -1)
                 false
