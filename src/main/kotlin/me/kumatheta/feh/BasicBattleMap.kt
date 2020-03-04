@@ -26,7 +26,7 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
         val spawnTime = if (spawnTimeString.isBlank()) {
             null
         } else {
-            when(val time = spawnTimeString.toIntOrNull()) {
+            when (val time = spawnTimeString.toIntOrNull()) {
                 null -> Unknown
                 1 -> Start
                 else -> ReinforceByTime(time)
@@ -94,12 +94,77 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
     return Pair(playerMap.toMap(), spawnMap.toMap())
 }
 
-private fun getWeaponType(name: String): WeaponType {
-    return ALL_WEAPONS[name].weaponType
+enum class WeaponTypeName(val weaponType: WeaponType) {
+    SWORD(Sword),
+    LANCE(Lance),
+    AXE(Axe)
 }
 
+private fun getWeaponType(name: String): WeaponType {
+    return WeaponTypeName.valueOf(name).weaponType
+}
+
+private fun String.splitOrNull(delimiter: Char): Pair<String, String?> {
+    val index = indexOf(delimiter)
+    return if (index == -1) {
+        Pair(this, null)
+    } else {
+        Pair(this.substring(0, index), this.substring(index + 1))
+    }
+}
+
+
 private fun getWeapon(name: String): Weapon {
-    return ALL_WEAPONS[name]
+    val (baseName, color: String?) = name.splitOrNull('@')
+    val (weaponName, baseRefine: String?) = baseName.splitOrNull('*')
+    val weapon = if (baseRefine != null) {
+        val trimBaseRefine = baseRefine.trim()
+        if (trimBaseRefine.length != 1) {
+            throw IllegalArgumentException("baseRefine can only be one of A,S,D,R")
+        }
+        val spdRefineWeapon = ALL_WEAPONS["$weaponName*S"]
+        val refineType = trimBaseRefine[0]
+        if (refineType == 'S') {
+            spdRefineWeapon
+        } else {
+            val spdRefineExtraStat = spdRefineWeapon.extraStat!!
+            when (refineType) {
+                'A' -> spdRefineWeapon.copy(
+                    basicSkill = spdRefineWeapon.basicSkill.copy(
+                        extraStat = spdRefineExtraStat.copy(
+                            spd = 0,
+                            atk = spdRefineExtraStat.atk + spdRefineExtraStat.spd - 1
+                        )
+                    )
+                )
+                'D' -> spdRefineWeapon.copy(
+                    basicSkill = spdRefineWeapon.basicSkill.copy(
+                        extraStat = spdRefineExtraStat.copy(spd = 0, def = spdRefineExtraStat.spd + 1)
+                    )
+                )
+                'R' -> spdRefineWeapon.copy(
+                    basicSkill = spdRefineWeapon.basicSkill.copy(
+                        extraStat = spdRefineExtraStat.copy(spd = 0, res = spdRefineExtraStat.spd + 1)
+                    )
+                )
+                else -> throw IllegalArgumentException("color can only be one of A,S,D,R")
+            }
+        }
+    } else {
+        ALL_WEAPONS[weaponName]
+    }
+    return if (color != null) {
+        val weaponColor = when (color.trim()) {
+            "R" -> Color.RED
+            "G" -> Color.GREEN
+            "B" -> Color.BLUE
+            "C" -> Color.COLORLESS
+            else -> throw IllegalArgumentException("wrong weapon name $name, color can only be one of R,G,B,C")
+        }
+        weapon.copy(weaponType = (weapon.weaponType as FreeColorWeapon).toColor(weaponColor))
+    } else {
+        weapon
+    }
 }
 
 private fun getAssist(name: String): Assist? {
@@ -167,7 +232,7 @@ class BasicBattleMap(
         get() = spawnMap.asSequence().mapNotNull {
             val spawn = it.value
             val spawnTime = spawn.spawnTime
-            if(spawnTime is ReinforceByTime) {
+            if (spawnTime is ReinforceByTime) {
                 spawnTime.turn to newHeroUnit(it.key, spawn)
             } else {
                 null

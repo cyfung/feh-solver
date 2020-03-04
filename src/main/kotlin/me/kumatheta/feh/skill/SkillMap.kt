@@ -11,7 +11,7 @@ class SkillMap<T : Skill>(seq: Sequence<Pair<String, T>>) {
 }
 
 private fun String.normalize() =
-    toLowerCase().replace("[^a-z0-9+]".toRegex(), "")
+    toLowerCase().replace("[^a-z0-9+*]".toRegex(), "")
 
 fun <T : Skill> Sequence<Pair<String, T>>.toSkillMap(): SkillMap<T> {
     return SkillMap(this)

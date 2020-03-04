@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
+import kotlin.time.MonoClock
 
 @ExperimentalCoroutinesApi
 class Mcts<T : Move, S : Score<T>>(
@@ -37,7 +37,7 @@ class Mcts<T : Move, S : Score<T>>(
         if (rootNode.noMoreChild()) {
             throw RuntimeException("no solution")
         }
-        val clockMark = TimeSource.Monotonic.markNow()
+        val clockMark = MonoClock.markNow()
         val count = AtomicInteger(0)
         runBlocking {
             supervisorScope {

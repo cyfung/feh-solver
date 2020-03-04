@@ -70,7 +70,7 @@ interface Weapon : Skill {
     val weaponType: WeaponType
 }
 
-open class BasicWeapon(override val weaponType: WeaponType, basicSkill: BasicSkill) :
+data class BasicWeapon(override val weaponType: WeaponType, val basicSkill: BasicSkill) :
     Weapon, Skill by basicSkill
 
 abstract class Special(val coolDownCount: Int, basicSkill: BasicSkill = EmptySkill) : Skill by basicSkill

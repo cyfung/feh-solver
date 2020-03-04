@@ -43,5 +43,6 @@ val ALL_SPECIALS = sequenceOf(
     "Dragon Fang" to SelfStatBased(4) {
         it.atk / 2
     },
-    "Glimmer" to DamageAmplify(2, 50)
+    "Glimmer" to DamageAmplify(2, 50),
+    "Astra" to DamageAmplify(2, 150)
 ).toSkillMap()

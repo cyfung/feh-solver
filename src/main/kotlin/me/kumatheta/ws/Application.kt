@@ -21,7 +21,7 @@ import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
+import kotlin.time.MonoClock
 
 typealias MsgTerrain = me.kumatheta.feh.message.Terrain
 typealias MsgBattleMap = me.kumatheta.feh.message.BattleMap
@@ -53,7 +53,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @ExperimentalTime
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
-    val dataSet = "duma infernal"
+    val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -150,7 +150,7 @@ private suspend fun getMcts(
     jobRef: AtomicReference<Job?>
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
     val phaseLimit = 20
-    val board = newFehBoard(phaseLimit, state, 3)
+    val board = newFehBoard(phaseLimit, state, 3, false)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
     val mcts = Mcts(board, scoreManager)
     val next = Pair(board, mcts)
@@ -220,8 +220,8 @@ private suspend fun runMcts(
     scoreManager: VaryingUCT<FehMove>
 ) {
     var tries = 0
-    val mctsStart = TimeSource.Monotonic.markNow()
-    var lastFixMove = TimeSource.Monotonic.markNow()
+    val mctsStart = MonoClock.markNow()
+    var lastFixMove = MonoClock.markNow()
 
     val json = Json(JsonConfiguration.Stable)
 
@@ -229,7 +229,7 @@ private suspend fun runMcts(
         mcts.run(5, parallelCount = 5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
-            lastFixMove = TimeSource.Monotonic.markNow()
+            lastFixMove = MonoClock.markNow()
         }
         println("elapsed ${mctsStart.elapsedNow()}")
         val score = mcts.score

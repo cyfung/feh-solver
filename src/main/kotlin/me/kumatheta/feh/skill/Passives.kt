@@ -53,6 +53,8 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Guidance 3" to Guidance3,
 
     "Spd Smoke 3" to smoke(Stat(spd = -7)),
+    "Def Smoke 3" to smoke(Stat(def = -7)),
+    "Res Smoke 3" to smoke(Stat(res = -7)),
 
     "Spd Tactics 3" to tactics(Stat(spd = 6)),
     "Def Tactics 3" to tactics(Stat(def = 6)),

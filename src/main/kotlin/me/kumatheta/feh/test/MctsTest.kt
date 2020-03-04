@@ -16,7 +16,7 @@ import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
+import kotlin.time.MonoClock
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
@@ -65,15 +65,15 @@ fun main() {
     val mcts = Mcts(board, scoreManager)
     var tries = 0
     val fixedMoves = mutableListOf<FehMove>()
-    val clockMark = TimeSource.Monotonic.markNow()
-    var lastFixMove = TimeSource.Monotonic.markNow()
+    val clockMark = MonoClock.markNow()
+    var lastFixMove = MonoClock.markNow()
 
 
     repeat(10000) {
         mcts.run(5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
-            lastFixMove = TimeSource.Monotonic.markNow()
+            lastFixMove = MonoClock.markNow()
         }
         println("elapsed ${clockMark.elapsedNow()}")
         val score = mcts.score

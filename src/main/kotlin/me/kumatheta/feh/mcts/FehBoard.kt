@@ -283,7 +283,6 @@ class UnitActionTypeGrouping(
         }
     }
 
-
 }
 
 class StandardFehBoard(

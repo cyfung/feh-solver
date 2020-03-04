@@ -7,14 +7,27 @@ import me.kumatheta.feh.skill.effect.incombatstat.stance
 import me.kumatheta.feh.skill.weapon.*
 
 val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
+    "Flametongue+" to DragonC.basic(15),
+
+    "Flametongue+*S" to DragonC.withSkill(16, DragonAdaptive, hp = 5, spd = 3),
+    "Slaying Edge+*S" to Sword.slaying(14, hp = 5, spd = 3),
+    "Thoron+*S" to MagicB.basic(14, hp = 2, spd = 2),
+    "Rexcailbur+*S" to MagicG.basic(14, hp = 2, spd = 2),
+    "Silver Axe+*S" to Axe.basic(16, hp = 5, spd =3),
+    "Wo Gun+*S" to Axe.withSkill(14, dealSpecialDamage, hp = 5, spd = 3),
+    "Blarowl+*S" to MagicB.owl(10, hp = 2, spd = 2),
+    "Shining Bow+*S" to BowC.shining(12, hp = 2, spd=2),
+    "Barrier Lance+*S" to Lance.withSkill(14, stance(Stat(res = 7)), hp = 5, spd = 3),
+    "Dark Breath+*S" to DragonC.darkBreathPlus(14, hp = 5, spd = 3),
+    "Slaying Bow+*S" to BowC.slaying(12, hp = 2, spd = 2),
+    "Slaying Lance+*S" to Lance.slaying(14, hp = 5, spd = 3),
+
     "Iron Lance" to Lance.basic(6),
     "Steel Lance" to Lance.basic(8),
     "Silver Lance" to Lance.basic(11),
     "Iron Sword" to Sword.basic(6),
     "Steel Sword" to Sword.basic(8),
     "Silver Sword" to Sword.basic(11),
-    "Flametongue+G" to DragonG.basic(15),
-    "Flametongue+R Atk" to DragonR.withSkill(18, DragonAdaptive, hp = 5),
     "Armorsmasher+" to Sword.effective(14, MoveType.ARMORED),
     "Iron Axe" to Axe.basic(6),
     "Steel Axe" to Axe.basic(8),
@@ -22,28 +35,18 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Silver Axe+" to Axe.basic(15),
     "Slaying Hammer" to Axe.effective(10, MoveType.ARMORED),
     "Slaying Hammer+" to Axe.effective(14, MoveType.ARMORED),
-    "Steel Bow C" to BowC.basic(6),
+    "Steel Bow" to BowC.basic(6),
+    "Slaying Bow+" to BowC.slaying(12),
     "Assault" to Staff.basic(10),
-    "Slaying Bow+ B" to BowB.slaying(12),
-    "Slaying Bow+ G" to BowG.slaying(12),
     "Slaying Axe+" to Axe.slaying(14),
-    "Slaying Edge+ Def" to Sword.slaying(14, hp = 5, def = 4),
     "Thoron+" to MagicB.basic(13),
-    "Thoron+ Spd" to MagicB.basic(14, hp = 2, spd = 2),
-    "Rexcailbur+ Atk" to MagicG.basic(15, hp = 2),
-    "Silver Axe+ Def" to Axe.basic(16, hp = 5, def = 4),
     "Raudrblade+" to MagicR.bladeTome(13),
     "Gronnowl+" to MagicG.owl(10),
     "Blarowl+" to MagicB.owl(10),
-    "Blarowl+ Spd" to MagicB.owl(10, hp = 2, spd = 2),
     "Ridersbane+ Eff" to Lance.effective(14, MoveType.CAVALRY, neutralizeBonus = true, hp = 3),
-    "Keen Gronnwolf+ G Eff" to MagicG.effective(12, MoveType.CAVALRY, neutralizeBonus = true),
+    "Keen Gronnwolf+ Eff" to MagicG.effective(12, MoveType.CAVALRY, neutralizeBonus = true),
     "Armorsmasher+ Eff" to Sword.effective(14, MoveType.ARMORED, neutralizeBonus = true, hp = 3),
     "Zanbato+ Eff" to Sword.effective(14, MoveType.CAVALRY, neutralizeBonus = true, hp = 3),
-    "Wo Gun+ Def" to Axe.withSkill(14, dealSpecialDamage, hp = 5, def = 4),
-    "Shining Bow+C Atk" to BowC.shining(13, hp = 2),
-    "Barrier Lance+ Res" to Lance.withSkill(14, stance(Stat(res = 7)), hp = 5, def = 4),
-    "Dark Breath+G Res" to DragonG.darkBreathPlus(14, hp = 5, res = 4),
 
     "Slow+" to slowPlus,
     "Gravity+" to gravityPlus,
@@ -64,20 +67,16 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
 
     "Trilemma+ Dazzling" to trilemmaPlus(disableCounter = true, staffAsNormal = false),
 
-    "Brave Bow+C" to BowC.brave(7),
-    "Brave Bow+R" to BowR.brave(7),
+    "Brave Bow+" to BowC.brave(7),
     "Brave Sword+" to Sword.brave(8),
     "Brave Lance+" to Lance.brave(8),
     "Brave Axe+" to Axe.brave(8),
-    "Blarserpent+ atk" to MagicB.withSkill(
-        13,
-        rangeDefStat(Stat(def = 6, res = 6)), hp = 2
-    ),
-    "Guard Bow+C" to BowC.withSkill(
+    "Blarserpent+*S" to MagicB.withSkill(
         12,
-        rangeDefStat(Stat(def = 6, res = 6))
+        rangeDefStat(Stat(def = 6, res = 6)),
+        hp = 2, spd = 2
     ),
-    "Guard Bow+G" to BowG.withSkill(
+    "Guard Bow+" to BowC.withSkill(
         12,
         rangeDefStat(Stat(def = 6, res = 6))
     ),
