@@ -1,13 +1,11 @@
 package me.kumatheta.feh.util
 
-import me.kumatheta.feh.BattleMap
-import me.kumatheta.feh.MoveType
-import me.kumatheta.feh.Position
-import me.kumatheta.feh.Terrain
+import me.kumatheta.feh.*
 
 fun FixedBattleMap.calculateDistance(
     moveType: MoveType,
     startingPositions: Pair<Int, Sequence<MoveStep>>,
+    obstacleWalls: Set<Position>,
     distanceReceiver: DistanceReceiver
 ) {
     val workingMap = sortedMapOf(
@@ -23,6 +21,9 @@ fun FixedBattleMap.calculateDistance(
         temp.asSequence().filter {
             distanceReceiver.receive(it)
         }.flatMap { it.position.surroundings(maxPosition) }.mapNotNull { position ->
+            if (obstacleWalls.contains(position)) {
+                return@mapNotNull null
+            }
             val terrain = getTerrain(position)
             val moveCost = terrain.moveCost(moveType) ?: return@mapNotNull null
             val distanceTravel = currentDistance + moveCost
@@ -33,9 +34,20 @@ fun FixedBattleMap.calculateDistance(
     }
 }
 
-data class DistanceIndex(val moveType: MoveType, val position: Position, val isRanged: Boolean)
+data class DistanceIndex(
+    val moveType: MoveType,
+    val position: Position,
+    val isRanged: Boolean,
+    val obstacleWalls: Set<Position>
+)
 
-data class ThreatIndex(val moveType: MoveType, val position: Position, val isRanged: Boolean, val obstacles: Set<Position>)
+data class ThreatIndex(
+    val moveType: MoveType,
+    val position: Position,
+    val isRanged: Boolean,
+    val obstacles: Set<Position>,
+    val team: Team
+)
 
 interface DistanceReceiver {
     fun isOverMaxDistance(distance: Int): Boolean

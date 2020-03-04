@@ -53,7 +53,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @ExperimentalTime
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
-    val dataSet = "sothis infernal"
+    val dataSet = "duma infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -150,7 +150,7 @@ private suspend fun getMcts(
     jobRef: AtomicReference<Job?>
 ): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
     val phaseLimit = 20
-    val board = newFehBoard(phaseLimit, state, 3, false)
+    val board = newFehBoard(phaseLimit, state, 3)
     val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
     val mcts = Mcts(board, scoreManager)
     val next = Pair(board, mcts)
@@ -262,12 +262,13 @@ private fun buildSetupInfo(
     battleMap: BasicBattleMap,
     state: BattleState
 ): SetupInfo {
+    val chessPieceMap = battleMap.toChessPieceMap()
     val battleMapPositions = positionMap.terrainMap.map { (position, terrain) ->
         BattleMapPosition(
             x = position.x,
             y = position.y,
             terrain = terrain.toMsgTerrain(),
-            obstacle = positionMap.obstacles[position] ?: 0
+            obstacle = (chessPieceMap[position] as? Obstacle)?.health?:0
         )
     }
     val msgBattleMap = MsgBattleMap(

@@ -1,18 +1,16 @@
 package me.kumatheta.feh.test
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import me.kumatheta.feh.BasicBattleMap
-import me.kumatheta.feh.BattleState
-import me.kumatheta.feh.mcts.FehBoard
-import me.kumatheta.feh.mcts.FehMove
-import me.kumatheta.feh.mcts.newFehBoard
-import me.kumatheta.feh.mcts.tryMoves
-import me.kumatheta.feh.readMap
-import me.kumatheta.feh.readUnits
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.list
+import me.kumatheta.feh.*
+import me.kumatheta.feh.mcts.*
+import me.kumatheta.feh.message.UpdateInfo
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.RecyclableNode
 import me.kumatheta.mcts.RecycleManager
 import me.kumatheta.mcts.VaryingUCT
+import me.kumatheta.ws.toUpdateInfoList
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
@@ -21,7 +19,7 @@ import kotlin.time.MonoClock
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 fun main() {
-    val dataSet = "sothis infernal"
+    val dataSet = "duma infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -35,32 +33,41 @@ fun main() {
     )
     val phraseLimit = 20
     var board = newFehBoard(phraseLimit, state, 3)
-//    val testMoves = listOf(
-//        Rearrange(listOf(1, 4, 3, 2)),
-//        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
-//        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 5, moveTargetY = 0)),
-//        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 0)),
-//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1)),
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13)),
-//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 5, moveTargetY = 1, assistTargetId = 3)),
-//        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1, attackTargetId = 13)),
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 0, attackTargetId = 13)),
-//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0, attackTargetId = 12))
-//    )
-//    val testResult = board.tryMoves(testMoves, false)
-//    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
-//
-//    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
-//
-//    testMoves.take(8).forEach { move ->
-//        val exists = board.moves.any {
-//            it == move
-//        }
-//        if (!exists) {
-//            throw IllegalStateException("moves not exists $move")
-//        }
-//        board = board.applyMove(move)
-//    }
+    val testMoves = listOf(
+        Rearrange(listOf(1, 4, 3, 2)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 3, attackTargetId = 10)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 2, assistTargetId = 1)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 10)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 3, attackTargetId = 8)),
+        NormalMove(MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
+        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 4, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 4, moveTargetY = 2)),
+        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 4, moveTargetY = 0)),
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 5, moveTargetY = 2, attackTargetId = 7)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 1, assistTargetId = 3)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 1, attackTargetId = 9)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 3, attackTargetId = 9))
+    )
+    val testResult = board.tryMoves(testMoves, false)
+    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
+
+    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
+
+    testMoves.forEach { move ->
+        val exists = board.moves.any {
+            it == move
+        }
+        if (!exists) {
+            throw IllegalStateException("moves not exists $move")
+        }
+        board = board.applyMove(move)
+    }
     val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.0)
     val mcts = Mcts(board, scoreManager)
     var tries = 0

@@ -7,6 +7,7 @@ import me.kumatheta.feh.skill.assist.Heal
 import me.kumatheta.feh.skill.assist.Refresh
 import me.kumatheta.mcts.Board
 import me.kumatheta.mcts.Move
+import kotlin.random.Random
 
 data class FehBoardConfig(
     val phaseLimit: Int,
@@ -21,6 +22,12 @@ interface FehBoard : Board<FehMove> {
 
     override val score: Long?
         get() = null
+
+    override fun applyMove(move: FehMove): FehBoard
+
+    override fun getPlayOutMove(random: Random): FehMove {
+        return moves.random(random)
+    }
 }
 
 fun newFehBoard(
@@ -61,7 +68,7 @@ class RearrangeFehBoard(
 
     override fun getStateCopy() = state.copy()
 
-    override fun applyMove(move: FehMove): Board<FehMove> {
+    override fun applyMove(move: FehMove): FehBoard {
         move as Rearrange
         val stateCopy = getStateCopy()
         stateCopy.rearrange(move.order)
@@ -83,7 +90,7 @@ class ScoreFehBoard(
         throw UnsupportedOperationException()
     }
 
-    override fun applyMove(move: FehMove): Board<FehMove> {
+    override fun applyMove(move: FehMove): FehBoard {
         throw UnsupportedOperationException()
     }
 
@@ -115,7 +122,7 @@ abstract class Grouping<T>(
         actualMoves.keys.map { GroupMove(it) }
     }
 
-    override fun applyMove(move: FehMove): Board<FehMove> {
+    override fun applyMove(move: FehMove): FehBoard {
         @Suppress("UNCHECKED_CAST")
         val group = (move as GroupMove<T>).value
         val actualMoves = actualMoves[group] ?: throw IllegalStateException()
@@ -291,6 +298,15 @@ class StandardFehBoard(
     private val playerMoves: Sequence<UnitAction> = state.getAllPlayerMovements()
 ) : FehBoard {
 
+    private val dangerAreas: Map<Position, Int>
+
+    init {
+        val stateDangerAreas = state.dangerAreas()
+        dangerAreas =
+            stateDangerAreas.values.asSequence().flatMap { it.keys.asSequence() }.groupingBy { it }.eachCount()
+    }
+
+
     override val moves: List<FehMove> by lazy {
         playerMoves.map {
             NormalMove(it)
@@ -329,8 +345,9 @@ class StandardFehBoard(
     private fun calculateScore(battleState: BattleState) =
         battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
                 battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
-            Team.ENEMY
-        ).sumBy { it.maxHp - it.currentHp } * 2 + (config.phaseLimit - battleState.phase) * 20 + if (battleState.phase >= config.phaseLimit) {
+                Team.ENEMY
+            )
+            .sumBy { it.maxHp - it.currentHp } * 2 + (config.phaseLimit - battleState.phase) * 20 + if (battleState.phase >= config.phaseLimit) {
             -1500L
         } else {
             0L
@@ -351,6 +368,14 @@ class StandardFehBoard(
                 }
                 else -> 2
             }
+        }
+    }
+
+    override fun getPlayOutMove(random: Random): FehMove {
+        return if (random.nextBoolean()) {
+            super.getPlayOutMove(random)
+        } else {
+            suggestedOrder(moves.shuffled()).first()
         }
     }
 

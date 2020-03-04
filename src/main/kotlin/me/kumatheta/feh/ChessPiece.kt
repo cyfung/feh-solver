@@ -1,7 +1,5 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.Skill
-
 sealed class ChessPiece {
     abstract val position: Position
     abstract fun copy(): ChessPiece
@@ -316,9 +314,9 @@ enum class PositiveStatus {
     EXTRA_TRAVEL_POWER
 }
 
-class Obstacle(var health: Int, override val position: Position) : ChessPiece() {
+class Obstacle(var health: Int, override val position: Position, val isBreakableByEnemy: Boolean) : ChessPiece() {
     override fun copy(): ChessPiece {
-        return Obstacle(health, position)
+        return Obstacle(health, position, isBreakableByEnemy)
     }
 }
 

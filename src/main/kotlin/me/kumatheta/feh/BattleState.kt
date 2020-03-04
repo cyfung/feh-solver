@@ -103,6 +103,7 @@ class BattleState private constructor(
         if (position.x < 0 || position.y < 0 || position.x > maxPosition.x || position.y >= maxPosition.y) {
             return false
         }
+        // checking actual terrain only, unoccupied is checked later, so no need to check obstacle
         return battleMap.getTerrain(position).moveCost(heroUnit.moveType) != null
     }
 
@@ -176,35 +177,46 @@ class BattleState private constructor(
             it.endOfTurn()
         }
         if (nextTeam == Team.PLAYER) {
-            battleMap.reinforceByTime[turn]?.forEach { it ->
-                val newUnit = it.copy()
-                if (locationMap.putIfAbsent(newUnit.position, newUnit) != null) {
-                    val pathAvailable = distanceFrom(newUnit, newUnit.position).keys
-                    val actualLocation = battleMap.terrainMap.asSequence().filter {
-                        locationMap[it.key] == null
-                    }.filterNot {
-                        it.value.type == Terrain.Type.WALL
-                    }.minWith(
-                        compareBy({
-                            when {
-                                pathAvailable.contains(it.key) -> 0
-                                it.value.moveCost(newUnit.moveType) != null -> 1
-                                else -> 2
-                            }
-                        }, {
-                            it.key.distanceTo(newUnit.position)
-                        }, {
-                            it.key
-                        })
-                    )?.key ?: throw IllegalStateException("whole map full?")
-                    if (locationMap.putIfAbsent(actualLocation, newUnit) != null) {
-                        throw IllegalStateException()
-                    }
-                    newUnit.position = actualLocation
-                }
-            }
+            checkReinforcements()
         }
         startOfTurn(nextTeam)
+    }
+
+    private fun checkReinforcements() {
+        val reinforcements = battleMap.reinforceByTime[turn] ?: return
+        val obstacleWalls = obstacleWalls()
+        reinforcements.forEach { it ->
+            val newUnit = it.copy()
+            if (locationMap.putIfAbsent(newUnit.position, newUnit) != null) {
+                val pathAvailable = battleMap.distanceMap[DistanceIndex(
+                    newUnit.moveType,
+                    newUnit.position,
+                    newUnit.weaponType.isRanged,
+                    obstacleWalls
+                )] ?: throw IllegalStateException("distance map not found")
+                val actualLocation = battleMap.terrainMap.asSequence().filter {
+                    locationMap[it.key] == null
+                }.filterNot {
+                    it.value.type == Terrain.Type.WALL
+                }.minWith(
+                    compareBy({
+                        when {
+                            pathAvailable.contains(it.key) -> 0
+                            it.value.moveCost(newUnit.moveType) != null -> 1
+                            else -> 2
+                        }
+                    }, {
+                        it.key.distanceTo(newUnit.position)
+                    }, {
+                        it.key
+                    })
+                )?.key ?: throw IllegalStateException("whole map full?")
+                if (locationMap.putIfAbsent(actualLocation, newUnit) != null) {
+                    throw IllegalStateException()
+                }
+                newUnit.position = actualLocation
+            }
+        }
     }
 
     internal fun swap(unit1: HeroUnit, unit2: HeroUnit) {
@@ -336,9 +348,10 @@ class BattleState private constructor(
                 it(supportCombatInput)
             }
         }.filterNotNull()
-        return attacker.skillSet.skills.asSequence() + attackerTeamSkills + defenderTeamSkills + defender.skillSet.foeEffect.asSequence().map {
-            it(CombatStatus(this, defender, attacker, false))
-        }.filterNotNull()
+        return attacker.skillSet.skills.asSequence() + attackerTeamSkills + defenderTeamSkills + defender.skillSet.foeEffect.asSequence()
+            .map {
+                it(CombatStatus(this, defender, attacker, false))
+            }.filterNotNull()
     }
 
     private fun getDefenderSkillSeq(
@@ -357,9 +370,10 @@ class BattleState private constructor(
                 it(supportCombatInput)
             }
         }.filterNotNull()
-        return defender.skillSet.skills.asSequence() + defenderTeamSkills + attackerTeamSkills + attacker.skillSet.foeEffect.asSequence().map {
-            it(CombatStatus(this, attacker, defender, true))
-        }.filterNotNull()
+        return defender.skillSet.skills.asSequence() + defenderTeamSkills + attackerTeamSkills + attacker.skillSet.foeEffect.asSequence()
+            .map {
+                it(CombatStatus(this, attacker, defender, true))
+            }.filterNotNull()
     }
 
     private fun HeroUnit.basicStat(
@@ -402,14 +416,14 @@ class BattleState private constructor(
         attackerInCombatStat.inCombatStat += attackerSkillWrapper.additionalInCombatStat
         defenderInCombatStat.inCombatStat += defenderSkillWrapper.additionalInCombatStat
 
-        if (battleMap.getTerrain(attacker.position).isDefenseTile) {
+        if (isDefenseTile(attacker.position)) {
             attackerInCombatStat.inCombatStat = attackerInCombatStat.inCombatStat.copy(
                 def = attackerInCombatStat.inCombatStat.def * 13 / 10,
                 res = attackerInCombatStat.inCombatStat.res * 13 / 10
             )
         }
 
-        if (battleMap.getTerrain(defender.position).isDefenseTile) {
+        if (isDefenseTile(defender.position)) {
             defenderInCombatStat.inCombatStat = defenderInCombatStat.inCombatStat.copy(
                 def = defenderInCombatStat.inCombatStat.def * 13 / 10,
                 res = defenderInCombatStat.inCombatStat.res * 13 / 10
@@ -421,6 +435,8 @@ class BattleState private constructor(
             defenderSkillWrapper
         )
     }
+
+    private fun isDefenseTile(position: Position) = battleMap.getTerrain(position).isDefenseTile
 
     private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): AttackerDefenderPair<InCombatSkillSet> {
         val attackerTeammates = unitsSeq(attacker.team).filterNot { it == attacker }.map {
@@ -619,7 +635,7 @@ class BattleState private constructor(
     }
 
     private fun HeroUnit.aoeInCombatStat(): InCombatStat {
-        val inCombatStat: Stat = if (battleMap.getTerrain(position).isDefenseTile) {
+        val inCombatStat: Stat = if (isDefenseTile(position)) {
             visibleStat.copy(
                 def = visibleStat.def * 13 / 10,
                 res = visibleStat.res * 13 / 10
@@ -930,19 +946,22 @@ class BattleState private constructor(
         val foeTeam = Team.ENEMY.foe
 
         var obstacles = locationMap.toMap()
+        val obstacleWalls = obstacleWalls()
 
         val movements = generateSequence {
             if (winningTeam != null || unitsSeq(myTeam).none { it.available }) {
                 return@generateSequence null
             }
-            val distanceFromAlly = distanceFrom(myTeam)
+            val distanceFromAlly = distanceFrom(myTeam, obstacleWalls)
             val distanceToClosestFoe = distanceToClosestFoe(myTeam, distanceFromAlly)
-            val foeThreat = calculateThreat(foeTeam, obstacles).flatMap { it.second }.groupingBy { it }.eachCount()
-            val lazyAllyThreat = lazyThreat(obstacles, myTeam)
+            val foeThreat =
+                calculateThreat(foeTeam, obstacles, obstacleWalls).flatMap { it.second }.groupingBy { it }.eachCount()
+            val lazyAllyThreat = lazyThreat(myTeam, obstacles, obstacleWalls)
 
             val availableUnits = unitsSeq(myTeam).filter { it.available }.toList()
             val obstruct = foeTeam.obstruct()
-            val possibleMoves = possibleMoves(obstruct, foeThreat, availableUnits.asSequence())
+            val possibleMoves =
+                possibleMoves(obstruct, foeThreat, availableUnits.asSequence(), obstacleWalls)
 
             val attackTargetPositions = attackTargetPositions(possibleMoves)
 
@@ -1045,7 +1064,7 @@ class BattleState private constructor(
                 }.filterNot {
                     it.weaponType.isRanged
                 }.flatMap { enemy ->
-                    moveTargets(enemy, emptySet(), obstaclesOnly)
+                    moveTargets(enemy, emptySet(), obstaclesOnly, obstacleWalls)
                 }.map {
                     it.position
                 }
@@ -1060,13 +1079,14 @@ class BattleState private constructor(
 
             // movement
             val move = getMoveAction(
-                availableUnits,
-                distanceToClosestFoe,
-                possibleMoves,
-                attackTargetPositions,
-                distanceFromAlly,
-                foeThreat,
-                obstacles
+                availableUnits = availableUnits,
+                distanceToClosestFoe = distanceToClosestFoe,
+                possibleMoves = possibleMoves,
+                attackTargetPositions = attackTargetPositions,
+                distanceFromAlly = distanceFromAlly,
+                foeThreat = foeThreat,
+                obstacles = obstacles,
+                obstacleWalls = obstacleWalls
             )
             if (move != null) {
                 executeMove(move)
@@ -1084,8 +1104,14 @@ class BattleState private constructor(
         return movements
     }
 
+    private fun obstacleWalls(): Set<Position> {
+        return locationMap.values.asSequence().filterIsInstance<Obstacle>().filterNot { it.isBreakableByEnemy }.map {
+            it.position
+        }.toSet()
+    }
+
     fun dangerAreas(): Map<HeroUnit, Map<Position, MoveStep>> {
-        val possibleMoves = possibleMoves(emptySet(), emptyMap(), unitsSeq(Team.ENEMY))
+        val possibleMoves = possibleMoves(emptySet(), emptyMap(), unitsSeq(Team.ENEMY), emptySet())
         return attackTargetPositions(possibleMoves)
     }
 
@@ -1102,10 +1128,16 @@ class BattleState private constructor(
     private fun possibleMoves(
         obstruct: Set<Position>,
         foeThreat: Map<Position, Int>,
-        availableUnits: Sequence<HeroUnit>
+        availableUnits: Sequence<HeroUnit>,
+        obstacleWalls: Set<Position>
     ): Map<HeroUnit, Map<Position, MoveStep>> {
         return availableUnits.associateWith { heroUnit ->
-            moveTargets(heroUnit, obstruct).sortedWith(attackPositionOrder(heroUnit, foeThreat))
+            moveTargets(heroUnit, obstruct, locationMap, obstacleWalls).sortedWith(
+                    attackPositionOrder(
+                        heroUnit,
+                        foeThreat
+                    )
+                )
                 .associateBy { it.position }
         }
     }
@@ -1245,14 +1277,15 @@ class BattleState private constructor(
         attackTargetPositions: Map<HeroUnit, Map<Position, MoveStep>>,
         distanceFromAlly: Map<HeroUnit, Map<Position, Int>>,
         foeThreat: Map<Position, Int>,
-        obstacles: Map<Position, ChessPiece>
+        obstacles: Map<Position, ChessPiece>,
+        obstacleWalls: Set<Position>
     ): UnitAction? {
         return availableUnits.asSequence().filter { it.engaged }.sortedWith(unitMoveOrder(distanceToClosestFoe))
             .mapNotNull { heroUnit ->
                 val moves = possibleMoves[heroUnit] ?: throw IllegalStateException()
                 val distanceMap = distanceFromAlly[heroUnit] ?: throw IllegalStateException()
                 val targetPositions = attackTargetPositions[heroUnit] ?: throw IllegalStateException()
-                getMoveAction(heroUnit, distanceMap, moves, targetPositions, foeThreat, obstacles)
+                getMoveAction(heroUnit, distanceMap, moves, targetPositions, foeThreat, obstacles, obstacleWalls)
             }.firstOrNull()
     }
 
@@ -1279,12 +1312,13 @@ class BattleState private constructor(
         moves: Map<Position, MoveStep>,
         attackTargetPositions: Map<Position, MoveStep>,
         foeThreat: Map<Position, Int>,
-        obstacles: Map<Position, ChessPiece>
+        obstacles: Map<Position, ChessPiece>,
+        obstacleWalls: Set<Position>
     ): UnitAction? {
         val chaseTarget =
             getChaseTarget(heroUnit, distanceMap, obstacles) ?: getClosestAlly(heroUnit, distanceMap) ?: return null
 
-        val distanceToTarget = distanceFrom(heroUnit, chaseTarget.position)
+        val distanceToTarget = distanceTo(heroUnit, chaseTarget.position, obstacleWalls)
         val okToStay = if (chaseTarget.team == heroUnit.team) {
             unitsSeq(heroUnit.team.foe).mapNotNull { it.position.distanceTo(heroUnit.position) }.all { it > 2 }
         } else {
@@ -1301,14 +1335,15 @@ class BattleState private constructor(
 
         val basicDistance = basicMove.distanceTo(chaseTarget.position)
 
-        val validObstacles = locationMap.values.asSequence().filterIsInstance<Obstacle>().mapNotNull {
-            val distance = it.position.distanceTo(chaseTarget.position)
-            if (distance < basicDistance) {
-                it.position to distance
-            } else {
-                null
-            }
-        }.associate { it }
+        val validObstacles =
+            locationMap.values.asSequence().filterIsInstance<Obstacle>().filter { it.isBreakableByEnemy }.mapNotNull {
+                val distance = it.position.distanceTo(chaseTarget.position)
+                if (distance < basicDistance) {
+                    it.position to distance
+                } else {
+                    null
+                }
+            }.associate { it }
 
         val obstacle = if (validObstacles.isEmpty()) {
             null
@@ -1356,12 +1391,13 @@ class BattleState private constructor(
     }
 
     private fun lazyThreat(
+        myTeam: Team,
         obstacles: Map<Position, ChessPiece>,
-        myTeam: Team
+        obstacleWalls: Set<Position>
     ): Lazy<Map<HeroUnit, Set<HeroUnit>>> {
         return lazy {
             val enemies = unitsSeq(myTeam.foe).associateBy { it.position }
-            calculateThreat(myTeam, obstacles).mapNotNull { (heroUnit, threatenedSeq) ->
+            calculateThreat(myTeam, obstacles, obstacleWalls).mapNotNull { (heroUnit, threatenedSeq) ->
                 val threatenedEnemies = threatenedSeq.mapNotNull { enemies[it] }.toSet()
                 if (threatenedEnemies.isEmpty()) {
                     null
@@ -1384,16 +1420,30 @@ class BattleState private constructor(
         }
     }
 
-    private fun distanceFrom(myTeam: Team): Map<HeroUnit, Map<Position, Int>> {
-        return unitsSeq(myTeam).filterNot { it.isEmptyHanded }.associateWith {
-            battleMap.distanceMap[DistanceIndex(it.moveType, it.position, it.weaponType.isRanged)]
+    private fun distanceFrom(team: Team, obstacleWalls: Set<Position>): Map<HeroUnit, Map<Position, Int>> {
+        return unitsSeq(team).filterNot { it.isEmptyHanded }.associateWith {
+            battleMap.distanceMap[DistanceIndex(it.moveType, it.position, it.weaponType.isRanged, obstacleWalls)]
                 ?: throw IllegalStateException("illegal position of unit")
         }
     }
 
-    private fun distanceFrom(heroUnit: HeroUnit, startingPosition: Position): Map<Position, Int> {
-        return battleMap.distanceMap[DistanceIndex(heroUnit.moveType, startingPosition, heroUnit.weaponType.isRanged)]
-            ?: throw IllegalStateException("illegal position of unit")
+    private fun distanceTo(
+        heroUnit: HeroUnit,
+        targetPosition: Position,
+        obstacleWalls: Set<Position>
+    ): Map<Position, Int> {
+        val distanceIndex = DistanceIndex(
+            heroUnit.moveType,
+            targetPosition,
+            heroUnit.weaponType.isRanged,
+            obstacleWalls
+        )
+        val distanceMap =
+            battleMap.distanceMap[distanceIndex] ?: throw IllegalStateException("illegal position of unit")
+        if (distanceMap[heroUnit.position] == null) {
+            return battleMap.chaseAttackMap[distanceIndex] ?: throw IllegalStateException()
+        }
+        return distanceMap
     }
 
     private fun Sequence<HeroUnit>.checkPreCombatAssist(
@@ -1484,16 +1534,18 @@ class BattleState private constructor(
 
     private fun calculateThreat(
         team: Team,
-        obstacles: Map<Position, ChessPiece>
+        obstacles: Map<Position, ChessPiece>,
+        obstacleWalls: Set<Position>
     ): Sequence<Pair<HeroUnit, Sequence<Position>>> {
         return unitsSeq(team).filterNot { it.isEmptyHanded }.map { heroUnit ->
-            heroUnit to calculateThreat(heroUnit, obstacles)
+            heroUnit to calculateThreat(heroUnit, obstacles, obstacleWalls)
         }
     }
 
     private fun calculateThreat(
         heroUnit: HeroUnit,
-        obstacles: Map<Position, ChessPiece>
+        obstacles: Map<Position, ChessPiece>,
+        obstacleWalls: Set<Position>
     ): Sequence<Position> {
         return if (heroUnit.isEmptyHanded) {
             emptySequence()
@@ -1502,7 +1554,7 @@ class BattleState private constructor(
             val travelPower = heroUnit.travelPower
             if (pass) {
                 val threatReceiver = ThreatWithPass(travelPower, obstacles, heroUnit.team)
-                calculateDistance(heroUnit, threatReceiver)
+                calculateDistance(heroUnit, obstacleWalls, threatReceiver)
                 threatReceiver.movablePositions.flatMap {
                     attackTargetPositions(heroUnit, it, maxPosition)
                 }.distinct()
@@ -1511,7 +1563,8 @@ class BattleState private constructor(
                     heroUnit.moveType,
                     heroUnit.position,
                     heroUnit.weaponType.isRanged,
-                    obstacles.values.asSequence().filterIsInstance<Obstacle>().map { it.position }.toSet()
+                    obstacles.values.asSequence().filterIsInstance<Obstacle>().map { it.position }.toSet(),
+                    heroUnit.team
                 )
                 val list =
                     battleMap.threatMap[threatIndex] ?: throw IllegalStateException("failed threatIndex $threatIndex")
@@ -1528,12 +1581,13 @@ class BattleState private constructor(
     private fun moveTargets(
         heroUnit: HeroUnit,
         obstruct: Set<Position>,
-        obstacles: Map<Position, ChessPiece> = locationMap
+        obstacles: Map<Position, ChessPiece>,
+        obstacleWalls: Set<Position>
     ): Sequence<MoveStep> {
         val pass = heroUnit.skillSet.pass.any { it(this, heroUnit) }
         val travelPower = heroUnit.travelPower
         val distanceReceiver = DistanceReceiverRealMovement(travelPower, obstacles, heroUnit, pass, obstruct)
-        calculateDistance(heroUnit, distanceReceiver)
+        calculateDistance(heroUnit, obstacleWalls, distanceReceiver)
         val teleportSkills = heroUnit.skillSet.teleport.asSequence()
         val teleportLocations = if (heroUnit.withMoveOrder) {
             teleportSkills + MOVE_ORDER_EFFECT
@@ -1562,14 +1616,17 @@ class BattleState private constructor(
 
     private fun calculateDistance(
         heroUnit: HeroUnit,
+        obstacleWalls: Set<Position>,
         distanceReceiver: DistanceReceiver
     ) {
         val startingPositions = 0 to sequenceOf(
+            // unit position so no need to check obstacle wall
             MoveStep(heroUnit.position, battleMap.getTerrain(heroUnit.position), false, 0)
         )
         battleMap.calculateDistance(
             heroUnit.moveType,
             startingPositions,
+            obstacleWalls,
             distanceReceiver
         )
     }
@@ -1594,8 +1651,8 @@ class BattleState private constructor(
         val obstruct = Team.ENEMY.obstruct()
         return unitsSeq(Team.PLAYER).filter { it.available }.flatMap { heroUnit ->
             val teammates = teammates(heroUnit).toList()
-            moveTargets(heroUnit, obstruct).map { it.position }.flatMap { move ->
-                if(locationMap[move] is Obstacle) {
+            moveTargets(heroUnit, obstruct, locationMap, emptySet()).map { it.position }.flatMap { move ->
+                if (locationMap[move] is Obstacle) {
                     throw IllegalStateException()
                 }
                 attackMoves(heroUnit, move) + assistMoves(teammates, heroUnit, move) + MoveOnly(

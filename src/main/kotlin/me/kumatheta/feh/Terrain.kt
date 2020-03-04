@@ -1,6 +1,6 @@
 package me.kumatheta.feh
 
-class Terrain(val type: Type, val isDefenseTile: Boolean) {
+data class Terrain(val type: Type, val isDefenseTile: Boolean) {
 
     enum class Type {
         WALL,
@@ -8,20 +8,24 @@ class Terrain(val type: Type, val isDefenseTile: Boolean) {
         FOREST,
         TRENCH,
         REGULAR;
+
+        fun moveCost(moveType: MoveType): Int? {
+            return when (this) {
+                WALL -> null
+                REGULAR -> 1
+                FOREST -> when (moveType) {
+                    MoveType.INFANTRY -> 2
+                    MoveType.CAVALRY -> null
+                    else -> 1
+                }
+                FLIER_ONLY -> if (moveType == MoveType.FLYING) 1 else null
+                TRENCH -> if (moveType == MoveType.CAVALRY) 3 else 1
+            }
+        }
     }
 
     fun moveCost(moveType: MoveType): Int? {
-        return when (type) {
-            Type.WALL -> null
-            Type.REGULAR -> 1
-            Type.FOREST -> when (moveType) {
-                MoveType.INFANTRY -> 2
-                MoveType.CAVALRY -> null
-                else -> 1
-            }
-            Type.FLIER_ONLY -> if (moveType == MoveType.FLYING) 1 else null
-            Type.TRENCH -> if (moveType == MoveType.CAVALRY) 3 else 1
-        }
+        return type.moveCost(moveType)
     }
 
     fun priority(moveType: MoveType): Int {

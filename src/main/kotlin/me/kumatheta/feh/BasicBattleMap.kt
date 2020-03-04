@@ -208,7 +208,14 @@ class BasicBattleMap(
         }.map {
             newHeroUnit(it.key, it.value)
         } + obstacles.asSequence().map {
-            Obstacle(it.value, it.key)
+            val value = it.value
+            if (value > 4 || value < -2) {
+                throw IllegalStateException("invalid obstacle value $value")
+            } else if (value > 2) {
+                Obstacle(value - 2, it.key, false)
+            } else {
+                Obstacle(value, it.key, true)
+            }
         } + playerMap.asSequence().map {
             val position = idMap[it.key] ?: throw IllegalStateException()
             HeroUnit(it.key, it.value, Team.PLAYER, position)
