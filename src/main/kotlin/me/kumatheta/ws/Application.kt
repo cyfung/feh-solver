@@ -16,6 +16,7 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Terrain
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
+import me.kumatheta.feh.util.getAllTrials
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
@@ -53,7 +54,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @ExperimentalTime
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
-    val dataSet = "duma infernal"
+    val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))

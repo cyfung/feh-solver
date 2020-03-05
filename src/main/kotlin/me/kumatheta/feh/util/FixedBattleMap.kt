@@ -3,8 +3,7 @@ package me.kumatheta.feh.util
 import com.marcinmoskala.math.powerset
 import me.kumatheta.feh.*
 
-class FixedBattleMap(delegate: BattleMap) :
-    BattleMap {
+class FixedBattleMap(delegate: BattleMap) : BattleMap {
     val maxPosition = Position(delegate.size.x - 1, delegate.size.y - 1)
     override val size: Position = delegate.size
 

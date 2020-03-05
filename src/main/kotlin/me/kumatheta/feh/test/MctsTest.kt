@@ -24,12 +24,13 @@ fun main() {
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
     val (playerMap, _) = readUnits(Paths.get("data/$dataSet/$dataSet - players.csv"))
+    val battleMap = BasicBattleMap(
+        positionMap,
+        spawnMap,
+        playerMap
+    )
     val state = BattleState(
-        BasicBattleMap(
-            positionMap,
-            spawnMap,
-            playerMap
-        )
+        battleMap
     )
     val phraseLimit = 20
     var board = newFehBoard(phraseLimit, state, 3)

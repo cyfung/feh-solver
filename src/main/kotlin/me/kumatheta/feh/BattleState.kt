@@ -549,7 +549,9 @@ class BattleState private constructor(
             )
         }
 
-    private fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
+
+
+    internal fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
         check(attacker.team.foe == defender.team)
         if (attacker.cooldown == 0 && attacker.special is AoeSpecial) {
             val attackerStat = attacker.aoeInCombatStat()

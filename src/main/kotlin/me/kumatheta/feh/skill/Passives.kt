@@ -49,6 +49,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Fierce Stance 3" to stance(Stat(atk = 6)),
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)),
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)),
+    "Bracing Stance 2" to stance(Stat(def = 4, res = 4)),
     "Warding Breath" to WardingBreath,
     "Guidance 3" to Guidance3,
 

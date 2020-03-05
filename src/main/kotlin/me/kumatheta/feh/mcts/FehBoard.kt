@@ -30,6 +30,34 @@ interface FehBoard : Board<FehMove> {
     }
 }
 
+abstract class BasicFehBoard(
+    private val parent: BasicFehBoard?,
+    private val move: FehMove?,
+    private val state: BattleState,
+    val config: FehBoardConfig
+) : FehBoard {
+    final override fun getStateCopy(): BattleState {
+        return state.copy()
+    }
+
+    fun calculateScore(currentState: BattleState, move: FehMove): Long {
+        return currentState.calculateScore(config.phaseLimit)
+    }
+
+}
+
+fun BattleState.calculateScore(phaseLimit: Int): Long {
+    return enemyDied * 500L + (playerCount - playerDied) * 500L +
+            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 +
+            unitsSeq(Team.ENEMY).sumBy { it.maxHp - it.currentHp } * 2 +
+            (phaseLimit - phase) * 20 +
+            if (phase >= phaseLimit) {
+                -1500L
+            } else {
+                0L
+            }
+}
+
 fun newFehBoard(
     phaseLimit: Int,
     state: BattleState,
@@ -42,39 +70,45 @@ fun newFehBoard(
     val assistMap = internalState.unitsSeq(Team.PLAYER).associate {
         it.id to it.assist
     }
-    val config = FehBoardConfig(phaseLimit, totalPlayerHp, maxTurnBeforeEngage, assistMap, bossId)
+    val config = FehBoardConfig(
+        phaseLimit = phaseLimit,
+        totalPlayerHp = totalPlayerHp,
+        maxTurnBeforeEngage = maxTurnBeforeEngage,
+        assistMap = assistMap,
+        bossId = bossId
+    )
     return if (canRearrange) {
         RearrangeFehBoard(config, internalState)
     } else {
         internalState.rearrange((1..internalState.playerCount).toList())
-        newInternalBoardChain(config, internalState)
+        newInternalBoardChain(null, null, config, internalState)
     }
 }
 
 private fun newInternalBoardChain(
+    parent: BasicFehBoard?,
+    move: FehMove?,
     config: FehBoardConfig,
     state: BattleState
 ): FehBoard {
-    return StandardFehBoard(config, state)
+    return StandardFehBoard(parent, move, config, state)
 }
 
 class RearrangeFehBoard(
-    private val config: FehBoardConfig,
+    config: FehBoardConfig,
     private val state: BattleState
-) : FehBoard {
+) : BasicFehBoard(null, null, state, config) {
     override val moves: List<FehMove> by lazy {
         (1..state.playerCount).toList().permutations().map {
             Rearrange(it)
         }
     }
 
-    override fun getStateCopy() = state.copy()
-
     override fun applyMove(move: FehMove): FehBoard {
         move as Rearrange
         val stateCopy = getStateCopy()
         stateCopy.rearrange(move.order)
-        return newInternalBoardChain(config, stateCopy)
+        return newInternalBoardChain(this, move, config, stateCopy)
     }
 
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
@@ -99,54 +133,6 @@ class ScoreFehBoard(
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
         throw UnsupportedOperationException()
     }
-}
-
-abstract class Grouping<T>(
-    val config: FehBoardConfig,
-    private val state: BattleState,
-    private val actions: Sequence<UnitAction>
-) : FehBoard {
-    override fun getStateCopy() = state.copy()
-    private val actualMoves by lazy {
-        actions.groupBy(this::selectKey)
-    }
-
-    abstract fun selectKey(unitAction: UnitAction): T
-
-    abstract fun newBoard(
-        config: FehBoardConfig,
-        state: BattleState,
-        actions: Sequence<UnitAction>,
-        group: T
-    ): FehBoard
-
-    override val moves: List<FehMove> by lazy {
-        actualMoves.keys.map { GroupMove(it) }
-    }
-
-    override fun applyMove(move: FehMove): FehBoard {
-        @Suppress("UNCHECKED_CAST")
-        val group = (move as GroupMove<T>).value
-        val actualMoves = actualMoves[group] ?: throw IllegalStateException()
-        return newBoard(config, state, actualMoves.asSequence(), group)
-    }
-
-    final override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
-        val suggestedGroupOrder = suggestedGroupOrder
-        @Suppress("UNCHECKED_CAST")
-        nextMoves as List<GroupMove<T>>
-        return if (suggestedGroupOrder != null) {
-            val getValue: java.util.function.Function<GroupMove<T>, T> = java.util.function.Function { it.value }
-            val comparator = Comparator.comparing<GroupMove<T>, T>(getValue, suggestedGroupOrder)
-            nextMoves.asSequence().sortedWith(comparator)
-        } else {
-            nextMoves.asSequence()
-        }
-    }
-
-    open val suggestedGroupOrder: Comparator<T>?
-        get() = null
-
 }
 
 fun FehBoard.tryMoves(moves: List<FehMove>, printMoves: Boolean = false): BattleState {
@@ -211,104 +197,13 @@ fun FehBoard.tryAndGetDetails(moves: List<FehMove>): List<Pair<UnitAction?, Batt
     }.flatMap { it }.toList()
 }
 
-class DangerLevelGrouping(
-    config: FehBoardConfig,
-    state: BattleState,
-    actions: Sequence<UnitAction>,
-    private val dangerAreas: Map<Position, Int>,
-    private val bossDangerArea: Set<Position>
-) : Grouping<Pair<Int, Boolean>>(config, state, actions) {
-    override fun selectKey(unitAction: UnitAction): Pair<Int, Boolean> {
-        return (dangerAreas[unitAction.moveTarget] ?: 0) to bossDangerArea.contains(unitAction.moveTarget)
-    }
-
-    override fun newBoard(
-        config: FehBoardConfig,
-        state: BattleState,
-        actions: Sequence<UnitAction>,
-        group: Pair<Int, Boolean>
-    ): FehBoard {
-        return StandardFehBoard(config, state, actions)
-    }
-
-    override val suggestedGroupOrder: Comparator<Pair<Int, Boolean>>? = compareBy({
-        if (it.second) {
-            1
-        } else {
-            0
-        }
-    }, {
-        it.first
-    })
-
-}
-
-class UnitActionTypeGrouping(
-    config: FehBoardConfig,
-    state: BattleState,
-    actions: Sequence<UnitAction>
-) : Grouping<Pair<Int, FehActionType>>(config, state, actions) {
-    private val dangerAreas: Map<Position, Int>
-    private val bossDangerArea: Set<Position>
-
-    init {
-        val stateDangerAreas = state.dangerAreas()
-        dangerAreas =
-            stateDangerAreas.values.asSequence().flatMap { it.keys.asSequence() }.groupingBy { it }.eachCount()
-        bossDangerArea =
-            stateDangerAreas.entries.firstOrNull { it.key.id == config.bossId }?.value?.keys?.toSet() ?: emptySet()
-    }
-
-    private fun Assist?.toActionType() = when (this) {
-        is Refresh -> FehActionType.REFRESH
-        is Heal -> FehActionType.HEAL
-        else -> FehActionType.OTHERS
-    }
-
-    override fun newBoard(
-        config: FehBoardConfig,
-        state: BattleState,
-        actions: Sequence<UnitAction>,
-        group: Pair<Int, FehActionType>
-    ): FehBoard {
-        return DangerLevelGrouping(config, state, actions, dangerAreas, bossDangerArea)
-    }
-
-    override fun selectKey(unitAction: UnitAction): Pair<Int, FehActionType> {
-        val actionType = when (unitAction) {
-            is MoveAndAssist -> config.assistMap[unitAction.heroUnitId].toActionType()
-            is MoveAndAttack -> FehActionType.ATTACK
-            else -> FehActionType.OTHERS
-        }
-        return unitAction.heroUnitId to actionType
-    }
-
-    override val suggestedGroupOrder: Comparator<Pair<Int, FehActionType>>? = compareBy {
-        when (it.second) {
-            FehActionType.REFRESH -> 0
-            FehActionType.ATTACK -> 1
-            FehActionType.HEAL -> 1
-            FehActionType.OTHERS -> 2
-        }
-    }
-
-}
-
 class StandardFehBoard(
-    private val config: FehBoardConfig,
+    parent: BasicFehBoard?,
+    move: FehMove?,
+    config: FehBoardConfig,
     private val state: BattleState,
     private val playerMoves: Sequence<UnitAction> = state.getAllPlayerMovements()
-) : FehBoard {
-
-    private val dangerAreas: Map<Position, Int>
-
-    init {
-        val stateDangerAreas = state.dangerAreas()
-        dangerAreas =
-            stateDangerAreas.values.asSequence().flatMap { it.keys.asSequence() }.groupingBy { it }.eachCount()
-    }
-
-
+) : BasicFehBoard(parent, move, state, config) {
     override val moves: List<FehMove> by lazy {
         playerMoves.map {
             NormalMove(it)
@@ -318,15 +213,15 @@ class StandardFehBoard(
     override fun applyMove(move: FehMove): FehBoard {
         move as NormalMove
         check(score == null)
-        val state = state.copy()
+        val state = getStateCopy()
         val nextMove = move.unitAction
         val movementResult = state.playerMove(nextMove)
         val score = if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
-            calculateScore(state)
+            calculateScore(state, move)
         } else if (movementResult.phraseChange) {
             state.enemyMoves()
             if (state.playerDied > 0 || state.winningTeam != null || config.phaseLimit < state.phase) {
-                calculateScore(state)
+                calculateScore(state, move)
             } else if (!state.engaged && state.phase > config.maxTurnBeforeEngage * 2) {
                 0L
             } else {
@@ -337,50 +232,67 @@ class StandardFehBoard(
         }
 
         return if (score == null) {
-            newInternalBoardChain(config, state)
+            newInternalBoardChain(this, move, config, state)
         } else {
             ScoreFehBoard(score)
         }
 
     }
 
-    private fun calculateScore(battleState: BattleState) =
-        battleState.enemyDied * 500L + (battleState.playerCount - battleState.playerDied) * 500L +
-                battleState.unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 + +battleState.unitsSeq(
-                Team.ENEMY
-            )
-            .sumBy { it.maxHp - it.currentHp } * 2 + (config.phaseLimit - battleState.phase) * 20 + if (battleState.phase >= config.phaseLimit) {
-            -1500L
-        } else {
-            0L
-        }
-
-    override fun getStateCopy() = state.copy()
-
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
         @Suppress("UNCHECKED_CAST")
         nextMoves as List<NormalMove>
-        return nextMoves.asSequence().sortedBy {
-            val assist = state.getUnit(it.unitAction.heroUnitId).assist
-            if (assist is Refresh) {
-                when (it.unitAction) {
-                    is MoveAndAssist -> 0
-                    else -> 3
-                }
-            }
-            when (it.unitAction) {
-                is MoveAndAttack -> 1
-                is MoveAndAssist -> when (assist) {
-                    is Heal -> 1
-                    else -> 2
-                }
-                else -> 2
-            }
+        return nextMoves.asSequence().sortedByDescending { move ->
+            val unitAction = move.unitAction
+            unitAction.toRating()
         }
     }
 
+    private fun UnitAction.toRating(): Int {
+        val playerUnit = heroUnitId
+        val assist = state.getUnit(playerUnit).assist
+        return if (assist is Refresh) {
+            if (this is MoveAndAssist) {
+                5
+            } else {
+                0
+            }
+        } else {
+            when (this) {
+                is MoveAndAttack -> 3
+                is MoveAndAssist -> if (assist is Heal) {
+                    3
+                } else {
+                    1
+                }
+                else -> 1
+            }
+        }
+//        val attackers = enemiesInRange(this)
+//        attackers.mapNotNull {
+//            config.trialResults[AttackerDefenderPair(it, playerUnit)]
+//        }.forEach {
+//            if (it.defenderHpAfter == 0) {
+//                score-=10
+//                return@forEach
+//            }
+//            if (it.attackerHpAfter == 0) {
+//                score+=2
+//            }
+//            if (it.defenderHpAfter * 2 < it.defenderHpBefore) {
+//                score-=2
+//            }
+//        }
+    }
+
+//    private fun enemiesInRange(unitAction: UnitAction): Sequence<Int> {
+//        val enemies = dangerAreas[unitAction.moveTarget] ?: return emptySequence()
+//        val attackTargetId = (unitAction as? MoveAndAttack)?.attackTargetId ?: return enemies.asSequence()
+//        return enemies.asSequence() - attackTargetId
+//    }
+
     override fun getPlayOutMove(random: Random): FehMove {
-        return suggestedOrder(moves.shuffled()).first()
+        return suggestedOrder(moves.shuffled(random)).first()
     }
 
 }

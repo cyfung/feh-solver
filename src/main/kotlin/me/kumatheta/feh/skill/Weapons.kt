@@ -18,9 +18,11 @@ val ALL_WEAPONS: SkillMap<BasicWeapon> = sequenceOf(
     "Blarowl+*S" to MagicB.owl(10, hp = 2, spd = 2),
     "Shining Bow+*S" to BowC.shining(12, hp = 2, spd=2),
     "Barrier Lance+*S" to Lance.withSkill(14, stance(Stat(res = 7)), hp = 5, spd = 3),
-    "Dark Breath+*S" to DragonC.darkBreathPlus(14, hp = 5, spd = 3),
+    "Dark Breath+*S" to DragonC.darkBreathPlusRefine(14, hp = 5, spd = 3),
+    "Water Breath+*S" to waterBreathPlusS,
     "Slaying Bow+*S" to BowC.slaying(12, hp = 2, spd = 2),
     "Slaying Lance+*S" to Lance.slaying(14, hp = 5, spd = 3),
+    "Slaying Axe+*S" to Axe.slaying(14, hp = 5, spd = 3),
 
     "Iron Lance" to Lance.basic(6),
     "Steel Lance" to Lance.basic(8),
