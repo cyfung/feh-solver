@@ -3,28 +3,40 @@ package me.kumatheta.feh.util
 import com.marcinmoskala.math.powerset
 import me.kumatheta.feh.*
 
-class FixedBattleMap(delegate: BattleMap) : BattleMap {
-    val maxPosition = Position(delegate.size.x - 1, delegate.size.y - 1)
+class FixedBattleMap(delegate: BattleMap) : InternalBattleMap {
+    override val maxPosition = Position(delegate.size.x - 1, delegate.size.y - 1)
     override val size: Position = delegate.size
 
-    override val terrainMap: Map<Position, Terrain> = delegate.terrainMap.toMap()
-
-    private val chessPieceMap = delegate.toChessPieceMap().toMap()
-    override fun toChessPieceMap(): Map<Position, ChessPiece> {
-        return chessPieceMap
-    }
-
+    private val terrainMap: Map<Position, Terrain> = delegate.terrainMap.toMap()
+    override val chessPieceMap = delegate.toChessPieceMap().toMap()
     override val reinforceByTime = delegate.reinforceByTime.asSequence().associate { it.key to it.value.toList() }
 
     override val enemyCount: Int = delegate.enemyCount
     override val playerCount: Int = delegate.playerCount
 
-    val distanceMap: Map<DistanceIndex, Map<Position, Int>> by lazy {
-        distanceIndexes().associateWith { (moveType, position, isRanged, obstacleWalls) ->
+    override val notWallLocations: Map<Position, Terrain> = terrainMap.filter { it.value.type != Terrain.Type.WALL }
+    override fun terrain(index: Position): Terrain {
+        return terrainMap[index] ?: throw IllegalArgumentException("out of bound: $index")
+    }
+
+    override fun distance(index: DistanceIndex): Map<Position, Int> {
+        return requireNotNull(distanceMap[index])
+    }
+
+    override fun chaseTarget(index: ChaseTargetIndex): Map<Position, Int> {
+        return requireNotNull(chaseAttackMap[index])
+    }
+
+    override fun threat(index: ThreatIndex): List<MoveStep> {
+        return requireNotNull(threatMap[index])
+    }
+
+    private val distanceMap: Map<DistanceIndex, Map<Position, Int>> by lazy {
+        distanceIndexes().associateWith { (moveType, position, obstacleWalls) ->
             if (obstacleWalls.contains(position)) {
                 return@associateWith emptyMap<Position, Int>()
             }
-            val terrain = getTerrain(position)
+            val terrain = terrain(position)
             if (terrain.moveCost(moveType) == null) {
                 return@associateWith emptyMap<Position, Int>()
             }
@@ -35,15 +47,15 @@ class FixedBattleMap(delegate: BattleMap) : BattleMap {
         }
     }
 
-    val chaseAttackMap: Map<DistanceIndex, Map<Position, Int>> by lazy {
-        distanceIndexes().associateWith { (moveType, position, isRanged, obstacleWalls) ->
+    private val chaseAttackMap: Map<ChaseTargetIndex, Map<Position, Int>> by lazy {
+        chaseTargetIndex().associateWith { (moveType, position, isRanged, obstacleWalls) ->
             val distanceTravel = if (isRanged) 2 else 1
             val startingPositions =
                 distanceTravel to attackTargetPositions(position, maxPosition, isRanged).mapNotNull {
                     if (obstacleWalls.contains(position)) {
                         return@mapNotNull null
                     }
-                    val attackTerrain = getTerrain(it)
+                    val attackTerrain = terrain(it)
                     if (attackTerrain.moveCost(moveType) == null) {
                         null
                     } else {
@@ -68,8 +80,29 @@ class FixedBattleMap(delegate: BattleMap) : BattleMap {
                         MoveType.values().asSequence()
                             .flatMap {
                                 sequenceOf(
-                                    DistanceIndex(it, position, true, obstacleWalls),
-                                    DistanceIndex(it, position, false, obstacleWalls)
+                                    DistanceIndex(it, position, obstacleWalls)
+                                )
+                            }
+                    }
+            }
+    }
+
+    private fun chaseTargetIndex(): Sequence<ChaseTargetIndex> {
+        return chessPieceMap.values.filterIsInstance<Obstacle>().filterNot { it.isBreakableByEnemy }
+            .map { it.position }.powerset().asSequence()
+            .flatMap { obstacleWalls ->
+                (0 until size.x).asSequence()
+                    .flatMap { x ->
+                        (0 until size.y).asSequence().map { y ->
+                            Position(x, y)
+                        }
+                    }
+                    .flatMap { position ->
+                        MoveType.values().asSequence()
+                            .flatMap {
+                                sequenceOf(
+                                    ChaseTargetIndex(it, position, true, obstacleWalls),
+                                    ChaseTargetIndex(it, position, false, obstacleWalls)
                                 )
                             }
                     }
@@ -96,7 +129,7 @@ class FixedBattleMap(delegate: BattleMap) : BattleMap {
         return resultMap.toMap()
     }
 
-    val threatMap by lazy {
+    private val threatMap by lazy {
         chessPieceMap.values.filterIsInstance<Obstacle>().map { it.position }.powerset().asSequence()
             .flatMap { obstacles ->
                 (0 until size.x).asSequence()
@@ -130,7 +163,7 @@ class FixedBattleMap(delegate: BattleMap) : BattleMap {
                     obstacleWalls = pair.second.toSet()
                 }
                 val threatReceiver = ThreatWithoutPass(obstacles)
-                val terrain = getTerrain(threatIndex.position)
+                val terrain = terrain(threatIndex.position)
                 val startingPositions = if (terrain.moveCost(threatIndex.moveType) != null) {
                     0 to sequenceOf(
                         MoveStep(threatIndex.position, terrain, false, 0)
@@ -152,19 +185,4 @@ class FixedBattleMap(delegate: BattleMap) : BattleMap {
             }
     }
 
-}
-
-private class ThreatWithoutPass(
-    private val obstacles: Set<Position>
-) : ThreatReceiver(3) {
-    override fun receive(moveStep: MoveStep): Boolean {
-        if (resultMap[moveStep.position] != null) {
-            return false
-        }
-        val isNotObstacle = !obstacles.contains(moveStep.position)
-        resultMap[moveStep.position] = Pair(isNotObstacle, moveStep)
-        return isNotObstacle
-    }
-
-    fun getResult() = resultMap.values.asSequence().filter { it.first }.map { it.second }
 }

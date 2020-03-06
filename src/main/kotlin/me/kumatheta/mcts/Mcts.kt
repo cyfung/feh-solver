@@ -10,9 +10,9 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
 @ExperimentalCoroutinesApi
-class Mcts<T : Move, S : Score<T>>(
+class Mcts<T : Move, S : Score<T>, M: ScoreManager<T, S>>(
     board: Board<T>,
-    private val scoreManager: ScoreManager<T, S>
+    val scoreManager: M
 ) {
     private val nodeManager = CountableNodeManager(Random, scoreManager)
 

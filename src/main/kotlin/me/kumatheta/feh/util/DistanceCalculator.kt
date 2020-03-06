@@ -2,7 +2,7 @@ package me.kumatheta.feh.util
 
 import me.kumatheta.feh.*
 
-fun FixedBattleMap.calculateDistance(
+fun InternalBattleMap.calculateDistance(
     moveType: MoveType,
     startingPositions: Pair<Int, Sequence<MoveStep>>,
     obstacleWalls: Set<Position>,
@@ -24,7 +24,7 @@ fun FixedBattleMap.calculateDistance(
             if (obstacleWalls.contains(position)) {
                 return@mapNotNull null
             }
-            val terrain = getTerrain(position)
+            val terrain = terrain(position)
             val moveCost = terrain.moveCost(moveType) ?: return@mapNotNull null
             val distanceTravel = currentDistance + moveCost
             distanceTravel to MoveStep(position, terrain, false, distanceTravel)
@@ -35,6 +35,12 @@ fun FixedBattleMap.calculateDistance(
 }
 
 data class DistanceIndex(
+    val moveType: MoveType,
+    val position: Position,
+    val obstacleWalls: Set<Position>
+)
+
+data class ChaseTargetIndex(
     val moveType: MoveType,
     val position: Position,
     val isRanged: Boolean,
@@ -67,3 +73,17 @@ private fun <K, V> MutableMap<K, Sequence<V>>.add(k: K, values: Sequence<V>) {
     }
 }
 
+class ThreatWithoutPass(
+    private val obstacles: Set<Position>
+) : ThreatReceiver(3) {
+    override fun receive(moveStep: MoveStep): Boolean {
+        if (resultMap[moveStep.position] != null) {
+            return false
+        }
+        val isNotObstacle = !obstacles.contains(moveStep.position)
+        resultMap[moveStep.position] = Pair(isNotObstacle, moveStep)
+        return isNotObstacle
+    }
+
+    fun getResult() = resultMap.values.asSequence().filter { it.first }.map { it.second }
+}

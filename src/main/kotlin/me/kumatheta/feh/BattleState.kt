@@ -19,7 +19,7 @@ private val protectiveAssistPositionOrder = compareBy<Triple<HeroUnit, MoveStep,
 })
 
 class BattleState private constructor(
-    private val battleMap: FixedBattleMap,
+    private val battleMap: InternalBattleMap,
     private val locationMap: MutableMap<Position, ChessPiece>,
     phase: Int,
     playerDied: Int,
@@ -87,7 +87,7 @@ class BattleState private constructor(
     }
 
     constructor(battleMap: BattleMap, endOnPlayerDeath: Boolean = true) : this(
-        battleMap = FixedBattleMap(battleMap),
+        battleMap = CacheBattleMap(battleMap),
         locationMap = battleMap.toChessPieceMap().toMutableMap(),
         phase = 0,
         playerDied = 0,
@@ -102,7 +102,7 @@ class BattleState private constructor(
             return false
         }
         // checking actual terrain only, unoccupied is checked later, so no need to check obstacle
-        return battleMap.getTerrain(position).moveCost(heroUnit.moveType) != null
+        return battleMap.terrain(position).moveCost(heroUnit.moveType) != null
     }
 
     fun unitsSeq(team: Team) =
@@ -186,16 +186,13 @@ class BattleState private constructor(
         reinforcements.forEach { it ->
             val newUnit = it.copy()
             if (locationMap.putIfAbsent(newUnit.position, newUnit) != null) {
-                val pathAvailable = battleMap.distanceMap[DistanceIndex(
-                    newUnit.moveType,
-                    newUnit.position,
-                    newUnit.weaponType.isRanged,
-                    obstacleWalls
-                )] ?: throw IllegalStateException("distance map not found")
-                val actualLocation = battleMap.terrainMap.asSequence().filter {
+                val pathAvailable = battleMap.distance(
+                    moveType = newUnit.moveType,
+                    position = newUnit.position,
+                    obstacleWalls = obstacleWalls
+                )
+                val actualLocation = battleMap.notWallLocations.asSequence().filter {
                     locationMap[it.key] == null
-                }.filterNot {
-                    it.value.type == Terrain.Type.WALL
                 }.minWith(
                     compareBy({
                         when {
@@ -208,10 +205,8 @@ class BattleState private constructor(
                     }, {
                         it.key
                     })
-                )?.key ?: throw IllegalStateException("whole map full?")
-                if (locationMap.putIfAbsent(actualLocation, newUnit) != null) {
-                    throw IllegalStateException()
-                }
+                )?.key ?: error("whole map full?")
+                check(locationMap.putIfAbsent(actualLocation, newUnit) == null)
                 newUnit.position = actualLocation
             }
         }
@@ -435,7 +430,7 @@ class BattleState private constructor(
         )
     }
 
-    private fun isDefenseTile(position: Position) = battleMap.getTerrain(position).isDefenseTile
+    private fun isDefenseTile(position: Position) = battleMap.terrain(position).isDefenseTile
 
     private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): AttackerDefenderPair<InCombatSkillSet> {
         val attackerTeammates = unitsSeq(attacker.team).filterNot { it == attacker }.map {
@@ -548,7 +543,6 @@ class BattleState private constructor(
                 )
             )
         }
-
 
 
     internal fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
@@ -1423,8 +1417,7 @@ class BattleState private constructor(
 
     private fun distanceFrom(team: Team, obstacleWalls: Set<Position>): Map<HeroUnit, Map<Position, Int>> {
         return unitsSeq(team).filterNot { it.isEmptyHanded }.associateWith {
-            battleMap.distanceMap[DistanceIndex(it.moveType, it.position, it.weaponType.isRanged, obstacleWalls)]
-                ?: throw IllegalStateException("illegal position of unit")
+            battleMap.distance(moveType = it.moveType, position = it.position, obstacleWalls = obstacleWalls)
         }
     }
 
@@ -1433,16 +1426,18 @@ class BattleState private constructor(
         targetPosition: Position,
         obstacleWalls: Set<Position>
     ): Map<Position, Int> {
-        val distanceIndex = DistanceIndex(
-            heroUnit.moveType,
-            targetPosition,
-            heroUnit.weaponType.isRanged,
-            obstacleWalls
+        val distanceMap = battleMap.distance(
+            moveType = heroUnit.moveType,
+            position = targetPosition,
+            obstacleWalls = obstacleWalls
         )
-        val distanceMap =
-            battleMap.distanceMap[distanceIndex] ?: throw IllegalStateException("illegal position of unit")
         if (distanceMap[heroUnit.position] == null) {
-            return battleMap.chaseAttackMap[distanceIndex] ?: throw IllegalStateException()
+            return battleMap.chaseTarget(
+                moveType = heroUnit.moveType,
+                position = targetPosition,
+                isRanged = heroUnit.weaponType.isRanged,
+                obstacleWalls = obstacleWalls
+            )
         }
         return distanceMap
     }
@@ -1560,15 +1555,17 @@ class BattleState private constructor(
                     attackTargetPositions(heroUnit, it, maxPosition)
                 }.distinct()
             } else {
-                val threatIndex = ThreatIndex(
-                    heroUnit.moveType,
-                    heroUnit.position,
-                    heroUnit.weaponType.isRanged,
-                    obstacles.values.asSequence().filterIsInstance<Obstacle>().map { it.position }.toSet(),
-                    heroUnit.team
-                )
+                val obstaclesOnly = obstacles.values.asSequence()
+                    .filterIsInstance<Obstacle>().map { it.position }
+                    .toSet()
                 val list =
-                    battleMap.threatMap[threatIndex] ?: throw IllegalStateException("failed threatIndex $threatIndex")
+                    battleMap.threat(
+                        moveType = heroUnit.moveType,
+                        position = heroUnit.position,
+                        isRanged = heroUnit.weaponType.isRanged,
+                        obstacles = obstaclesOnly,
+                        team = heroUnit.team
+                    )
                 list.asSequence().filter { it.distanceTravel <= travelPower }.map { it.position }
             }
         }
@@ -1604,9 +1601,9 @@ class BattleState private constructor(
             it.position.surroundings(maxPosition)
         }
         teleportLocations.distinct().filter {
-            locationMap[it] == null && battleMap.getTerrain(it).moveCost(heroUnit.moveType) != null
+            locationMap[it] == null && battleMap.terrain(it).moveCost(heroUnit.moveType) != null
         }.map {
-            MoveStep(it, battleMap.getTerrain(it), true, 0)
+            MoveStep(it, battleMap.terrain(it), true, 0)
         }.forEach {
             distanceReceiver.receive(it)
         }
@@ -1622,7 +1619,7 @@ class BattleState private constructor(
     ) {
         val startingPositions = 0 to sequenceOf(
             // unit position so no need to check obstacle wall
-            MoveStep(heroUnit.position, battleMap.getTerrain(heroUnit.position), false, 0)
+            MoveStep(heroUnit.position, battleMap.terrain(heroUnit.position), false, 0)
         )
         battleMap.calculateDistance(
             heroUnit.moveType,

@@ -16,7 +16,6 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Terrain
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
-import me.kumatheta.feh.util.getAllTrials
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
@@ -54,44 +53,23 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @ExperimentalTime
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
-    val dataSet = "sothis infernal"
-    Paths.get("data/$dataSet")
-    val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
-    val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
-    val (playerMap, _) = readUnits(Paths.get("data/$dataSet/$dataSet - players.csv"))
-    val battleMap = BasicBattleMap(
-        positionMap,
-        spawnMap,
-        playerMap
-    )
-    val state = BattleState(
-        battleMap,
-        false
-    )
-    val setupInfo = buildSetupInfo(positionMap, battleMap, state)
     val protoBuf = ProtoBuf()
-    val mctsRef =
-        AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>(null)
+    val jobInfoRef = AtomicReference<JobInfo?>(null)
     val jobRef = AtomicReference<Job?>(null)
 
     routing {
         get("/start") {
-            getMcts(state, mctsRef, jobRef)
-            call.respond(protoBuf.dump(SetupInfo.serializer(), setupInfo))
+            val jobInfo = getOrStartJob(jobInfoRef, jobRef)
+            call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
         get("/moveset") {
             val isCompleted = jobRef.get() == null
-            val pair = if (isCompleted) {
-                // last get
-                mctsRef.getAndSet(null)
-            } else {
-                mctsRef.get()
-            }
-            if (pair == null) {
-                call.respond(HttpStatusCode.BadRequest)
+            val jobInfo = jobInfoRef.get()
+            if (jobInfo == null) {
+                call.respond(HttpStatusCode.BadRequest, "no job running")
                 return@get
             }
-            val (board, mcts) = pair
+            val (_, board, mcts) = jobInfo
             val currentScore = if (isCompleted) {
                 mcts.score
             } else {
@@ -145,32 +123,62 @@ fun toUpdateInfoList(
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-private suspend fun getMcts(
-    state: BattleState,
-    mctsRef: AtomicReference<Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>>?>,
+private fun getOrStartJob(
+    jobInfoRef: AtomicReference<JobInfo?>,
     jobRef: AtomicReference<Job?>
-): Pair<FehBoard, Mcts<FehMove, VaryingUCT.MyScore<FehMove>>> {
-    val phaseLimit = 20
-    val board = newFehBoard(phaseLimit, state, 3)
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
-    val mcts = Mcts(board, scoreManager)
-    val next = Pair(board, mcts)
+): JobInfo {
+    val jobInfo = jobInfoRef.get()
+    if (jobInfo != null) {
+        return jobInfo
+    }
+    val newJobInfo = newJobInfo()
     do {
-        val prev = mctsRef.get()
+        val prev = jobInfoRef.get()
         if (prev != null) {
             return prev
         }
-    } while (!mctsRef.compareAndSet(null, next))
+    } while (!jobInfoRef.compareAndSet(null, newJobInfo))
 
     val job = GlobalScope.launch {
-        runMcts(mcts, board, scoreManager)
+        runMcts(newJobInfo)
     }
     check(jobRef.compareAndSet(null, job))
     job.invokeOnCompletion {
         check(jobRef.compareAndSet(job, null))
     }
-    return next
+    return newJobInfo
 }
+
+@ExperimentalCoroutinesApi
+private fun newJobInfo(): JobInfo {
+    val phaseLimit = 20
+    val dataSet = "sothis infernal"
+    Paths.get("data/$dataSet")
+    val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
+    val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
+    val (playerMap, _) = readUnits(Paths.get("data/$dataSet/$dataSet - players.csv"))
+    val battleMap = BasicBattleMap(
+        positionMap,
+        spawnMap,
+        playerMap
+    )
+    val state = BattleState(
+        battleMap,
+        false
+    )
+    val setupInfo = buildSetupInfo(positionMap, battleMap, state)
+    val board = newFehBoard(phaseLimit, state, 3)
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
+    val mcts = Mcts(board, scoreManager)
+    return JobInfo(setupInfo, board, mcts)
+}
+
+@ExperimentalCoroutinesApi
+data class JobInfo(
+    val setupInfo: SetupInfo,
+    val board: FehBoard,
+    val mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>, VaryingUCT<FehMove>>
+)
 
 private fun getUpdated(
     oldUnits: Map<Int, HeroUnit>,
@@ -200,7 +208,7 @@ private fun UnitAction.toMsgAction(): Action {
 }
 
 @ExperimentalCoroutinesApi
-private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>>): VaryingUCT.MyScore<FehMove> {
+private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>, VaryingUCT<FehMove>>): VaryingUCT.MyScore<FehMove> {
     repeat(10) {
         val score = mcts.resetRecentScore()
         val moves = score.moves
@@ -215,11 +223,11 @@ private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<F
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-private suspend fun runMcts(
-    mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>>,
-    board: FehBoard,
-    scoreManager: VaryingUCT<FehMove>
+private fun runMcts(
+    jobInfo: JobInfo
 ) {
+    val mcts = jobInfo.mcts
+    val board = jobInfo.board
     var tries = 0
     val mctsStart = MonoClock.markNow()
     var lastFixMove = MonoClock.markNow()
@@ -241,9 +249,9 @@ private suspend fun runMcts(
         println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
 
         println("best score: ${score.bestScore}")
-        scoreManager.high = score.bestScore
-        scoreManager.average = score.totalScore / score.tries
-        println("average = ${scoreManager.average}")
+        mcts.scoreManager.high = score.bestScore
+        mcts.scoreManager.average = score.totalScore / score.tries
+        println("average = ${mcts.scoreManager.average}")
         println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
         tries = score.tries
         println("estimatedSize: ${mcts.estimatedSize}")
@@ -252,7 +260,7 @@ private suspend fun runMcts(
             "memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
                 .freeMemory()) / 1000_000}"
         )
-        if (testState.enemyCount == testState.enemyDied && testState.playerDied == 0) {
+        if (testState.winningTeam == Team.PLAYER) {
             return
         }
     }
@@ -269,7 +277,7 @@ private fun buildSetupInfo(
             x = position.x,
             y = position.y,
             terrain = terrain.toMsgTerrain(),
-            obstacle = (chessPieceMap[position] as? Obstacle)?.health?:0
+            obstacle = (chessPieceMap[position] as? Obstacle)?.health ?: 0
         )
     }
     val msgBattleMap = MsgBattleMap(
