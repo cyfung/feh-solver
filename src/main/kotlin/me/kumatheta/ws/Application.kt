@@ -4,7 +4,9 @@ import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
+import io.ktor.routing.delete
 import io.ktor.routing.get
+import io.ktor.routing.put
 import io.ktor.routing.routing
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
@@ -55,20 +57,28 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module() {
     val protoBuf = ProtoBuf()
     val jobInfoRef = AtomicReference<JobInfo?>(null)
-    val jobRef = AtomicReference<Job?>(null)
 
     routing {
-        get("/start") {
-            val jobInfo = getOrStartJob(jobInfoRef, jobRef)
+        get("/job") {
+            val jobInfo = getOrStartJob(JobConfig(), jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
-        get("/moveset") {
-            val isCompleted = jobRef.get() == null
+        put("/job") {
+            val jobInfo = restartJob(JobConfig(), jobInfoRef)
+            call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
+
+        }
+        delete("/job") {
+            jobInfoRef.get()?.completableJob?.cancel()
+            call.respond("cancel success")
+        }
+        get("/job/moveSet") {
             val jobInfo = jobInfoRef.get()
             if (jobInfo == null) {
                 call.respond(HttpStatusCode.BadRequest, "no job running")
                 return@get
             }
+            val isCompleted = jobInfo.completableJob.isCompleted
             val (_, board, mcts) = jobInfo
             val currentScore = if (isCompleted) {
                 mcts.score
@@ -121,17 +131,24 @@ fun toUpdateInfoList(
     return lastState to list
 }
 
+data class JobConfig(
+    val mapName: String = "sothis infernal",
+    val phaseLimit: Int = 20,
+    val explorationConstantC: Double = 1.5,
+    val maxTurnBeforeEngage: Int = 3
+)
+
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 private fun getOrStartJob(
-    jobInfoRef: AtomicReference<JobInfo?>,
-    jobRef: AtomicReference<Job?>
+    jobConfig: JobConfig,
+    jobInfoRef: AtomicReference<JobInfo?>
 ): JobInfo {
     val jobInfo = jobInfoRef.get()
     if (jobInfo != null) {
         return jobInfo
     }
-    val newJobInfo = newJobInfo()
+    val newJobInfo = newJobInfo(jobConfig)
     do {
         val prev = jobInfoRef.get()
         if (prev != null) {
@@ -142,21 +159,40 @@ private fun getOrStartJob(
     val job = GlobalScope.launch {
         runMcts(newJobInfo)
     }
-    check(jobRef.compareAndSet(null, job))
-    job.invokeOnCompletion {
-        check(jobRef.compareAndSet(job, null))
+    newJobInfo.completableJob.invokeOnCompletion {
+        job.cancel()
     }
     return newJobInfo
 }
 
 @ExperimentalCoroutinesApi
-private fun newJobInfo(): JobInfo {
-    val phaseLimit = 20
-    val dataSet = "sothis infernal"
-    Paths.get("data/$dataSet")
-    val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
-    val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
-    val (playerMap, _) = readUnits(Paths.get("data/$dataSet/$dataSet - players.csv"))
+@ExperimentalTime
+private fun restartJob(
+    jobConfig: JobConfig,
+    jobInfoRef: AtomicReference<JobInfo?>
+): JobInfo {
+    val newJobInfo = newJobInfo(jobConfig)
+    val oldJobInfo = jobInfoRef.getAndSet(newJobInfo)
+    oldJobInfo?.completableJob?.cancel()
+
+    val job = GlobalScope.launch {
+        runMcts(newJobInfo)
+    }
+    newJobInfo.completableJob.invokeOnCompletion {
+        job.cancel()
+    }
+    return newJobInfo
+}
+
+@ExperimentalCoroutinesApi
+private fun newJobInfo(
+    jobConfig: JobConfig
+): JobInfo {
+    val (mapName, phaseLimit, explorationConstantC, maxTurnBeforeEngage) = jobConfig
+    Paths.get("data/$mapName")
+    val positionMap = readMap(Paths.get("data/$mapName/$mapName - map.csv"))
+    val (_, spawnMap) = readUnits(Paths.get("data/$mapName/$mapName - spawn.csv"))
+    val (playerMap, _) = readUnits(Paths.get("data/$mapName/$mapName - players.csv"))
     val battleMap = BasicBattleMap(
         positionMap,
         spawnMap,
@@ -167,17 +203,18 @@ private fun newJobInfo(): JobInfo {
         false
     )
     val setupInfo = buildSetupInfo(positionMap, battleMap, state)
-    val board = newFehBoard(phaseLimit, state, 3)
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.5)
+    val board = newFehBoard(phaseLimit, state, maxTurnBeforeEngage)
+    val scoreManager = VaryingUCT<FehMove>(3000, 2000, explorationConstantC)
     val mcts = Mcts(board, scoreManager)
-    return JobInfo(setupInfo, board, mcts)
+    return JobInfo(setupInfo, board, mcts, Job())
 }
 
 @ExperimentalCoroutinesApi
 data class JobInfo(
     val setupInfo: SetupInfo,
     val board: FehBoard,
-    val mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>, VaryingUCT<FehMove>>
+    val mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>, VaryingUCT<FehMove>>,
+    val completableJob: CompletableJob
 )
 
 private fun getUpdated(
@@ -223,9 +260,9 @@ private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<F
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-private fun runMcts(
+private suspend fun runMcts(
     jobInfo: JobInfo
-) {
+) = coroutineScope {
     val mcts = jobInfo.mcts
     val board = jobInfo.board
     var tries = 0
@@ -235,6 +272,9 @@ private fun runMcts(
     val json = Json(JsonConfiguration.Stable)
 
     repeat(10000) {
+        if(!isActive) {
+            return@coroutineScope
+        }
         mcts.run(5, parallelCount = 5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
@@ -261,7 +301,7 @@ private fun runMcts(
                 .freeMemory()) / 1000_000}"
         )
         if (testState.winningTeam == Team.PLAYER) {
-            return
+            return@coroutineScope
         }
     }
 }
