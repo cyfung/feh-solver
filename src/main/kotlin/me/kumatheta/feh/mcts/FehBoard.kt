@@ -50,7 +50,7 @@ fun BattleState.calculateScore(phaseLimit: Int): Long {
     return enemyDied * 500L + (playerCount - playerDied) * 500L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 +
             unitsSeq(Team.ENEMY).sumBy { it.maxHp - it.currentHp } * 2 +
-//            phase * 100 +
+            (phaseLimit - phase) * 20 +
             if (phase >= phaseLimit) {
                 -1500L
             } else {

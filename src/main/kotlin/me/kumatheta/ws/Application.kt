@@ -21,7 +21,10 @@ import me.kumatheta.feh.message.*
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.VaryingUCT
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.ClockMark
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
@@ -66,7 +69,6 @@ fun Application.module() {
         put("/job") {
             val jobInfo = restartJob(JobConfig(), jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
-
         }
         delete("/job") {
             jobInfoRef.get()?.completableJob?.cancel()
@@ -85,6 +87,11 @@ fun Application.module() {
             } else {
                 resetScoreWithRetry(mcts)
             }
+            val elapsed: Long = if(isCompleted) {
+                jobInfo.elapsed.get()
+            } else {
+                jobInfo.startTime.elapsedNow().toLong(TimeUnit.SECONDS)
+            }
             val moves = currentScore.moves
             if (moves == null) {
                 call.respond(HttpStatusCode.BadRequest)
@@ -93,6 +100,7 @@ fun Application.module() {
             val (testState, updates) = toUpdateInfoList(board, moves)
 
             val allTimeBest = mcts.score
+            val runtime = Runtime.getRuntime()
             val moveSet = MoveSet(
                 updates,
                 currentScore.bestScore,
@@ -101,7 +109,10 @@ fun Application.module() {
                 testState.playerDied,
                 allTimeBest.bestScore,
                 allTimeBest.tries,
-                mcts.estimatedSize
+                mcts.estimatedSize,
+                runtime.totalMemory() - runtime.freeMemory(),
+                elapsed,
+                isCompleted
             )
 
             call.respond(protoBuf.dump(MoveSet.serializer(), moveSet))
@@ -156,12 +167,7 @@ private fun getOrStartJob(
         }
     } while (!jobInfoRef.compareAndSet(null, newJobInfo))
 
-    val job = GlobalScope.launch {
-        runMcts(newJobInfo)
-    }
-    newJobInfo.completableJob.invokeOnCompletion {
-        job.cancel()
-    }
+    startNewJob(newJobInfo)
     return newJobInfo
 }
 
@@ -175,15 +181,26 @@ private fun restartJob(
     val oldJobInfo = jobInfoRef.getAndSet(newJobInfo)
     oldJobInfo?.completableJob?.cancel()
 
+    startNewJob(newJobInfo)
+    return newJobInfo
+}
+
+@ExperimentalCoroutinesApi
+@ExperimentalTime
+private fun startNewJob(newJobInfo: JobInfo) {
     val job = GlobalScope.launch {
         runMcts(newJobInfo)
+    }
+    job.invokeOnCompletion {
+        newJobInfo.elapsed.set(newJobInfo.startTime.elapsedNow().toLong(TimeUnit.SECONDS))
+        newJobInfo.completableJob.complete()
     }
     newJobInfo.completableJob.invokeOnCompletion {
         job.cancel()
     }
-    return newJobInfo
 }
 
+@ExperimentalTime
 @ExperimentalCoroutinesApi
 private fun newJobInfo(
     jobConfig: JobConfig
@@ -209,12 +226,15 @@ private fun newJobInfo(
     return JobInfo(setupInfo, board, mcts, Job())
 }
 
+@ExperimentalTime
 @ExperimentalCoroutinesApi
 data class JobInfo(
     val setupInfo: SetupInfo,
     val board: FehBoard,
     val mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>, VaryingUCT<FehMove>>,
-    val completableJob: CompletableJob
+    val completableJob: CompletableJob,
+    val startTime: ClockMark = MonoClock.markNow(),
+    val elapsed: AtomicLong = AtomicLong()
 )
 
 private fun getUpdated(
@@ -272,7 +292,7 @@ private suspend fun runMcts(
     val json = Json(JsonConfiguration.Stable)
 
     repeat(10000) {
-        if(!isActive) {
+        if (!isActive) {
             return@coroutineScope
         }
         mcts.run(5, parallelCount = 5)

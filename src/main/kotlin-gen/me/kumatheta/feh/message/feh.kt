@@ -118,5 +118,8 @@ data class MoveSet(
     val playerDied: Int,
     val bestScore: Long,
     val totalTries: Int,
-    val numberOfNodes: Int
+    val numberOfNodes: Int,
+    val memoryUsed: Long,
+    val elapsed: Long,
+    val ended: Boolean
 )
