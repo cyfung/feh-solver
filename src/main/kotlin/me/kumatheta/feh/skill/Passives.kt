@@ -45,8 +45,10 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Swift Sparrow 2" to blow(Stat(atk = 4, spd = 4)),
     "Sturdy Blow 2" to blow(Stat(atk = 4, def = 4)),
     "Mirror Strike 2" to blow(Stat(atk = 4, res = 4)),
+    "Swift Strike 2" to blow(Stat(spd = 4, def= 4)),
 
     "Fierce Stance 3" to stance(Stat(atk = 6)),
+    "Steady Stance 3" to stance(Stat(def = 6)),
     "Mirror Stance 2" to stance(Stat(atk = 4, res = 4)),
     "Steady Posture 2" to stance(Stat(spd = 4, def = 4)),
     "Bracing Stance 2" to stance(Stat(def = 4, res = 4)),
@@ -78,6 +80,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Desperation 3" to desperation(75),
     "Wary Fighter 3" to waryFighter(50),
     "Armor March 3" to armorMarch3(),
+    "Windsweep 3" to windsweep(1),
 
     "Sabotage Atk 3" to sabotage(Stat(atk = -7)),
     "Distant Def 3" to rangeDefStat(
@@ -178,6 +181,7 @@ val ALL_PASSIVES = sequenceOf<Pair<String, Passive>>(
     "Shield Pulse 3" to ShieldPulse3,
     "Drive Atk 2" to drive(Stat(atk = 3)),
     "Drive Spd 2" to drive(Stat(spd = 3)),
+    "Drive Def 2" to drive(Stat(def = 3)),
     "Drive Res 2" to drive(Stat(res = 3)),
     "Goad Cavalry" to drive(
         Stat(atk = 4, spd = 4),

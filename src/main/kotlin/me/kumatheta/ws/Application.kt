@@ -143,7 +143,7 @@ fun toUpdateInfoList(
 }
 
 data class JobConfig(
-    val mapName: String = "sothis infernal",
+    val mapName: String = "duma infernal",
     val phaseLimit: Int = 20,
     val explorationConstantC: Double = 1.5,
     val maxTurnBeforeEngage: Int = 3

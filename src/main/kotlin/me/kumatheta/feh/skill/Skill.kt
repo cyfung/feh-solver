@@ -5,6 +5,7 @@ import me.kumatheta.feh.*
 interface Skill {
     val postInitiateMovement: MovementEffect?
     val extraStat: Stat?
+    val phantomStat: Stat?
     val coolDownCountAdj: Int
     val debuffer: Boolean
     val specialDebuff: SpecialDebuff?
@@ -112,6 +113,9 @@ interface InCombatStat {
     val penalty: Stat
     val inCombatStat: Stat
 }
+
+val InCombatStat.inCombatVirtualSpd
+    get() = inCombatStat.spd + heroUnit.phantomStat.spd
 
 class BasicInCombatStat(
     override val heroUnit: HeroUnit,

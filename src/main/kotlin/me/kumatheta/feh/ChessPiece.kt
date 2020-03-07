@@ -12,6 +12,8 @@ class HeroUnit(
     override var position: Position,
     cooldown: Int? = null
 ) : ChessPiece(), Hero by heroModel {
+    val virtualSpd: Int
+        get() = visibleStat.spd + phantomStat.spd
     val weapon
         get() = heroModel.weapon
     private var engageCountDown = heroModel.engageDelay

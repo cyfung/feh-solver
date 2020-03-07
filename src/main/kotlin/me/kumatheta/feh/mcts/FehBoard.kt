@@ -174,12 +174,12 @@ fun FehBoard.tryAndGetDetails(moves: List<FehMove>): List<Pair<UnitAction?, Batt
         when (it) {
             is Rearrange -> {
                 currentState.rearrange((moves[0] as Rearrange).order)
-                null
+                sequenceOf(null to currentState.copy())
             }
             is NormalMove -> {
                 val unitAction = it.unitAction
                 val movementResult = currentState.playerMove(unitAction)
-                val seq = sequenceOf(Pair<UnitAction?, BattleState>(unitAction, currentState.copy()))
+                val seq = sequenceOf(unitAction to currentState.copy())
                 when {
                     movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER -> {
                         seq

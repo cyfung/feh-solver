@@ -10,4 +10,7 @@ id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,spec
 13,2,Lance Fighter,Fighter - Lance,,2,1,INFANTRY,Slaying Lance+ *D,,Sacred Cowl,66,48,34,33,28,Atk/Def Solo 3,Vantage 3,Res Smoke 3
 14,3,Axe Cavalier,Knight - Axe,,,3,CAVALRY,Brave Axe+,,Iceberg,57,48,25,31,36,Fury 3,Guard 3,Distant Guard 3
 15,3,Axe Knight,Armor - Axe,,,3,ARMORED,Slaying Axe+ *A,,Ignis,81,58,17,44,21,Death Blow 3,Wary Fighter 3,Armor March 3
-16,3,Blue Fafnir,Manakete Winged - Blue,,,4,FLYING,Water Breath+ *S@B,,Dragon Fang,59,46,42,35,30,Bracing Stance 2,Aerobatics 3,Guidance 3
+16,3,Blue Fafnir,Manakete Winged - Blue,,,4,FLYING,Water Breath+ *S @B,,Dragon Fang,59,46,42,35,30,Bracing Stance 2,Aerobatics 3,Guidance 3
+17,4,Blue Flier,Pegasus Knight - Blue Tome,,,4,FLYING,Blarserpent+ *D,,Growing Thunder,48,44,41,17,38,Distant Def 3,Quick Riposte 3,Even Atk Wave 3
+18,4,Green Cavalier,Knight - Green Tome,,,4,CAVALRY,Rexcailbur+ *S,,Blazing Wind,47,52,30,18,37,Swift Strike 2,Windsweep 3,Atk Opening 3
+19,4,Sword Dragon,Wyvern Knight - Sword,,,2,FLYING,Slaying Edge+ *D,,Bonfire,62,52,30,43,21,Steady Stance 3,Flier Formation 3,Drive Def 2

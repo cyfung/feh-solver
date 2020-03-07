@@ -21,6 +21,7 @@ interface Hero {
     val name: String
     val imageName: String
     val cooldownCount: Int?
+    val phantomStat: Stat
 }
 
 fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
@@ -82,6 +83,11 @@ open class HeroModel(
             sum + extraStat
         }
     }
+
+    final override val phantomStat: Stat =
+        skillSet.skills.asSequence().mapNotNull(Skill::phantomStat).fold(stat) { sum, extraStat ->
+            sum + extraStat
+        }
 
     override val cooldownCount: Int? = if (special?.coolDownCount != null) {
         special.coolDownCount + skillSet.skills.sumBy(Skill::coolDownCountAdj)

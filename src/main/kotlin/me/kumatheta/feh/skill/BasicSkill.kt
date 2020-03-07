@@ -7,6 +7,7 @@ val EmptySkill = BasicSkill()
 data class BasicSkill(
     override val postInitiateMovement: MovementEffect? = null,
     override val extraStat: Stat? = null,
+    override val phantomStat: Stat? = null,
     override val coolDownCountAdj: Int = 0,
     override val debuffer: Boolean = false,
     override val specialDebuff: SpecialDebuff? = null,
