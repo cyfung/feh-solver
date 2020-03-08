@@ -40,16 +40,17 @@ abstract class BasicFehBoard(
         return state.copy()
     }
 
-    fun calculateScore(currentState: BattleState, move: FehMove): Long {
-        return currentState.calculateScore(config.phaseLimit)
+    fun calculateScore(endState: BattleState, move: FehMove): Long {
+        return endState.calculateScore(config.phaseLimit)
     }
 
 }
 
 fun BattleState.calculateScore(phaseLimit: Int): Long {
-    return enemyDied * 500L + (playerCount - playerDied) * 500L +
-            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 +
-            unitsSeq(Team.ENEMY).sumBy { it.maxHp - it.currentHp } * 2 +
+    return enemyDied * 500L +
+            (playerCount - playerDied) * 400L +
+            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
+            unitsSeq(Team.ENEMY).sumBy { it.maxHp - it.currentHp } * 5 +
             (phaseLimit - phase) * 20 +
             if (phase >= phaseLimit) {
                 -1500L
