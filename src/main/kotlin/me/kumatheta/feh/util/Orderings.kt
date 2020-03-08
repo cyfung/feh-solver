@@ -108,14 +108,11 @@ fun unitMoveOrder(distanceToClosestFoe: Map<HeroUnit, Int>): Comparator<HeroUnit
 fun moveTargetOrder(
     heroUnit: HeroUnit,
     foeThreat: Map<Position, Int>,
-    chaseTarget: HeroUnit,
-    distanceToTarget: Map<Position, Int>
-): Comparator<MoveStep> {
-    return compareBy({
-        val test = distanceToTarget[it.position]
-        if (test != null) test else
-            throw IllegalStateException()
-    }, {
+    chaseTarget: HeroUnit
+): Comparator<Pair<Int,MoveStep>> {
+    return compareBy<Pair<Int,MoveStep>>{
+        it.first
+    }.thenBy(compareBy({
         if (it.terrain.isDefenseTile) {
             0
         } else {
@@ -137,7 +134,9 @@ fun moveTargetOrder(
         it.distanceTravel
     }, {
         it.position
-    })
+    })) {
+        it.second
+    }
 }
 
 val bodyBlockTargetOrder = compareByDescending<HeroUnit>({

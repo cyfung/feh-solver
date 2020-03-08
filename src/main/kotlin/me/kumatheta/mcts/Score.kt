@@ -9,7 +9,7 @@ interface Score<T> {
 
 interface ScoreManager<T : Move, S : Score<T>> {
     fun newChildScore(childScore: Long, moves: List<T>): S
-    fun computeScore(childScore: S, tries: Int): Double
+    fun computeScore(childScore: S, score: S): Double
     fun newEmptyScore(): S
     fun updateScore(oldScore: S, newScore: Long, movesCreator: () -> List<T>?): S
 }

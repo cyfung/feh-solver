@@ -78,12 +78,32 @@ fun newFehBoard(
         assistMap = assistMap,
         bossId = bossId
     )
+
+//    val testMoves = listOf(
+//        Rearrange(listOf(1, 4, 2, 3)),
+//        NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
+//        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
+//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 1, assistTargetId = 3)),
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, attackTargetId = 8)),
+//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2))//,
+//    )
+//    testMoves.take(0).forEach { move ->
+//        val exists = board.moves.any {
+//            it == move
+//        }
+//        if (!exists) {
+//            throw IllegalStateException("moves not exists $move")
+//        }
+//        board = board.applyMove(move)
+//    }
+
     return if (canRearrange) {
         RearrangeFehBoard(config, internalState)
     } else {
         internalState.rearrange((1..internalState.playerCount).toList())
         newInternalBoardChain(null, null, config, internalState)
     }
+
 }
 
 private fun newInternalBoardChain(

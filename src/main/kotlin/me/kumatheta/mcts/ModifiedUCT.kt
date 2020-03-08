@@ -18,7 +18,8 @@ class ModifiedUCT<T : Move>(
     override fun newChildScore(childScore: Long, moves: List<T>) =
         ScoreWithSquareSum(childScore, 1, childScore, moves, childScore * childScore)
 
-    override fun computeScore(childScore: ScoreWithSquareSum<T>, tries: Int): Double {
+    override fun computeScore(childScore: ScoreWithSquareSum<T>, score: ScoreWithSquareSum<T>): Double {
+        val tries = score.tries
         val childTries = childScore.tries
         val average = childScore.totalScore.toDouble() / childTries
         return average +

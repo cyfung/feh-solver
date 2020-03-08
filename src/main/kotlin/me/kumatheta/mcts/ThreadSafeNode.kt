@@ -44,7 +44,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
     override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
         val index = childInitTicket.decrementAndGet()
         return if (index < 0) {
-            val tries = scoreRef.get().tries
+            val score = scoreRef.get()
             // select
             val child =
                 children.asSequence().mapNotNull {
@@ -55,7 +55,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
                         null
                     }
                 }.maxBy {
-                    scoreManager.computeScore(it.scoreRef.get(), tries)
+                    scoreManager.computeScore(it.scoreRef.get(), score)
                 }
             if (child != null) {
                 return child

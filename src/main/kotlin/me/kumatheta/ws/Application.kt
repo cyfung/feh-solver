@@ -18,8 +18,9 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Terrain
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
+import me.kumatheta.mcts.LocalVaryingUCT
 import me.kumatheta.mcts.Mcts
-import me.kumatheta.mcts.VaryingUCT
+import me.kumatheta.mcts.UCTScore
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -63,11 +64,11 @@ fun Application.module() {
 
     routing {
         get("/job") {
-            val jobInfo = getOrStartJob(JobConfig(), jobInfoRef)
+            val jobInfo = getOrStartJob(JobConfig(canRearrange = false), jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
         put("/job") {
-            val jobInfo = restartJob(JobConfig(), jobInfoRef)
+            val jobInfo = restartJob(JobConfig(canRearrange = false), jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
         delete("/job") {
@@ -87,7 +88,7 @@ fun Application.module() {
             } else {
                 resetScoreWithRetry(mcts)
             }
-            val elapsed: Long = if(isCompleted) {
+            val elapsed: Long = if (isCompleted) {
                 jobInfo.elapsed.get()
             } else {
                 jobInfo.startTime.elapsedNow().toLong(TimeUnit.SECONDS)
@@ -146,7 +147,8 @@ data class JobConfig(
     val mapName: String = "duma infernal",
     val phaseLimit: Int = 20,
     val explorationConstantC: Double = 1.5,
-    val maxTurnBeforeEngage: Int = 3
+    val maxTurnBeforeEngage: Int = 3,
+    val canRearrange: Boolean = true
 )
 
 @ExperimentalCoroutinesApi
@@ -215,14 +217,13 @@ private fun newJobInfo(
         spawnMap,
         playerMap
     )
-    val state = BattleState(
-        battleMap,
-        false
-    )
+    val state = BattleState(battleMap)
     val setupInfo = buildSetupInfo(positionMap, battleMap, state)
-    val board = newFehBoard(phaseLimit, state, maxTurnBeforeEngage)
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, explorationConstantC)
+    val board = newFehBoard(phaseLimit, state, maxTurnBeforeEngage, canRearrange = jobConfig.canRearrange)
+
+    val scoreManager = LocalVaryingUCT<FehMove>(explorationConstantC)
     val mcts = Mcts(board, scoreManager)
+
     return JobInfo(setupInfo, board, mcts, Job())
 }
 
@@ -231,7 +232,7 @@ private fun newJobInfo(
 data class JobInfo(
     val setupInfo: SetupInfo,
     val board: FehBoard,
-    val mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>, VaryingUCT<FehMove>>,
+    val mcts: Mcts<FehMove, UCTScore<FehMove>, LocalVaryingUCT<FehMove>>,
     val completableJob: CompletableJob,
     val startTime: ClockMark = MonoClock.markNow(),
     val elapsed: AtomicLong = AtomicLong()
@@ -265,7 +266,7 @@ private fun UnitAction.toMsgAction(): Action {
 }
 
 @ExperimentalCoroutinesApi
-private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, VaryingUCT.MyScore<FehMove>, VaryingUCT<FehMove>>): VaryingUCT.MyScore<FehMove> {
+private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, UCTScore<FehMove>, *>): UCTScore<FehMove> {
     repeat(10) {
         val score = mcts.resetRecentScore()
         val moves = score.moves
@@ -295,7 +296,7 @@ private suspend fun runMcts(
         if (!isActive) {
             return@coroutineScope
         }
-        mcts.run(5, parallelCount = 5)
+        mcts.run(5)
         if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
             lastFixMove = MonoClock.markNow()
@@ -309,9 +310,9 @@ private suspend fun runMcts(
         println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
 
         println("best score: ${score.bestScore}")
-        mcts.scoreManager.high = score.bestScore
-        mcts.scoreManager.average = score.totalScore / score.tries
-        println("average = ${mcts.scoreManager.average}")
+//        mcts.scoreManager.high = score.bestScore
+//        mcts.scoreManager.average = score.totalScore / score.tries
+//        println("average = ${mcts.scoreManager.average}")
         println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
         tries = score.tries
         println("estimatedSize: ${mcts.estimatedSize}")

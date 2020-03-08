@@ -26,8 +26,9 @@ class BattleState private constructor(
     enemyDied: Int,
     winningTeam: Team?,
     engaged: Boolean,
-    private val endOnPlayerDeath: Boolean
+    private val recordFirstPlayerDeath: Boolean
 ) {
+    var postFirstPlayerDeath: BattleState? = null
     val enemyCount
         get() = battleMap.enemyCount
     val playerCount
@@ -67,7 +68,7 @@ class BattleState private constructor(
             enemyDied = enemyDied,
             winningTeam = winningTeam,
             engaged = engaged,
-            endOnPlayerDeath = endOnPlayerDeath
+            recordFirstPlayerDeath = recordFirstPlayerDeath
         )
     }
 
@@ -82,11 +83,11 @@ class BattleState private constructor(
             enemyDied = enemyDied,
             winningTeam = winningTeam,
             engaged = engaged,
-            endOnPlayerDeath = endOnPlayerDeath
+            recordFirstPlayerDeath = recordFirstPlayerDeath
         )
     }
 
-    constructor(battleMap: BattleMap, endOnPlayerDeath: Boolean = true) : this(
+    constructor(battleMap: BattleMap, recordFirstPlayerDeath: Boolean = false) : this(
         battleMap = CacheBattleMap(battleMap),
         locationMap = battleMap.toChessPieceMap().toMutableMap(),
         phase = 0,
@@ -94,7 +95,7 @@ class BattleState private constructor(
         enemyDied = 0,
         winningTeam = null,
         engaged = false,
-        endOnPlayerDeath = endOnPlayerDeath
+        recordFirstPlayerDeath = recordFirstPlayerDeath
     )
 
     fun isValidPosition(heroUnit: HeroUnit, position: Position): Boolean {
@@ -733,9 +734,6 @@ class BattleState private constructor(
             val teamDied = damageReceiver.heroUnit.team
             if (teamDied == Team.PLAYER) {
                 playerDied++
-                if (endOnPlayerDeath) {
-                    winningTeam = Team.ENEMY
-                }
             } else {
                 enemyDied++
             }
@@ -1008,6 +1006,9 @@ class BattleState private constructor(
             if (attack != null) {
                 val foeOriginalPosition = attack.foe.position
                 val deadTeam = executeMove(attack.action)
+                if (recordFirstPlayerDeath && deadTeam == Team.PLAYER && playerDied == 1) {
+                    postFirstPlayerDeath = copy()
+                }
                 if (deadTeam == foeTeam || foeOriginalPosition != attack.foe.position) {
                     obstacles = locationMap.toMap()
                 }
@@ -1326,7 +1327,11 @@ class BattleState private constructor(
             } else {
                 seq.filterNot { it.position == heroUnit.position }
             }
-        }.minWith(moveTargetOrder(heroUnit, foeThreat, chaseTarget, distanceToTarget))?.position ?: heroUnit.position
+        }.mapNotNull {
+            // possible to be null, because of teleport skills, not all accessible tiles are connected
+            val distance = distanceToTarget[it.position] ?: return@mapNotNull null
+            distance to it
+        }.minWith(moveTargetOrder(heroUnit, foeThreat, chaseTarget))?.second?.position ?: heroUnit.position
 
         val basicDistance = basicMove.distanceTo(chaseTarget.position)
 

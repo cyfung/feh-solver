@@ -1,16 +1,9 @@
 package me.kumatheta.feh.test
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.list
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.*
-import me.kumatheta.feh.message.UpdateInfo
-import me.kumatheta.mcts.Mcts
-import me.kumatheta.mcts.RecyclableNode
-import me.kumatheta.mcts.RecycleManager
-import me.kumatheta.mcts.VaryingUCT
-import me.kumatheta.ws.toUpdateInfoList
+import me.kumatheta.mcts.*
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
@@ -29,42 +22,48 @@ fun main() {
         spawnMap,
         playerMap
     )
-    val state = BattleState(
-        battleMap
-    )
+    val state = BattleState(battleMap)
     val phraseLimit = 20
-    var board = newFehBoard(phraseLimit, state, 3)
+    var board = newFehBoard(phraseLimit, state, 3, false)
     val testMoves = listOf(
-        Rearrange(listOf(1, 4, 2, 3)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 3, attackTargetId = 10)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 2)),
-        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0)),
-        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 2, moveTargetY = 2, assistTargetId = 1)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 3, attackTargetId = 10)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 3, attackTargetId = 8)),
-        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 2, moveTargetY = 1)),
-        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0, obstacleX = 3, obstacleY = 1)),
-        NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1, attackTargetId = 9)),
-        NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 4, moveTargetY = 2)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1)),
-        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 6)),
-        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 3, assistTargetId = 1)),
-        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 2, attackTargetId = 12)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 6)),
-        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0)),
-        NormalMove(MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 4, attackTargetId = 11)),
-        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1)),
-        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 3, attackTargetId = 13)),
-        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 0))
+//        Rearrange(listOf(1, 4, 2, 3)),
+        NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
+        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 1, assistTargetId = 3)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, attackTargetId = 8)),
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2))//,
+
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 3, attackTargetId = 10)),
+//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 2, assistTargetId = 3)),
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 1, attackTargetId = 10)),
+//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 4, moveTargetY = 1, attackTargetId = 10)),
+//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
+
+//        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1)),
+//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 2)),
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
+//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 6)),
+//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2)),
+
+//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
+//        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1)),
+//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 0, moveTargetY = 2, attackTargetId = 11)),
+//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 1)),
+//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
+//
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1, attackTargetId = 16)),
+//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 3)),
+//        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2)),
+//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2)),
+//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 2, attackTargetId = 16))
+
     )
-    val testResult = board.tryMoves(testMoves, false)
-    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
+//    val testResult = board.tryMoves(testMoves, false)
+//    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 
-    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
+//    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 
-    testMoves.forEach { move ->
+    testMoves.take(2).forEach { move ->
         val exists = board.moves.any {
             it == move
         }
@@ -73,7 +72,7 @@ fun main() {
         }
         board = board.applyMove(move)
     }
-    val scoreManager = VaryingUCT<FehMove>(3000, 2000, 1.0)
+    val scoreManager = LocalVaryingUCT<FehMove>(1.5)
     val mcts = Mcts(board, scoreManager)
     var tries = 0
     val fixedMoves = mutableListOf<FehMove>()
@@ -83,10 +82,12 @@ fun main() {
 
     repeat(10000) {
         mcts.run(5)
-        if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
+        val currentRootTries = mcts.rootScore.tries
+        if (currentRootTries > 1000000 || mcts.estimatedSize > 650000 || lastFixMove.elapsedNow().inMinutes > 20) {
             mcts.moveDown()
             lastFixMove = MonoClock.markNow()
         }
+        println("current root tries $currentRootTries")
         println("elapsed ${clockMark.elapsedNow()}")
         val score = mcts.score
         val bestMoves = score.moves ?: throw IllegalStateException()
@@ -104,9 +105,9 @@ fun main() {
             println(it)
         }
         println("best score: ${score.bestScore}")
-        scoreManager.high = score.bestScore
-        scoreManager.average = score.totalScore / score.tries
-        println("average = ${scoreManager.average}")
+//        scoreManager.high = score.bestScore
+//        scoreManager.average = score.totalScore / score.tries
+//        println("average = ${scoreManager.average}")
         println(
             "tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}"
         )
@@ -126,10 +127,10 @@ fun main() {
 }
 
 private fun testCreate(
-    testRecycleManager: RecycleManager<FehMove, VaryingUCT.MyScore<FehMove>>,
+    testRecycleManager: RecycleManager<FehMove, UCTScore<FehMove>>,
     board: FehBoard,
     scoreManager: VaryingUCT<FehMove>
-): RecyclableNode<FehMove, VaryingUCT.MyScore<FehMove>> {
+): RecyclableNode<FehMove, UCTScore<FehMove>> {
     val recyclableNode = RecyclableNode(
         testRecycleManager,
         board,
