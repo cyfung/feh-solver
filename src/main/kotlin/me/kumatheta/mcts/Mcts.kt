@@ -59,6 +59,9 @@ class Mcts<T : Move, S : Score<T>, M: ScoreManager<T, S>>(
     val score: S
         get() = scoreRef.get()
 
+    val rootScore: S
+        get() = rootRef.get().score
+
     fun resetRecentScore(): S {
         return recentScoreRef.getAndSet(scoreManager.newEmptyScore())
     }
