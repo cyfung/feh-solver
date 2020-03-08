@@ -12,6 +12,7 @@ plugins {
 
 application {
     mainClassName = "io.ktor.server.netty.EngineMain"
+    applicationDefaultJvmArgs = listOf("-Xmx8G","-Xms6G")
 }
 
 group = "me.kumatheta.feh"
