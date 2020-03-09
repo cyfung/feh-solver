@@ -23,44 +23,44 @@ fun main() {
         playerMap
     )
     val state = BattleState(battleMap)
-    val phraseLimit = 20
-    var board = newFehBoard(phraseLimit, state, 3, false)
+    val phaseLimit = 20
+    var board = newFehBoard(phaseLimit, state, 3, false, calculateScore = BattleState::calculateHeroBattleScore)
     val testMoves = listOf(
 //        Rearrange(listOf(1, 4, 2, 3)),
         NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
         NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
         NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 1, assistTargetId = 3)),
         NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, attackTargetId = 8)),
-        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2))//,
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
 
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 3, attackTargetId = 10)),
-//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 2, assistTargetId = 3)),
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 1, attackTargetId = 10)),
-//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 4, moveTargetY = 1, attackTargetId = 10)),
-//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 3, attackTargetId = 10)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 2, assistTargetId = 3)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 1, attackTargetId = 10)),
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 4, moveTargetY = 1, attackTargetId = 10)),
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
 
-//        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1)),
-//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 2)),
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
-//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 6)),
-//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 2)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 6)),
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2)),
 
-//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
-//        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1)),
-//        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 0, moveTargetY = 2, attackTargetId = 11)),
-//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 1)),
-//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
-//
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1, attackTargetId = 16)),
-//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 3)),
-//        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2)),
-//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2)),
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 2, attackTargetId = 16))
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1)),
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 0, moveTargetY = 2, attackTargetId = 11)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 1)),
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2)),
+
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 2, moveTargetY = 1, attackTargetId = 16)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 1, moveTargetY = 1, assistTargetId = 3)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2)),
+        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 0, moveTargetY = 2)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 1, moveTargetY = 2, attackTargetId = 16))
 
     )
 //    val testResult = board.tryMoves(testMoves, false)
 //    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
-
+//
 //    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 
     testMoves.take(2).forEach { move ->
@@ -75,7 +75,6 @@ fun main() {
     val scoreManager = LocalVaryingUCT<FehMove>(1.5)
     val mcts = Mcts(board, scoreManager)
     var tries = 0
-    val fixedMoves = mutableListOf<FehMove>()
     val clockMark = MonoClock.markNow()
     var lastFixMove = MonoClock.markNow()
 
@@ -96,18 +95,11 @@ fun main() {
         } catch (t: Throwable) {
             throw t
         }
-        println("fixed:")
-        fixedMoves.forEach {
-            println(it)
-        }
-        println("changing:")
-        bestMoves.forEach {
-            println(it)
-        }
+        println(bestMoves)
         println("best score: ${score.bestScore}")
 //        scoreManager.high = score.bestScore
 //        scoreManager.average = score.totalScore / score.tries
-//        println("average = ${scoreManager.average}")
+        println("totalScore = ${score.totalScore}")
         println(
             "tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}"
         )

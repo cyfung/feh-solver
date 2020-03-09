@@ -90,7 +90,7 @@ class BattleState private constructor(
     constructor(battleMap: BattleMap, recordFirstPlayerDeath: Boolean = false) : this(
         battleMap = CacheBattleMap(battleMap),
         locationMap = battleMap.toChessPieceMap().toMutableMap(),
-        phase = 0,
+        phase = -1,
         playerDied = 0,
         enemyDied = 0,
         winningTeam = null,
@@ -222,7 +222,7 @@ class BattleState private constructor(
         unit2.position = unit1OldPosition
     }
 
-    internal fun rearrange(order: List<Int>) {
+    fun rearrange(order: List<Int>) {
         if (order.size != playerCount || order.any { it < 1 || it > playerCount }) {
             throw IllegalArgumentException("invalid order $order")
         }
@@ -238,6 +238,7 @@ class BattleState private constructor(
             locationMap[position] = heroUnit
             heroUnit.position = position
         }
+        phase = 0
         startOfTurn(Team.PLAYER)
     }
 

@@ -21,7 +21,7 @@ class LocalVaryingUCT<T : Move>(
     }
 
     override fun newEmptyScore(): UCTScore<T> {
-        return UCTScore(0, 0, 0, null)
+        return UCTScore(0, 0, -1, null)
     }
 
     override fun updateScore(oldScore: UCTScore<T>, newScore: Long, movesCreator: () -> List<T>?): UCTScore<T> {

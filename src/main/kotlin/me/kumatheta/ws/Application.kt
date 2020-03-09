@@ -64,11 +64,11 @@ fun Application.module() {
 
     routing {
         get("/job") {
-            val jobInfo = getOrStartJob(JobConfig(canRearrange = false), jobInfoRef)
+            val jobInfo = getOrStartJob(JobConfig(canRearrange = true), jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
         put("/job") {
-            val jobInfo = restartJob(JobConfig(canRearrange = false), jobInfoRef)
+            val jobInfo = restartJob(JobConfig(canRearrange = true), jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
         delete("/job") {
@@ -144,11 +144,12 @@ fun toUpdateInfoList(
 }
 
 data class JobConfig(
-    val mapName: String = "duma infernal",
+    val mapName: String = "bhb titania mist",
     val phaseLimit: Int = 20,
     val explorationConstantC: Double = 1.5,
     val maxTurnBeforeEngage: Int = 3,
-    val canRearrange: Boolean = true
+    val canRearrange: Boolean = true,
+    val calculateScore: BattleState.(phaseLimit: Int) -> Long = BattleState::calculateHeroBattleScore
 )
 
 @ExperimentalCoroutinesApi
@@ -219,7 +220,13 @@ private fun newJobInfo(
     )
     val state = BattleState(battleMap)
     val setupInfo = buildSetupInfo(positionMap, battleMap, state)
-    val board = newFehBoard(phaseLimit, state, maxTurnBeforeEngage, canRearrange = jobConfig.canRearrange)
+    val board = newFehBoard(
+        phaseLimit,
+        state,
+        maxTurnBeforeEngage,
+        canRearrange = jobConfig.canRearrange,
+        calculateScore = jobConfig.calculateScore
+    )
 
     val scoreManager = LocalVaryingUCT<FehMove>(explorationConstantC)
     val mcts = Mcts(board, scoreManager)
