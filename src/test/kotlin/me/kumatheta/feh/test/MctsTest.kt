@@ -24,7 +24,7 @@ fun main() {
     )
     val state = BattleState(battleMap)
     val phaseLimit = 20
-    var board = newFehBoard(phaseLimit, state, 3, true, calculateScore = BattleState::calculateHeroBattleScore)
+    var board = newFehBoard(phaseLimit, state, 3, false, calculateScore = BattleState::calculateHeroBattleScore)
     val testMoves = listOf(
 //        Rearrange(listOf(1, 4, 2, 3)),
         NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
@@ -63,7 +63,7 @@ fun main() {
 //
 //    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 
-    dumaMoveList.take(0).forEach { move ->
+    dumaMoveList.take(2).forEach { move ->
         val exists = board.moves.any {
             it == move
         }
@@ -72,7 +72,7 @@ fun main() {
         }
         board = board.applyMove(move)
     }
-    val scoreManager = LocalVaryingUCT<FehMove>(1.5)
+    val scoreManager = LocalVaryingUCTTuned<FehMove>()
     val mcts = Mcts(board, scoreManager)
     var tries = 0
     val clockMark = MonoClock.markNow()
@@ -112,9 +112,10 @@ fun main() {
 //            return
 //        }
         println("memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000_000}")
-//        if (testState.enemyCount == testState.enemyDied && testState.playerDied == 0) {
-//            return
-//        }
+        if(testState.winningTeam == Team.PLAYER) {
+            return
+        }
+
     }
 }
 

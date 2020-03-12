@@ -6,14 +6,7 @@ import kotlin.math.sqrt
 class ModifiedUCT<T : Move>(
     private val explorationConstantC: Double,
     private val explorationConstantD: Double
-) : ScoreManager<T, ModifiedUCT.ScoreWithSquareSum<T>> {
-    class ScoreWithSquareSum<T : Move>(
-        override val totalScore: Long,
-        override val tries: Int,
-        override val bestScore: Long,
-        override val moves: List<T>?,
-        val scoreSquareSum: Long
-    ) : Score<T>
+) : ScoreManager<T, ScoreWithSquareSum<T>> {
 
     override fun newChildScore(childScore: Long, moves: List<T>) =
         ScoreWithSquareSum(childScore, 1, childScore, moves, childScore * childScore)
