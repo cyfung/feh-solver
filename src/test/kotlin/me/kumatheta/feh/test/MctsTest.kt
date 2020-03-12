@@ -24,7 +24,7 @@ fun main() {
     )
     val state = BattleState(battleMap)
     val phaseLimit = 20
-    var board = newFehBoard(phaseLimit, state, 3, false, calculateScore = BattleState::calculateHeroBattleScore)
+    var board = newFehBoard(phaseLimit, state, 3, true, calculateScore = BattleState::calculateHeroBattleScore)
     val testMoves = listOf(
 //        Rearrange(listOf(1, 4, 2, 3)),
         NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
@@ -63,7 +63,7 @@ fun main() {
 //
 //    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 
-    testMoves.take(2).forEach { move ->
+    dumaMoveList.take(0).forEach { move ->
         val exists = board.moves.any {
             it == move
         }

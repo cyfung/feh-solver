@@ -7,7 +7,7 @@ import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
-private val dumaMoveList: List<NormalMove>
+val dumaMoveList: List<NormalMove>
     get() {
         return listOf(
 //        Rearrange(listOf(1, 4, 2, 3)),
@@ -44,7 +44,7 @@ private val dumaMoveList: List<NormalMove>
         )
     }
 
-private val sothisMoves: List<NormalMove>
+val sothisMoves: List<NormalMove>
     get() {
         return listOf(
             NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3)),
@@ -121,27 +121,24 @@ val grandmaster51Moves = listOf(
     NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 4, attackTargetId = 9)),
     NormalMove(MoveAndAssist(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, assistTargetId = 2)),
     NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 5, attackTargetId = 6)),
-
     NormalMove(MoveAndAssist(heroUnitId = 2, moveTargetX = 4, moveTargetY = 3, assistTargetId = 1)),
     NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, attackTargetId = 7)),
     NormalMove(MoveAndAttack(heroUnitId = 4, moveTargetX = 3, moveTargetY = 5, attackTargetId = 9)),
     NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 8)),
-
     NormalMove(MoveAndAssist(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3, assistTargetId = 4)),
     NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 11)),
     NormalMove(MoveAndAttack(heroUnitId = 4, moveTargetX = 2, moveTargetY = 5, attackTargetId = 12)),
     NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 3, attackTargetId = 17)),
-
     NormalMove(MoveAndAttack(heroUnitId = 4, moveTargetX = 1, moveTargetY = 5, attackTargetId = 14)),
-    NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 3, moveTargetY = 5, attackTargetId = 16)),
-    NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 3, attackTargetId = 18)),
-    NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 4, attackTargetId = 15))
+    NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 2)),
+    NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 5, attackTargetId = 15)),
+    NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 3, attackTargetId = 18))
 )
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 fun main() {
-    val dataSet = "bhb titania mist"
+    val dataSet = "grandmaster 51"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -156,10 +153,10 @@ fun main() {
 
 //    val phraseLimit = 1
 //    var board = newFehBoard(phraseLimit, state, 3, false)
-    val testMoves = titaniaMistMoves
+    val testMoves = grandmaster51Moves
     runBlocking {
         GlobalScope.launch {
-            (0..10 step 2).forEach {
+            (2..10 step 2).forEach {
                 countPhase(testMoves, state.copy(), it)
             }
         }.join()
@@ -243,7 +240,9 @@ private suspend fun countPhase(
             println("actual result for phase ${state.phase} ${state.count()}")
             return
         }
-        val exists = state.getAllPlayerMovements().any {
+        val allPlayerMovements = state.getAllPlayerMovements()
+        println(allPlayerMovements.toList().size)
+        val exists = allPlayerMovements.any {
             it == action
         }
         if (!exists) {
@@ -273,6 +272,9 @@ private var clockMark = MonoClock.markNow()
 
 @ExperimentalTime
 private suspend fun BattleState.count(): Pair<Int, Int> = coroutineScope {
+    if (winningTeam == Team.PLAYER) {
+        return@coroutineScope 1 to 1
+    }
     val deferredList = getAllPlayerMovements().map {
         async {
             val copyState = copy()

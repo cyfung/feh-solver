@@ -53,8 +53,8 @@ fun BattleState.calculateHeroBattleScore(phaseLimit: Int): Long {
     val phaseRemaining = phaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
-            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
-            unitsSeq(Team.ENEMY).sumBy { (it.maxHp - it.currentHp) * 270 / it.maxHp } +
+            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 7 +
+            unitsSeq(Team.ENEMY).sumBy { (it.maxHp - it.currentHp) * 320 / it.maxHp } +
             phaseRemaining * 20 +
             if (winningTeam == Team.PLAYER) {
                 5000L

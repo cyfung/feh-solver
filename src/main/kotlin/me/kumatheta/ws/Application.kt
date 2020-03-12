@@ -25,6 +25,7 @@ import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.math.sqrt
 import kotlin.time.ClockMark
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -144,7 +145,7 @@ fun toUpdateInfoList(
 }
 
 data class JobConfig(
-    val mapName: String = "bhb titania mist",
+    val mapName: String = "duma infernal",
     val phaseLimit: Int = 20,
     val explorationConstantC: Double = 1.5,
     val maxTurnBeforeEngage: Int = 3,
