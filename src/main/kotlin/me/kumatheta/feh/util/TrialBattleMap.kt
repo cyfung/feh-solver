@@ -55,7 +55,7 @@ fun BattleMap.getAllTrials(): Map<AttackerDefenderPair<Int>, TrialResult> {
             TrialBattleMap(enemy, player)
         }
     }.associate {
-        val battleState = BattleState(it)
+        val battleState = BattleState(CacheBattleMap(it))
         val attackerHpBefore = it.attacker.currentHp
         val defenderHpBefore = it.defender.currentHp
         battleState.fight(it.attacker, it.defender)

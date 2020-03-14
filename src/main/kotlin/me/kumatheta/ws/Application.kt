@@ -9,67 +9,38 @@ import io.ktor.routing.get
 import io.ktor.routing.put
 import io.ktor.routing.routing
 import kotlinx.coroutines.*
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonConfiguration
-import kotlinx.serialization.list
 import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.*
-import me.kumatheta.feh.MoveType
-import me.kumatheta.feh.Terrain
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
-import me.kumatheta.mcts.LocalVaryingUCT
-import me.kumatheta.mcts.Mcts
-import me.kumatheta.mcts.UCTScore
-import java.nio.file.Paths
+import me.kumatheta.mcts.*
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.sqrt
-import kotlin.time.ClockMark
 import kotlin.time.ExperimentalTime
-import kotlin.time.MonoClock
 
 typealias MsgTerrain = me.kumatheta.feh.message.Terrain
+typealias MsgTerrainType = me.kumatheta.feh.message.Terrain.Type
 typealias MsgBattleMap = me.kumatheta.feh.message.BattleMap
 typealias MsgMoveType = me.kumatheta.feh.message.MoveType
 
-private fun Terrain.toMsgTerrain(): MsgTerrain {
-    val msgType = when (type) {
-        Terrain.Type.WALL -> me.kumatheta.feh.message.Terrain.Type.WALL
-        Terrain.Type.FLIER_ONLY -> me.kumatheta.feh.message.Terrain.Type.FLIER_ONLY
-        Terrain.Type.FOREST -> me.kumatheta.feh.message.Terrain.Type.FOREST
-        Terrain.Type.TRENCH -> me.kumatheta.feh.message.Terrain.Type.TRENCH
-        Terrain.Type.REGULAR -> me.kumatheta.feh.message.Terrain.Type.REGULAR
-    }
-    return MsgTerrain(type = msgType, isDefenseTile = isDefenseTile)
-}
-
-private fun MoveType.toMsgMoveType(): MsgMoveType {
-    return when (this) {
-        MoveType.INFANTRY -> MsgMoveType.INFANTRY
-        MoveType.ARMORED -> MsgMoveType.ARMORED
-        MoveType.CAVALRY -> MsgMoveType.CAVALRY
-        MoveType.FLYING -> MsgMoveType.FLIER
-    }
-}
-
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+
+private val jobConfig = FehJobConfig(scoreManager = LocalVaryingUCTTuned<FehMove>(), canRearrange = true, mapName = "duma infernal")
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
     val protoBuf = ProtoBuf()
-    val jobInfoRef = AtomicReference<JobInfo?>(null)
+    val jobInfoRef = AtomicReference<FehJobInfo<Score<FehMove>>?>(null)
 
     routing {
         get("/job") {
-            val jobInfo = getOrStartJob(JobConfig(canRearrange = true), jobInfoRef)
+            val jobInfo = getOrStartJob(jobConfig, jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
         put("/job") {
-            val jobInfo = restartJob(JobConfig(canRearrange = true), jobInfoRef)
+            val jobInfo = restartJob(jobConfig, jobInfoRef)
             call.respond(protoBuf.dump(SetupInfo.serializer(), jobInfo.setupInfo))
         }
         delete("/job") {
@@ -83,7 +54,7 @@ fun Application.module() {
                 return@get
             }
             val isCompleted = jobInfo.completableJob.isCompleted
-            val (_, board, mcts) = jobInfo
+            val mcts = jobInfo.mcts
             val currentScore = if (isCompleted) {
                 mcts.score
             } else {
@@ -99,7 +70,7 @@ fun Application.module() {
                 call.respond(HttpStatusCode.BadRequest)
                 return@get
             }
-            val (testState, updates) = toUpdateInfoList(board, moves)
+            val (testState, updates) = toUpdateInfoList(jobInfo.board, moves)
 
             val allTimeBest = mcts.score
             val runtime = Runtime.getRuntime()
@@ -144,26 +115,17 @@ fun toUpdateInfoList(
     return lastState to list
 }
 
-data class JobConfig(
-    val mapName: String = "duma infernal",
-    val phaseLimit: Int = 20,
-    val explorationConstantC: Double = 1.5,
-    val maxTurnBeforeEngage: Int = 3,
-    val canRearrange: Boolean = true,
-    val calculateScore: BattleState.(phaseLimit: Int) -> Long = BattleState::calculateHeroBattleScore
-)
-
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-private fun getOrStartJob(
-    jobConfig: JobConfig,
-    jobInfoRef: AtomicReference<JobInfo?>
-): JobInfo {
+private fun <S : Score<FehMove>, M: ScoreManager<FehMove, S>> getOrStartJob(
+    jobConfig: FehJobConfig<S, M>,
+    jobInfoRef: AtomicReference<FehJobInfo<Score<FehMove>>?>
+): FehJobInfo<Score<FehMove>> {
     val jobInfo = jobInfoRef.get()
     if (jobInfo != null) {
         return jobInfo
     }
-    val newJobInfo = newJobInfo(jobConfig)
+    val newJobInfo = jobConfig.toJobInfo()
     do {
         val prev = jobInfoRef.get()
         if (prev != null) {
@@ -171,80 +133,23 @@ private fun getOrStartJob(
         }
     } while (!jobInfoRef.compareAndSet(null, newJobInfo))
 
-    startNewJob(newJobInfo)
+    newJobInfo.startNewJob()
     return newJobInfo
 }
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-private fun restartJob(
-    jobConfig: JobConfig,
-    jobInfoRef: AtomicReference<JobInfo?>
-): JobInfo {
-    val newJobInfo = newJobInfo(jobConfig)
+private fun <S : Score<FehMove>, M: ScoreManager<FehMove, S>> restartJob(
+    jobConfig: FehJobConfig<S, M>,
+    jobInfoRef: AtomicReference<FehJobInfo<Score<FehMove>>?>
+): FehJobInfo<Score<FehMove>> {
+    val newJobInfo = jobConfig.toJobInfo()
     val oldJobInfo = jobInfoRef.getAndSet(newJobInfo)
     oldJobInfo?.completableJob?.cancel()
 
-    startNewJob(newJobInfo)
+    newJobInfo.startNewJob()
     return newJobInfo
 }
-
-@ExperimentalCoroutinesApi
-@ExperimentalTime
-private fun startNewJob(newJobInfo: JobInfo) {
-    val job = GlobalScope.launch {
-        runMcts(newJobInfo)
-    }
-    job.invokeOnCompletion {
-        newJobInfo.elapsed.set(newJobInfo.startTime.elapsedNow().toLong(TimeUnit.SECONDS))
-        newJobInfo.completableJob.complete()
-    }
-    newJobInfo.completableJob.invokeOnCompletion {
-        job.cancel()
-    }
-}
-
-@ExperimentalTime
-@ExperimentalCoroutinesApi
-private fun newJobInfo(
-    jobConfig: JobConfig
-): JobInfo {
-    val (mapName, phaseLimit, explorationConstantC, maxTurnBeforeEngage) = jobConfig
-    Paths.get("data/$mapName")
-    val positionMap = readMap(Paths.get("data/$mapName/$mapName - map.csv"))
-    val (_, spawnMap) = readUnits(Paths.get("data/$mapName/$mapName - spawn.csv"))
-    val (playerMap, _) = readUnits(Paths.get("data/$mapName/$mapName - players.csv"))
-    val battleMap = BasicBattleMap(
-        positionMap,
-        spawnMap,
-        playerMap
-    )
-    val state = BattleState(battleMap)
-    val setupInfo = buildSetupInfo(positionMap, battleMap, state)
-    val board = newFehBoard(
-        phaseLimit,
-        state,
-        maxTurnBeforeEngage,
-        canRearrange = jobConfig.canRearrange,
-        calculateScore = jobConfig.calculateScore
-    )
-
-    val scoreManager = LocalVaryingUCT<FehMove>(explorationConstantC)
-    val mcts = Mcts(board, scoreManager)
-
-    return JobInfo(setupInfo, board, mcts, Job())
-}
-
-@ExperimentalTime
-@ExperimentalCoroutinesApi
-data class JobInfo(
-    val setupInfo: SetupInfo,
-    val board: FehBoard,
-    val mcts: Mcts<FehMove, UCTScore<FehMove>, LocalVaryingUCT<FehMove>>,
-    val completableJob: CompletableJob,
-    val startTime: ClockMark = MonoClock.markNow(),
-    val elapsed: AtomicLong = AtomicLong()
-)
 
 private fun getUpdated(
     oldUnits: Map<Int, HeroUnit>,
@@ -274,7 +179,7 @@ private fun UnitAction.toMsgAction(): Action {
 }
 
 @ExperimentalCoroutinesApi
-private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, UCTScore<FehMove>, *>): UCTScore<FehMove> {
+private suspend fun <S: Score<FehMove>> resetScoreWithRetry(mcts: Mcts<FehMove, S>): S {
     repeat(10) {
         val score = mcts.resetRecentScore()
         val moves = score.moves
@@ -287,130 +192,4 @@ private suspend fun resetScoreWithRetry(mcts: Mcts<FehMove, UCTScore<FehMove>, *
     return mcts.resetRecentScore()
 }
 
-@ExperimentalCoroutinesApi
-@ExperimentalTime
-private suspend fun runMcts(
-    jobInfo: JobInfo
-) = coroutineScope {
-    val mcts = jobInfo.mcts
-    val board = jobInfo.board
-    var tries = 0
-    val mctsStart = MonoClock.markNow()
-    var lastFixMove = MonoClock.markNow()
-
-    val json = Json(JsonConfiguration.Stable)
-
-    repeat(10000) {
-        if (!isActive) {
-            return@coroutineScope
-        }
-        mcts.run(5)
-        if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
-            mcts.moveDown()
-            lastFixMove = MonoClock.markNow()
-        }
-        println("elapsed ${mctsStart.elapsedNow()}")
-        val score = mcts.score
-        val bestMoves = score.moves ?: throw IllegalStateException()
-        val testState = board.tryMoves(bestMoves)
-
-        println(bestMoves)
-        println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
-
-        println("best score: ${score.bestScore}")
-//        mcts.scoreManager.high = score.bestScore
-//        mcts.scoreManager.average = score.totalScore / score.tries
-//        println("average = ${mcts.scoreManager.average}")
-        println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
-        tries = score.tries
-        println("estimatedSize: ${mcts.estimatedSize}")
-        println("elapsed ${mctsStart.elapsedNow()}")
-        println(
-            "memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
-                .freeMemory()) / 1000_000}"
-        )
-        if (testState.winningTeam == Team.PLAYER) {
-            return@coroutineScope
-        }
-    }
-}
-
-private fun buildSetupInfo(
-    positionMap: PositionMap,
-    battleMap: BasicBattleMap,
-    state: BattleState
-): SetupInfo {
-    val chessPieceMap = battleMap.toChessPieceMap()
-    val battleMapPositions = positionMap.terrainMap.map { (position, terrain) ->
-        BattleMapPosition(
-            x = position.x,
-            y = position.y,
-            terrain = terrain.toMsgTerrain(),
-            obstacle = (chessPieceMap[position] as? Obstacle)?.health ?: 0
-        )
-    }
-    val msgBattleMap = MsgBattleMap(
-        sizeX = battleMap.size.x,
-        sizeY = battleMap.size.y,
-        battleMapPositions = battleMapPositions
-    )
-    val unitsAdded = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).map {
-        it.toUnitAdded()
-    }.toList()
-    return SetupInfo(msgBattleMap, unitsAdded)
-}
-
-private fun HeroUnit.toUnitAdded(): UnitAdded {
-    check(currentHp == maxHp)
-    return UnitAdded(
-        name = name,
-        imageName = imageName,
-        unitId = id,
-        maxHp = maxHp,
-        playerControl = team == Team.PLAYER,
-        startX = position.x,
-        startY = position.y,
-        moveType = moveType.toMsgMoveType(),
-        attackType = weaponType.toAttackType()
-    )
-}
-
-private fun WeaponType.toAttackType(): AttackType {
-    return when (this) {
-        is Dagger -> when (color) {
-            Color.RED -> AttackType.RED_DAGGER
-            Color.GREEN -> AttackType.GREEN_DAGGER
-            Color.BLUE -> AttackType.BLUE_DAGGER
-            Color.COLORLESS -> AttackType.COLORLESS_DAGGER
-        }
-        is Bow -> when (color) {
-            Color.RED -> AttackType.RED_BOW
-            Color.GREEN -> AttackType.GREEN_BOW
-            Color.BLUE -> AttackType.BLUE_BOW
-            Color.COLORLESS -> AttackType.COLORLESS_BOW
-        }
-        is Beast -> when (color) {
-            Color.RED -> AttackType.RED_BEAST
-            Color.GREEN -> AttackType.GREEN_BEAST
-            Color.BLUE -> AttackType.BLUE_BEAST
-            Color.COLORLESS -> AttackType.COLORLESS_BEAST
-        }
-        is Dragon -> when (color) {
-            Color.RED -> AttackType.RED_BREATH
-            Color.GREEN -> AttackType.GREEN_BREATH
-            Color.BLUE -> AttackType.BLUE_BREATH
-            Color.COLORLESS -> AttackType.COLORLESS_BREATH
-        }
-        Staff -> AttackType.STAFF
-        Sword -> AttackType.SWORD
-        Lance -> AttackType.LANCE
-        Axe -> AttackType.AXE
-        is Magic -> when (color) {
-            Color.RED -> AttackType.RED_TOME
-            Color.GREEN -> AttackType.GREEN_TOME
-            Color.BLUE -> AttackType.BLUE_TOME
-            Color.COLORLESS -> throw IllegalArgumentException("no colorless tome")
-        }
-    }
-}
 

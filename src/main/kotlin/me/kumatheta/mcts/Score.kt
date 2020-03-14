@@ -1,6 +1,6 @@
 package me.kumatheta.mcts
 
-interface Score<T> {
+interface Score<out T> {
     val totalScore: Long
     val tries: Int
     val bestScore: Long

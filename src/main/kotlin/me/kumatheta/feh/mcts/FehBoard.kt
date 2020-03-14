@@ -1,10 +1,9 @@
 package me.kumatheta.feh.mcts
 
 import com.marcinmoskala.math.permutations
-import me.kumatheta.feh.*
-import me.kumatheta.feh.skill.MovementAssist
-import me.kumatheta.feh.skill.assist.Heal
-import me.kumatheta.feh.skill.assist.Refresh
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.Team
+import me.kumatheta.feh.UnitAction
 import me.kumatheta.mcts.Board
 import me.kumatheta.mcts.Move
 import kotlin.random.Random
@@ -44,6 +43,7 @@ fun newFehBoard(
     maxTurnBeforeEngage: Int,
     canRearrange: Boolean = true,
     bossId: Int = 5,
+    toRating: UnitAction.(config: FehBoardConfig) -> Int,
     calculateScore: BattleState.(phaseLimit: Int) -> Long
 ): FehBoard {
     val internalState = state.copy()
@@ -57,6 +57,7 @@ fun newFehBoard(
         maxTurnBeforeEngage = maxTurnBeforeEngage,
         assistMap = assistMap,
         bossId = bossId,
+        toRating = toRating,
         calculateScore = calculateScore
     )
 
@@ -246,51 +247,9 @@ class StandardFehBoard(
         nextMoves as List<NormalMove>
         return nextMoves.asSequence().sortedByDescending { move ->
             val unitAction = move.unitAction
-            unitAction.toRating()
+            config.toRating(unitAction, config)
         }
     }
-
-    private fun UnitAction.toRating(): Int {
-        val assist = config.assistMap[heroUnitId]
-        return if (assist is Refresh) {
-            if (this is MoveAndAssist) {
-                5
-            } else {
-                0
-            }
-        } else {
-            when (this) {
-                is MoveAndAttack -> 3
-                is MoveAndAssist -> when (assist) {
-                    is Heal -> 3
-                    is MovementAssist -> 2
-                    else -> 1
-                }
-                else -> 1
-            }
-        }
-//        val attackers = enemiesInRange(this)
-//        attackers.mapNotNull {
-//            config.trialResults[AttackerDefenderPair(it, playerUnit)]
-//        }.forEach {
-//            if (it.defenderHpAfter == 0) {
-//                score-=10
-//                return@forEach
-//            }
-//            if (it.attackerHpAfter == 0) {
-//                score+=2
-//            }
-//            if (it.defenderHpAfter * 2 < it.defenderHpBefore) {
-//                score-=2
-//            }
-//        }
-    }
-
-//    private fun enemiesInRange(unitAction: UnitAction): Sequence<Int> {
-//        val enemies = dangerAreas[unitAction.moveTarget] ?: return emptySequence()
-//        val attackTargetId = (unitAction as? MoveAndAttack)?.attackTargetId ?: return enemies.asSequence()
-//        return enemies.asSequence() - attackTargetId
-//    }
 
     override fun getPlayOutMove(random: Random): FehMove {
         return suggestedOrder(moves.shuffled(random)).first()

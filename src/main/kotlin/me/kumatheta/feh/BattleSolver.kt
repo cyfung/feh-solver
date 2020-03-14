@@ -1,5 +1,6 @@
 package me.kumatheta.feh
 
+import me.kumatheta.feh.util.NoCacheBattleMap
 import java.util.*
 
 private class PlayerMovement(
@@ -13,7 +14,7 @@ class BattleSolver(private val battleMap: BattleMap, private val phraseLimit: In
     fun solve(): BattleSolution {
         var lastPlayerMovement: PlayerMovement? = null
         val steps = LinkedList<PlayerMovement>()
-        var battleState = BattleState(battleMap)
+        var battleState = BattleState(NoCacheBattleMap(battleMap))
 
         mainLoop@ while (true) {
             while (true) {

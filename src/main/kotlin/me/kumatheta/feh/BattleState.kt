@@ -87,9 +87,9 @@ class BattleState private constructor(
         )
     }
 
-    constructor(battleMap: BattleMap, recordFirstPlayerDeath: Boolean = false) : this(
-        battleMap = CacheBattleMap(battleMap),
-        locationMap = battleMap.toChessPieceMap().toMutableMap(),
+    constructor(battleMap: InternalBattleMap, recordFirstPlayerDeath: Boolean = false) : this(
+        battleMap = battleMap,
+        locationMap = battleMap.chessPieceMap.toMutableMap(),
         phase = -1,
         playerDied = 0,
         enemyDied = 0,

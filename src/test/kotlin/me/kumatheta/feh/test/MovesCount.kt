@@ -3,6 +3,7 @@ package me.kumatheta.feh.test
 import kotlinx.coroutines.*
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.NormalMove
+import me.kumatheta.feh.util.CacheBattleMap
 import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -148,7 +149,7 @@ fun main() {
         spawnMap,
         playerMap
     )
-    val state = BattleState(battleMap)
+    val state = BattleState(CacheBattleMap(battleMap))
     state.rearrange((1..state.playerCount).toList())
 
 //    val phraseLimit = 1
