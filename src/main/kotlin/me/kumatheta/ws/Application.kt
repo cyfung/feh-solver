@@ -8,12 +8,16 @@ import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.put
 import io.ktor.routing.routing
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
-import me.kumatheta.mcts.*
+import me.kumatheta.mcts.Mcts
+import me.kumatheta.mcts.Score
+import me.kumatheta.mcts.ScoreManagerFactory
+import me.kumatheta.mcts.hybridDynamicUCTTune
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
@@ -25,7 +29,21 @@ typealias MsgMoveType = me.kumatheta.feh.message.MoveType
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
-private val jobConfig = FehJobConfig(scoreManager = LocalVaryingUCTTuned<FehMove>(), canRearrange = true, mapName = "duma infernal")
+private val jobConfig = FehJobConfig(
+    scoreManagerFactory = hybridDynamicUCTTune(),
+    mapName = "sothis infernal",
+    phaseLimit = 20,
+    maxTurnBeforeEngage = 3,
+    parallelCount = 20,
+    canRearrange = false,
+    toRating = UnitAction::toRating,
+    calculateScore = BattleState::toScore,
+    startingMoves = null
+//    listOf(
+//        NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
+//        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1, obstacleX = 3, obstacleY = 1))
+//    )
+)
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
@@ -117,7 +135,7 @@ fun toUpdateInfoList(
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-private fun <S : Score<FehMove>, M: ScoreManager<FehMove, S>> getOrStartJob(
+private fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> getOrStartJob(
     jobConfig: FehJobConfig<S, M>,
     jobInfoRef: AtomicReference<FehJobInfo<Score<FehMove>>?>
 ): FehJobInfo<Score<FehMove>> {
@@ -139,7 +157,7 @@ private fun <S : Score<FehMove>, M: ScoreManager<FehMove, S>> getOrStartJob(
 
 @ExperimentalCoroutinesApi
 @ExperimentalTime
-private fun <S : Score<FehMove>, M: ScoreManager<FehMove, S>> restartJob(
+private fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> restartJob(
     jobConfig: FehJobConfig<S, M>,
     jobInfoRef: AtomicReference<FehJobInfo<Score<FehMove>>?>
 ): FehJobInfo<Score<FehMove>> {
@@ -179,7 +197,7 @@ private fun UnitAction.toMsgAction(): Action {
 }
 
 @ExperimentalCoroutinesApi
-private suspend fun <S: Score<FehMove>> resetScoreWithRetry(mcts: Mcts<FehMove, S>): S {
+private suspend fun <S : Score<FehMove>> resetScoreWithRetry(mcts: Mcts<FehMove, S>): S {
     repeat(10) {
         val score = mcts.resetRecentScore()
         val moves = score.moves

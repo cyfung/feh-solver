@@ -7,8 +7,7 @@ import kotlin.random.Random
 
 @ExperimentalCoroutinesApi
 class CountableNodeManager<T : Move, S : Score<T>>(
-    private val random: Random,
-    private val scoreManager: ScoreManager<T, S>
+    private val random: Random
 ) : NodeManager<T, S> {
     private val sizeRef = AtomicInteger(0)
     override val estimatedSize
@@ -28,7 +27,6 @@ class CountableNodeManager<T : Move, S : Score<T>>(
                 lastMove = countableNode.lastMove,
                 scoreRef = countableNode.scoreRef,
                 childIndex = countableNode.childIndex,
-                scoreManager = scoreManager,
                 childBuilder = ::buildChild
             )
             if (countableNode.delegate.compareAndSet(null, node)) {
@@ -45,7 +43,8 @@ class CountableNodeManager<T : Move, S : Score<T>>(
         board: Board<T>,
         lastMove: T,
         childScore: Long,
-        moves: List<T>
+        moves: List<T>,
+        scoreManager: ScoreManager<T, S>
     ): Node<T, S> {
         sizeRef.incrementAndGet()
         return CountableNode(
@@ -65,14 +64,14 @@ class CountableNodeManager<T : Move, S : Score<T>>(
         countableNode.removeAllChildren()
     }
 
-    override fun createRootNode(board: Board<T>): Node<T, S> {
+    override fun createRootNode(board: Board<T>, emptyScore: S): Node<T, S> {
         sizeRef.incrementAndGet()
         return CountableNode(
             countableNodeManager = this,
             board = board,
             parent = null,
             lastMove = null,
-            scoreRef = AtomicReference(scoreManager.newEmptyScore()),
+            scoreRef = AtomicReference(emptyScore),
             childIndex = 0,
             isFixed = true
         )
@@ -107,8 +106,11 @@ class CountableNode<T : Move, S : Score<T>>(
         return countableNodeManager.getDelegateNode(this).getBestChild()
     }
 
-    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
-        return countableNodeManager.getDelegateNode(this).selectAndPlayOut(updateScore)
+    override suspend fun selectAndPlayOut(
+        scoreManager: ScoreManager<T, S>,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
+        return countableNodeManager.getDelegateNode(this).selectAndPlayOut(scoreManager, updateScore)
     }
 
     override fun removeChild(index: Int) {

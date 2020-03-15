@@ -9,7 +9,7 @@ interface Node<T : Move, S : Score<T>> {
     val childIndex: Int
     val fakeNode: FakeNode<T, S>
 
-    suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>?
+    suspend fun selectAndPlayOut(scoreManager: ScoreManager<T,S>, updateScore: (Long, List<T>) -> Unit): Node<T, S>?
     fun removeChild(index: Int)
     fun getBestChild(): Node<T, S>?
     fun noMoreChild(): Boolean

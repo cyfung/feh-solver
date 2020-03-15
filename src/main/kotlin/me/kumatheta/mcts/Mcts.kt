@@ -12,15 +12,15 @@ import kotlin.time.MonoClock
 @ExperimentalCoroutinesApi
 class Mcts<T : Move, out S : Score<T>>(
     board: Board<T>,
-    private val scoreManager: ScoreManager<T, S>
+    private val scoreManagerFactory: ScoreManagerFactory<T, S>
 ) {
-    private val nodeManager = CountableNodeManager(Random, scoreManager)
+    private val nodeManager = CountableNodeManager<T, S>(Random)
 
-    private val rootRef = AtomicReference(nodeManager.createRootNode(board))
+    private val rootRef = AtomicReference(nodeManager.createRootNode(board, scoreManagerFactory.newEmptyScore()))
 
     private val scoreRef = rootRef.get().scoreRef
 
-    private val recentScoreRef = AtomicReference(scoreManager.newEmptyScore())
+    private val recentScoreRef = AtomicReference(scoreManagerFactory.newEmptyScore())
 
     private val dispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2) {
         val thread = Thread(it)
@@ -45,7 +45,7 @@ class Mcts<T : Move, out S : Score<T>>(
                     launch(dispatcher) {
                         while (clockMark.elapsedNow().inSeconds < second) {
                             repeat(10) {
-                                selectAndPlayOut()
+                                selectAndPlayOut(scoreManagerFactory.newScoreManager())
                             }
                             count.getAndAdd(10)
                         }
@@ -63,7 +63,7 @@ class Mcts<T : Move, out S : Score<T>>(
         get() = rootRef.get().score
 
     fun resetRecentScore(): S {
-        return recentScoreRef.getAndSet(scoreManager.newEmptyScore())
+        return recentScoreRef.getAndSet(scoreManagerFactory.newEmptyScore())
     }
 
     fun moveDown() {
@@ -75,17 +75,22 @@ class Mcts<T : Move, out S : Score<T>>(
         oldRoot.removeAllChildren()
     }
 
-    private suspend fun selectAndPlayOut() {
+    private suspend fun selectAndPlayOut(scoreManager: ScoreManager<T, S>) {
         var node: Node<T, S> = rootRef.get()
         while (true) {
-            val newNode = node.selectAndPlayOut { newScore, moves ->
-                updateScore(node, newScore, moves)
+            val newNode = node.selectAndPlayOut(scoreManager) { newScore, moves ->
+                updateScore(scoreManager, node, newScore, moves)
             } ?: break
             node = newNode
         }
     }
 
-    private fun updateScore(startingNode: Node<T, S>, newScore: Long, moves: List<T>) {
+    private fun updateScore(
+        scoreManager: ScoreManager<T, S>,
+        startingNode: Node<T, S>,
+        newScore: Long,
+        moves: List<T>
+    ) {
         var currentNode: Node<T, S> = startingNode
         val currentMoves = LinkedList<T>()
         currentMoves.addAll(moves)

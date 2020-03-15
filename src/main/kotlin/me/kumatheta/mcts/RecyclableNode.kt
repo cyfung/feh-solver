@@ -70,7 +70,6 @@ class RecyclableNode<T : Move, S : Score<T>>(
             lastMove = lastMove,
             scoreRef = scoreRef,
             childIndex = childIndex,
-            scoreManager = scoreManager,
             childBuilder = ::buildChild
         )
     }
@@ -81,7 +80,8 @@ class RecyclableNode<T : Move, S : Score<T>>(
         board: Board<T>,
         lastMove: T,
         childScore: Long,
-        moves: List<T>
+        moves: List<T>,
+        scoreManager: ScoreManager<T, S>
     ): Node<T, S> {
         return RecyclableNode(
             recycleManager = recycleManager,
@@ -93,8 +93,11 @@ class RecyclableNode<T : Move, S : Score<T>>(
         )
     }
 
-    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
-        return recycleManager.getDelegateNode(this).selectAndPlayOut(updateScore)
+    override suspend fun selectAndPlayOut(
+        scoreManager: ScoreManager<T, S>,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
+        return recycleManager.getDelegateNode(this).selectAndPlayOut(scoreManager, updateScore)
     }
 
     override fun removeChild(index: Int) {

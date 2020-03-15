@@ -4,5 +4,5 @@ interface NodeManager<T : Move, S : Score<T>> {
 
     val estimatedSize: Int
 
-    fun createRootNode(board: Board<T>): Node<T, S>
+    fun createRootNode(board: Board<T>, emptyScore: S): Node<T, S>
 }

@@ -34,7 +34,7 @@ data class FehJobInfo<out S : Score<FehMove>>(
 
 @ExperimentalTime
 @ExperimentalCoroutinesApi
-fun <S : Score<FehMove>, M : ScoreManager<FehMove, S>> FehJobConfig<S, M>.toJobInfo(): FehJobInfo<S> {
+fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> FehJobConfig<S, M>.toJobInfo(): FehJobInfo<S> {
     Paths.get("data/$mapName")
     val positionMap = readMap(Paths.get("data/$mapName/$mapName - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$mapName/$mapName - spawn.csv"))
@@ -46,7 +46,7 @@ fun <S : Score<FehMove>, M : ScoreManager<FehMove, S>> FehJobConfig<S, M>.toJobI
     )
     val state = BattleState(battleMap.toInternalBattleMap())
     val setupInfo = buildSetupInfo(positionMap, battleMap, state)
-    val board = newFehBoard(
+    var board = newFehBoard(
         phaseLimit,
         state,
         maxTurnBeforeEngage,
@@ -54,8 +54,12 @@ fun <S : Score<FehMove>, M : ScoreManager<FehMove, S>> FehJobConfig<S, M>.toJobI
         toRating = toRating,
         calculateScore = calculateScore
     )
+    startingMoves?.forEach {
+        require(board.moves.contains(it))
+        board = board.applyMove(it)
+    }
 
-    val mcts = Mcts(board, scoreManager)
+    val mcts = Mcts(board, scoreManagerFactory)
 
     return FehJobInfo(
         jobConfig = this,
@@ -98,7 +102,9 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
                 return@coroutineScope
             }
             mcts.run(second = 5, parallelCount = jobConfig.parallelCount)
-            if (mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
+            val rootScore = mcts.rootScore
+            println("current root tries: ${rootScore.tries}")
+            if (rootScore.tries > 1000000 || mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
                 mcts.moveDown()
                 lastFixMove = MonoClock.markNow()
             }
@@ -111,9 +117,9 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
             println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
 
             println("best score: ${score.bestScore}")
-//        mcts.scoreManager.high = score.bestScore
-//        mcts.scoreManager.average = score.totalScore / score.tries
-//        println("average = ${mcts.scoreManager.average}")
+            if (jobConfig.scoreManagerFactory is ScoreRefRequired) {
+                jobConfig.scoreManagerFactory.update(score.totalScore / score.tries, score.bestScore)
+            }
             println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
             tries = score.tries
             println("estimatedSize: ${mcts.estimatedSize}")

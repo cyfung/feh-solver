@@ -13,7 +13,10 @@ class FakeNode<T : Move, S : Score<T>>(
     override val fakeNode: FakeNode<T, S>
         get() = throw UnsupportedOperationException()
 
-    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
+    override suspend fun selectAndPlayOut(
+        scoreManager: ScoreManager<T, S>,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
         throw UnsupportedOperationException()
     }
 

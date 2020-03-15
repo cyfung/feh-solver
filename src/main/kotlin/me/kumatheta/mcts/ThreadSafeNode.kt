@@ -14,8 +14,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
     lastMove: T?,
     scoreRef: AtomicReference<S>,
     override val childIndex: Int,
-    private val childBuilder: (parent: Node<T, S>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>) -> Node<T, S>,
-    private val scoreManager: ScoreManager<T, S>
+    private val childBuilder: (parent: Node<T, S>, childIndex: Int, board: Board<T>, lastMove: T, childScore: Long, moves: List<T>, scoreManager: ScoreManager<T, S>) -> Node<T, S>
 ) : AbstractNode<T, S>(parent, lastMove, scoreRef) {
     override fun noMoreChild() = outstandingChildCount.get() <= 0
 
@@ -41,7 +40,10 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
         }
     }
 
-    override suspend fun selectAndPlayOut(updateScore: (Long, List<T>) -> Unit): Node<T, S>? {
+    override suspend fun selectAndPlayOut(
+        scoreManager: ScoreManager<T, S>,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
         val index = childInitTicket.decrementAndGet()
         return if (index < 0) {
             val score = scoreRef.get()
@@ -83,7 +85,15 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
             } else {
                 // play out
                 val (childScore, moves) = copy.playOut(random)
-                val child = childBuilder(this, index, copy, move, childScore, moves)
+                val child = childBuilder(
+                    this,
+                    index,
+                    copy,
+                    move,
+                    childScore,
+                    moves,
+                    scoreManager
+                )
                 updateScore(childScore, (sequenceOf(move) + moves).toList())
                 val completed = deferred.complete(child)
                 if (!completed) {

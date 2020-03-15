@@ -32,7 +32,7 @@ abstract class BasicFehBoard(
     }
 
     fun calculateScore(endState: BattleState, move: FehMove): Long {
-        return config.calculateScore(endState, config.phaseLimit)
+        return config.calculateScore(endState, config)
     }
 
 }
@@ -44,7 +44,7 @@ fun newFehBoard(
     canRearrange: Boolean = true,
     bossId: Int = 5,
     toRating: UnitAction.(config: FehBoardConfig) -> Int,
-    calculateScore: BattleState.(phaseLimit: Int) -> Long
+    calculateScore: BattleState.(config: FehBoardConfig) -> Long
 ): FehBoard {
     val internalState = state.copy()
     val totalPlayerHp = internalState.unitsSeq(Team.PLAYER).sumBy { it.maxHp }

@@ -13,11 +13,11 @@ data class FehBoardConfig(
     val assistMap: Map<Int, Assist?>,
     val bossId: Int,
     val toRating: UnitAction.(config: FehBoardConfig) -> Int,
-    val calculateScore: BattleState.(phaseLimit: Int) -> Long
+    val calculateScore: BattleState.(config: FehBoardConfig) -> Long
 )
 
-fun BattleState.calculateTacticsDrillScore(phaseLimit: Int): Long {
-    val phaseRemaining = phaseLimit - phase
+fun BattleState.calculateTacticsDrillScore(config: FehBoardConfig): Long {
+    val phaseRemaining = config.phaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 2 +
@@ -37,8 +37,8 @@ fun BattleState.calculateTacticsDrillScore(phaseLimit: Int): Long {
 
 }
 
-fun BattleState.oldCalculateHeroBattleScore(phaseLimit: Int): Long {
-    val phaseRemaining = phaseLimit - phase
+fun BattleState.oldCalculateHeroBattleScore(config: FehBoardConfig): Long {
+    val phaseRemaining = config.phaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
@@ -52,8 +52,8 @@ fun BattleState.oldCalculateHeroBattleScore(phaseLimit: Int): Long {
 
 }
 
-fun BattleState.calculateHeroBattleScore(phaseLimit: Int): Long {
-    val phaseRemaining = phaseLimit - phase
+fun BattleState.calculateHeroBattleScore(config: FehBoardConfig): Long {
+    val phaseRemaining = config.phaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 7 +
@@ -67,8 +67,8 @@ fun BattleState.calculateHeroBattleScore(phaseLimit: Int): Long {
 
 }
 
-fun BattleState.calculateScoreV1(phaseLimit: Int): Long {
-    return (phaseLimit - phase) * 200L / phaseLimit +
+fun BattleState.calculateScoreV1(config: FehBoardConfig): Long {
+    return (config.phaseLimit - phase) * 200L / config.phaseLimit +
             enemyDied * 600L / enemyCount +
             (playerCount - playerDied) * 200L / playerCount
 }
@@ -100,4 +100,42 @@ fun UnitAction.toRating(config: FehBoardConfig): Int {
             else -> 1
         }
     }
+}
+
+fun BattleState.toScore(config: FehBoardConfig): Long {
+    val phaseRemaining = config.phaseLimit - phase
+    return enemyDied * 500L +
+            (playerCount - playerDied) * 400L +
+            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
+            unitsSeq(Team.ENEMY).sumBy { it.maxHp - it.currentHp } * 6 +
+            if (unitsSeq(Team.ENEMY).any { it.id == config.bossId }) {
+                0
+            } else {
+                300
+            } +
+            phaseRemaining * 20 +
+            if (winningTeam == Team.PLAYER) {
+                5000L
+            } else {
+                0L
+            }
+}
+
+fun BattleState.toNewScore(config: FehBoardConfig): Long {
+    val phaseRemaining = config.phaseLimit - phase
+    return enemyDied * 500L +
+            (playerCount - playerDied) * 400L +
+            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
+            unitsSeq(Team.ENEMY).sumBy { (it.maxHp - it.currentHp) * 320 / it.maxHp } +
+            if (unitsSeq(Team.ENEMY).any { it.id == config.bossId }) {
+                0
+            } else {
+                250
+            } +
+            phaseRemaining * 20 +
+            if (winningTeam == Team.PLAYER) {
+                5000L
+            } else {
+                0L
+            }
 }

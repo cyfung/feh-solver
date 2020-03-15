@@ -11,16 +11,17 @@ import me.kumatheta.feh.mcts.toRating
 import me.kumatheta.feh.util.CacheBattleMap
 import me.kumatheta.mcts.*
 
-data class FehJobConfig<S : Score<FehMove>, M: ScoreManager<FehMove, S>>(
-    val scoreManager: M,
+data class FehJobConfig<S : Score<FehMove>, M: ScoreManagerFactory<FehMove, S>>(
+    val scoreManagerFactory: M,
     val mapName: String,
     val phaseLimit: Int = 20,
     val maxTurnBeforeEngage: Int = 3,
     val canRearrange: Boolean = true,
     val parallelCount: Int = 20,
     val toRating: UnitAction.(config: FehBoardConfig) -> Int = UnitAction::toRating,
-    val calculateScore: BattleState.(phaseLimit: Int) -> Long = BattleState::calculateHeroBattleScore,
+    val calculateScore: BattleState.(config: FehBoardConfig) -> Long = BattleState::calculateHeroBattleScore,
     val toInternalBattleMap: BattleMap.() -> InternalBattleMap = {
         CacheBattleMap(this)
-    }
+    },
+    val startingMoves: Sequence<FehMove>? = null
 )
