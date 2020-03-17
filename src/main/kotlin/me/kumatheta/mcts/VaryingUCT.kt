@@ -7,7 +7,12 @@ class VaryingUCT<T : Move>(
     @Volatile var high: Long,
     @Volatile var average: Long,
     private val explorationConstantC: Double = sqrt(2.0)
-) : ScoreManager<T, UCTScore<T>> {
+) : ScoreManager<T, UCTScore<T>>, ScoreRefRequired {
+
+    override fun updateScoreRef(average: Long, high: Long) {
+        this.high = high
+        this.average = average
+    }
 
     override fun newChildScore(childScore: Long, moves: List<T>) =
         UCTScore(childScore, 1, childScore, moves)

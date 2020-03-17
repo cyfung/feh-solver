@@ -66,6 +66,10 @@ class Mcts<T : Move, out S : Score<T>>(
         return recentScoreRef.getAndSet(scoreManagerFactory.newEmptyScore())
     }
 
+    private val moveDownCountRef = AtomicInteger(0)
+    val moveDownCount
+        get() = moveDownCountRef.get()
+
     fun moveDown() {
         val newRoot = rootRef.updateAndGet { rootNode ->
             rootNode.getBestChild() ?: throw IllegalStateException("no more child")
@@ -73,6 +77,7 @@ class Mcts<T : Move, out S : Score<T>>(
         val oldRoot = newRoot.parent ?: throw IllegalStateException()
         newRoot.parent = oldRoot.fakeNode
         oldRoot.removeAllChildren()
+        moveDownCountRef.getAndIncrement()
     }
 
     private suspend fun selectAndPlayOut(scoreManager: ScoreManager<T, S>) {

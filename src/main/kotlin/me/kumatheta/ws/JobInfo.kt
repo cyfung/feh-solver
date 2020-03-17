@@ -12,7 +12,10 @@ import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.mcts.newFehBoard
 import me.kumatheta.feh.mcts.tryMoves
 import me.kumatheta.feh.message.*
-import me.kumatheta.mcts.*
+import me.kumatheta.mcts.Mcts
+import me.kumatheta.mcts.Score
+import me.kumatheta.mcts.ScoreManagerFactory
+import me.kumatheta.mcts.ScoreRefRequired
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -97,6 +100,7 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
 
         val json = Json(JsonConfiguration.Stable)
 
+        val moveDownCriteria = jobConfig.moveDownCriteria
         repeat(10000) {
             if (!isActive) {
                 return@coroutineScope
@@ -104,11 +108,14 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
             mcts.run(second = 5, parallelCount = jobConfig.parallelCount)
             val rootScore = mcts.rootScore
             println("current root tries: ${rootScore.tries}")
-            if (rootScore.tries > 1000000 || mcts.estimatedSize > 680000 || lastFixMove.elapsedNow().inMinutes > 20) {
+            if (moveDownCriteria.maxTries != null && moveDownCriteria.maxTries < rootScore.tries ||
+                moveDownCriteria.maxNodes != null && moveDownCriteria.maxNodes < mcts.estimatedSize ||
+                moveDownCriteria.maxDuration != null && moveDownCriteria.maxDuration < lastFixMove.elapsedNow()
+            ) {
                 mcts.moveDown()
                 lastFixMove = MonoClock.markNow()
             }
-            println("elapsed ${mctsStart.elapsedNow()}")
+            println("elapsed ${mctsStart.elapsedNow()}, moveDownCount ${mcts.moveDownCount}")
             val score = mcts.score
             val bestMoves = score.moves ?: throw IllegalStateException()
             val testState = board.tryMoves(bestMoves)
@@ -118,7 +125,7 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
 
             println("best score: ${score.bestScore}")
             if (jobConfig.scoreManagerFactory is ScoreRefRequired) {
-                jobConfig.scoreManagerFactory.update(score.totalScore / score.tries, score.bestScore)
+                jobConfig.scoreManagerFactory.updateScoreRef(score.totalScore / score.tries, score.bestScore)
             }
             println("tries: ${score.tries - tries}, total tries: ${score.tries}, ${testState.enemyDied}, ${testState.playerDied}, ${testState.winningTeam}")
             tries = score.tries

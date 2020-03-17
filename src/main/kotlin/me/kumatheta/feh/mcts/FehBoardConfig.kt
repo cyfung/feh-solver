@@ -67,27 +67,19 @@ fun BattleState.calculateHeroBattleScore(config: FehBoardConfig): Long {
 
 }
 
-fun BattleState.calculateScoreV1(config: FehBoardConfig): Long {
-    return (config.phaseLimit - phase) * 200L / config.phaseLimit +
-            enemyDied * 600L / enemyCount +
-            (playerCount - playerDied) * 200L / playerCount
-}
-
-fun UnitAction.toRatingAttackFirst(config: FehBoardConfig): Int {
-    return if (this is MoveAndAttack) {
-        2
-    } else {
-        1
-    }
-}
-
 fun UnitAction.toRating(config: FehBoardConfig): Int {
     val assist = config.assistMap[heroUnitId]
     return if (assist is Refresh) {
-        if (this is MoveAndAssist) {
-            5
-        } else {
-            0
+        when (this) {
+            is MoveAndAssist -> {
+                3
+            }
+            is MoveAndAttack -> {
+                2
+            }
+            else -> {
+                0
+            }
         }
     } else {
         when (this) {
@@ -103,25 +95,6 @@ fun UnitAction.toRating(config: FehBoardConfig): Int {
 }
 
 fun BattleState.toScore(config: FehBoardConfig): Long {
-    val phaseRemaining = config.phaseLimit - phase
-    return enemyDied * 500L +
-            (playerCount - playerDied) * 400L +
-            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
-            unitsSeq(Team.ENEMY).sumBy { it.maxHp - it.currentHp } * 6 +
-            if (unitsSeq(Team.ENEMY).any { it.id == config.bossId }) {
-                0
-            } else {
-                300
-            } +
-            phaseRemaining * 20 +
-            if (winningTeam == Team.PLAYER) {
-                5000L
-            } else {
-                0L
-            }
-}
-
-fun BattleState.toNewScore(config: FehBoardConfig): Long {
     val phaseRemaining = config.phaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +

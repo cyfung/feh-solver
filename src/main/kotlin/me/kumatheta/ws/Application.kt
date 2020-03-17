@@ -14,10 +14,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
-import me.kumatheta.mcts.Mcts
-import me.kumatheta.mcts.Score
-import me.kumatheta.mcts.ScoreManagerFactory
-import me.kumatheta.mcts.hybridDynamicUCTTune
+import me.kumatheta.mcts.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
@@ -29,20 +26,20 @@ typealias MsgMoveType = me.kumatheta.feh.message.MoveType
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
+@ExperimentalTime
 private val jobConfig = FehJobConfig(
-    scoreManagerFactory = hybridDynamicUCTTune(),
-    mapName = "sothis infernal",
+    scoreManagerFactory = UCT<FehMove>().toFactory(),
+//    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
+    mapName = "duma infernal",
     phaseLimit = 20,
     maxTurnBeforeEngage = 3,
     parallelCount = 20,
-    canRearrange = false,
-    toRating = UnitAction::toRating,
-    calculateScore = BattleState::toScore,
-    startingMoves = null
-//    listOf(
-//        NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
-//        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1, obstacleX = 3, obstacleY = 1))
-//    )
+    canRearrange = true,
+    toRating = {
+        1
+    },
+    calculateScore = BattleState::calculateScoreV1,
+    moveDownCriteria = MoveDownCriteria(null, null, 600000)
 )
 
 @ExperimentalCoroutinesApi

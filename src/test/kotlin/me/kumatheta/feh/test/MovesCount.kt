@@ -139,7 +139,7 @@ val grandmaster51Moves = listOf(
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 fun main() {
-    val dataSet = "grandmaster 51"
+    val dataSet = "bhb morgan morgan"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -154,10 +154,10 @@ fun main() {
 
 //    val phraseLimit = 1
 //    var board = newFehBoard(phraseLimit, state, 3, false)
-    val testMoves = grandmaster51Moves
+    val testMoves = morganMorganMoves
     runBlocking {
         GlobalScope.launch {
-            (2..10 step 2).forEach {
+            (4 downTo 0 step 2).forEach {
                 countPhase(testMoves, state.copy(), it)
             }
         }.join()

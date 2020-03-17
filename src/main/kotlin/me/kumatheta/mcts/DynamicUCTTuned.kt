@@ -1,14 +1,13 @@
 package me.kumatheta.mcts
 
-import me.kumatheta.feh.mcts.FehMove
 import kotlin.math.ln
 import kotlin.math.sqrt
 
-fun hybridDynamicUCTTune(): CombinedScoreManagerFactory<FehMove, DynamicUCTTunedScore<FehMove>> {
-    return CombinedScoreManagerFactory(
-        manager1 = DynamicUCTTuned<FehMove>(bestScoreWeight = 0.0),
-        manager2 = DynamicUCTTuned<FehMove>(),
-        manager1Chance = 0.7f
+fun <T : Move> hybridDynamicUCTTune(): CombinedScoreManagerFactory<T, DynamicUCTTunedScore<T>> {
+    return CombinedScoreManagerFactory<T, DynamicUCTTunedScore<T>>(
+        manager1 = DynamicUCTTuned(bestScoreWeight = 0.0),
+        manager2 = DynamicUCTTuned(),
+        ratio = 7.0 / 3
     )
 }
 

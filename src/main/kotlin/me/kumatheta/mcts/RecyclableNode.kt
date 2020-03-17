@@ -6,9 +6,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 
+@ExperimentalCoroutinesApi
 class RecycleManager<T : Move, S : Score<T>>(
     private val random: Random,
-    val scoreManager: ScoreManager<T, S>,
     cacheCount: Long
 ) {
     private val cache =
@@ -17,7 +17,7 @@ class RecycleManager<T : Move, S : Score<T>>(
                 value?.onRemove()
             }
             .build { recyclableNode: RecyclableNode<T, S> ->
-                recyclableNode.createActualNode(random, scoreManager)
+                recyclableNode.createActualNode(random)
             }
 
     val estimatedSize
@@ -38,6 +38,7 @@ class RecycleManager<T : Move, S : Score<T>>(
     }
 }
 
+@ExperimentalCoroutinesApi
 class RecyclableNode<T : Move, S : Score<T>>(
     private val recycleManager: RecycleManager<T, S>,
     private val board: Board<T>,
@@ -60,8 +61,7 @@ class RecyclableNode<T : Move, S : Score<T>>(
 
     @ExperimentalCoroutinesApi
     internal fun createActualNode(
-        random: Random,
-        scoreManager: ScoreManager<T, S>
+        random: Random
     ): ThreadSafeNode<T, S> {
         return ThreadSafeNode(
             board = board,
@@ -88,7 +88,7 @@ class RecyclableNode<T : Move, S : Score<T>>(
             board = board,
             parent = parent,
             lastMove = lastMove,
-            scoreRef = AtomicReference(recycleManager.scoreManager.newChildScore(childScore, moves)),
+            scoreRef = AtomicReference(scoreManager.newChildScore(childScore, moves)),
             childIndex = childIndex
         )
     }
