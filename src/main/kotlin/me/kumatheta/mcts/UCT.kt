@@ -23,7 +23,7 @@ class UCT<T : Move>(
         return UCTScore(0, 0, -1, null)
     }
 
-    override fun updateScore(oldScore: UCTScore<T>, newScore: Long, movesCreator: () -> List<T>?): UCTScore<T> {
+    override fun updateScore(oldScore: UCTScore<T>, newScore: Long, movesCreator: () -> List<T>): UCTScore<T> {
         val totalScore = oldScore.totalScore + newScore
         if (totalScore < 0) {
             throw IllegalStateException()

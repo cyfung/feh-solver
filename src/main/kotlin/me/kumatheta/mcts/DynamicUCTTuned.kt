@@ -34,7 +34,11 @@ class DynamicUCTTuned<T : Move>(
         val high = score.bestScore
         val realAverage = childScore.totalScore.toDouble() / childTries
         val weighedAverage = (realAverage + bestScoreWeight * childScore.bestScore) / (1 + bestScoreWeight)
-        val normalizeFactor = (high - average) * 2
+        val normalizeFactor = if (high <= average) {
+            average
+        } else {
+            (high - average) * 2
+        }
         val averageScore = (weighedAverage - average) / normalizeFactor
         val v =
             (childScore.scoreSquareSum.toDouble() / childTries - realAverage * realAverage) / normalizeFactor / normalizeFactor + sqrt(
@@ -52,7 +56,7 @@ class DynamicUCTTuned<T : Move>(
     override fun updateScore(
         oldScore: DynamicUCTTunedScore<T>,
         newScore: Long,
-        movesCreator: () -> List<T>?
+        movesCreator: () -> List<T>
     ): DynamicUCTTunedScore<T> {
         val totalScore = oldScore.totalScore + newScore
         if (totalScore < 0) {

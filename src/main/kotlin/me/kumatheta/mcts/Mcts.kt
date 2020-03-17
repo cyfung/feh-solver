@@ -99,11 +99,11 @@ class Mcts<T : Move, out S : Score<T>>(
         var currentNode: Node<T, S> = startingNode
         val currentMoves = LinkedList<T>()
         currentMoves.addAll(moves)
+        val movesCreator = {
+            currentMoves.toList()
+        }
         while (true) {
             val parent = currentNode.parent
-            val movesCreator = {
-                currentMoves.toList()
-            }
             currentNode.scoreRef.getAndUpdate { oldScore ->
                 scoreManager.updateScore(oldScore, newScore, movesCreator)
             }

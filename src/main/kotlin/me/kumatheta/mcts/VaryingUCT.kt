@@ -21,9 +21,12 @@ class VaryingUCT<T : Move>(
         val tries = score.tries
         val childTries = childScore.tries
         val ref = average
-//        val averageScore = (childScore.totalScore.toDouble() - ref) / (high - ref) / childTries // wrong but working
-        val averageScore = (childScore.totalScore.toDouble() / childTries - ref) / (high - ref)
-//        val averageScore = (childScore.bestScore.toDouble() - ref) / (high - ref) / 2
+        val normalizeFactor = if (high <= ref) {
+            ref
+        } else {
+            high - ref
+        }
+        val averageScore = (childScore.totalScore.toDouble() / childTries - ref) / normalizeFactor
         return averageScore +
                 explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble())
     }
@@ -32,7 +35,7 @@ class VaryingUCT<T : Move>(
         return UCTScore(0, 0, -1, null)
     }
 
-    override fun updateScore(oldScore: UCTScore<T>, newScore: Long, movesCreator: () -> List<T>?): UCTScore<T> {
+    override fun updateScore(oldScore: UCTScore<T>, newScore: Long, movesCreator: () -> List<T>): UCTScore<T> {
         val totalScore = oldScore.totalScore + newScore
         if (totalScore < 0) {
             throw IllegalStateException()

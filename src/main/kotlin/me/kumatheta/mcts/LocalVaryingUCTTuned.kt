@@ -14,7 +14,11 @@ class LocalVaryingUCTTuned<T : Move> : ScoreManager<T, ScoreWithSquareSum<T>> {
         val average = score.totalScore / score.tries
         val high = score.bestScore
         val realAverage = childScore.totalScore.toDouble() / childTries
-        val normalizeFactor = (high - average) * 2
+        val normalizeFactor = if(high <= average) {
+            average
+        } else {
+            (high - average) * 2
+        }
         val averageScore = (realAverage - average) / normalizeFactor
         val v =
             (childScore.scoreSquareSum.toDouble() / childTries - realAverage * realAverage) / normalizeFactor / normalizeFactor + sqrt(
@@ -32,7 +36,7 @@ class LocalVaryingUCTTuned<T : Move> : ScoreManager<T, ScoreWithSquareSum<T>> {
     override fun updateScore(
         oldScore: ScoreWithSquareSum<T>,
         newScore: Long,
-        movesCreator: () -> List<T>?
+        movesCreator: () -> List<T>
     ): ScoreWithSquareSum<T> {
         val totalScore = oldScore.totalScore + newScore
         if (totalScore < 0) {

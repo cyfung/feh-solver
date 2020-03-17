@@ -24,7 +24,11 @@ class ModifiedUCT<T : Move>(
         return ScoreWithSquareSum(0, 0, 0, null, 0)
     }
 
-    override fun updateScore(oldScore: ScoreWithSquareSum<T>, newScore: Long, movesCreator: () -> List<T>?): ScoreWithSquareSum<T> {
+    override fun updateScore(
+        oldScore: ScoreWithSquareSum<T>,
+        newScore: Long,
+        movesCreator: () -> List<T>
+    ): ScoreWithSquareSum<T> {
         val totalScore = oldScore.totalScore + newScore
         val scoreSquareSum = oldScore.scoreSquareSum + newScore * newScore
         if (scoreSquareSum < oldScore.scoreSquareSum) {
