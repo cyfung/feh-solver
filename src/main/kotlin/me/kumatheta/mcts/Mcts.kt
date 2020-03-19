@@ -9,6 +9,7 @@ import kotlin.random.Random
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
+@ExperimentalTime
 @ExperimentalCoroutinesApi
 class Mcts<T : Move, out S : Score<T>>(
     board: Board<T>,
@@ -62,8 +63,20 @@ class Mcts<T : Move, out S : Score<T>>(
     val rootScore: S
         get() = rootRef.get().score
 
-    fun resetRecentScore(): S {
-        return recentScoreRef.getAndSet(scoreManagerFactory.newEmptyScore())
+    suspend fun resetRecentScore(): S {
+        val score = recentScoreRef.get()
+        coroutineScope {
+            var prev = score
+            val clockMark = MonoClock.markNow()
+            while (!recentScoreRef.compareAndSet(prev, scoreManagerFactory.newEmptyScore()) || clockMark.elapsedNow().inSeconds > 2) {
+                val newScore = recentScoreRef.get()
+                if (newScore.bestScore > score.bestScore) {
+                    break
+                }
+                prev = newScore
+            }
+        }
+        return score
     }
 
     private val moveDownCountRef = AtomicInteger(0)
