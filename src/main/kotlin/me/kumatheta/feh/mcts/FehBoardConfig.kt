@@ -99,7 +99,7 @@ fun BattleState.toScore(config: FehBoardConfig): Long {
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
-            unitsSeq(Team.ENEMY).sumBy { (it.maxHp - it.currentHp) * 320 / it.maxHp } +
+            unitsSeq(Team.ENEMY).sumBy { (it.maxHp - it.currentHp) * 400 / it.maxHp } +
             if (unitsSeq(Team.ENEMY).any { it.id == config.bossId }) {
                 0
             } else {
