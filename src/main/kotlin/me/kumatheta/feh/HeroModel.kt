@@ -1,6 +1,7 @@
 package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.*
+import me.kumatheta.feh.skill.effect.SpecialDebuff
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 
 interface Hero {
@@ -30,11 +31,6 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
     } else {
         this.plus(skill)
     }
-}
-
-enum class SpecialDebuff {
-    ALWAYS_AVAILABLE,
-    ONLY_WHEN_ALIVE
 }
 
 open class HeroModel(

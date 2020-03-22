@@ -1,6 +1,6 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.SpecialDebuff
+import me.kumatheta.feh.skill.effect.SpecialDebuff
 import me.kumatheta.feh.skill.BasicSkill
 
 fun poisonStrike(hpDamage:Int) = BasicSkill(

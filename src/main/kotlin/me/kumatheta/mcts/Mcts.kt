@@ -65,7 +65,7 @@ class Mcts<T : Move, out S : Score<T>>(
 
     suspend fun resetRecentScore(): S {
         val score = recentScoreRef.get()
-        coroutineScope {
+        GlobalScope.launch {
             var prev = score
             val clockMark = MonoClock.markNow()
             while (!recentScoreRef.compareAndSet(prev, scoreManagerFactory.newEmptyScore()) || clockMark.elapsedNow().inSeconds > 2) {

@@ -3,6 +3,13 @@ package me.kumatheta.feh
 import kotlin.math.max
 import kotlin.math.min
 
+enum class StatType {
+    ATK,
+    SPD,
+    DEF,
+    RES
+}
+
 data class Stat(
     val hp: Int = 0,
     val atk: Int = 0,

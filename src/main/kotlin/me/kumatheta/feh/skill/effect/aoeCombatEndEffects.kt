@@ -1,9 +1,9 @@
 package me.kumatheta.feh.skill.effect
 
 import me.kumatheta.feh.HeroUnit
-import me.kumatheta.feh.skill.CombatEndSkill
 import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.CombatEndSkill
 import me.kumatheta.feh.skill.nearbyAllies
 
 fun aoeNegativeStatus(negativeStatus: NegativeStatus, range: Int, applyToTarget: Boolean): CombatEndSkill {
@@ -18,7 +18,7 @@ fun aoeDebuff(range: Int, applyToTarget: Boolean, debuff: Stat): CombatEndSkill 
     }
 }
 
-inline fun aoeEnemy(range: Int, applyToTarget: Boolean, crossinline f:(HeroUnit)->Unit): CombatEndSkill {
+inline fun aoeEnemy(range: Int, applyToTarget: Boolean, crossinline f: (HeroUnit) -> Unit): CombatEndSkill {
     return { combatStatus, attacked ->
         if (attacked) {
             if (applyToTarget) {

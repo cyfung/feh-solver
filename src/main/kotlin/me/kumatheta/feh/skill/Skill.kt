@@ -1,6 +1,8 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.effect.SpecialDebuff
+import me.kumatheta.feh.skill.effect.InCombatSupportInput
 
 interface Skill {
     val postInitiateMovement: MovementEffect?
@@ -44,8 +46,8 @@ interface Skill {
     val counterIgnoreRange: InCombatSkill<Boolean>?
     val brave: InCombatSkill<Boolean>?
     val disablePriorityChange: InCombatSkill<Boolean>?
-    val cooldownBuff: InCombatSkill<CooldownChange<Int>?>?
-    val cooldownDebuff: InCombatSkill<CooldownChange<Int>?>?
+    val cooldownBuff: InCombatSkill<CooldownChange?>?
+    val cooldownDebuff: InCombatSkill<CooldownChange?>?
     val triangleAdept: InCombatSkill<Int>?
     val cancelAffinity: InCombatSkill<Int>?
     val raven: InCombatSkill<Boolean>?
@@ -65,7 +67,7 @@ interface Skill {
     val combatEnd: CombatEndSkill?
 }
 
-class CooldownChange<T>(val unitAttack: T, val foeAttack: T)
+class CooldownChange(val unitAttack: Int, val foeAttack: Int)
 
 interface Weapon : Skill {
     val weaponType: WeaponType
@@ -150,28 +152,7 @@ typealias PerAttackListener<T> = (CombatStatus<InCombatStat>, value: T) -> Unit
 typealias MapSkillMethod<T> = (battleState: BattleState, self: HeroUnit) -> T
 typealias TeleportEffect = MapSkillMethod<Sequence<Position>>
 
-data class SupportCombatInput(
-    val battleState: BattleState,
-    val self: HeroUnit,
-    val attacker: HeroUnit,
-    val defender: HeroUnit
-) {
-    val allyIsAttacker = self.team == attacker.team
-    val targetAlly
-        get() = if (allyIsAttacker) {
-            attacker
-        } else {
-            defender
-        }
-    val targetFoe
-        get() = if (allyIsAttacker) {
-            defender
-        } else {
-            attacker
-        }
-}
-
-typealias SupportCombatEffect = (SupportCombatInput) -> Skill?
+typealias SupportCombatEffect = (InCombatSupportInput) -> Skill?
 
 
 interface AssistRelated {

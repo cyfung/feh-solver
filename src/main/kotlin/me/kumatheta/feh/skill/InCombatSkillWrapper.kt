@@ -44,7 +44,7 @@ class InCombatSkillWrapper(
         return forEach { it(combatStatus, value) }
     }
 
-    private fun Sequence<CooldownChange<Int>>.max(): CooldownChange<Int> {
+    private fun Sequence<CooldownChange>.max(): CooldownChange {
         return fold(CooldownChange(0, 0)) { acc, cooldownChange ->
             CooldownChange(
                 kotlin.math.max(acc.unitAttack, cooldownChange.foeAttack),
@@ -80,9 +80,9 @@ class InCombatSkillWrapper(
         get() = baseSkillSet.cancelAffinity.applyAll().max() ?: 0
     val triangleAdept: Int
         get() = baseSkillSet.triangleAdept.applyAll().max() ?: 0
-    val cooldownBuff: CooldownChange<Int>
+    val cooldownBuff: CooldownChange
         get() = baseSkillSet.cooldownBuff.applyAll().filterNotNull().max()
-    val cooldownDebuff: CooldownChange<Int>
+    val cooldownDebuff: CooldownChange
         get() = baseSkillSet.cooldownDebuff.applyAll().filterNotNull().max()
     val counterIgnoreRange: Boolean
         get() = baseSkillSet.counterIgnoreRange.applyAll().any { it }

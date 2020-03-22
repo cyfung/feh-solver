@@ -19,14 +19,14 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 fun main() {
     val jobConfig = FehJobConfig(
-        scoreManagerFactory = VaryingUCT<FehMove>(3000, 2000, 1.5).toFactory(),
+        scoreManagerFactory = hybridDynamicUCTTune<FehMove>(),
         mapName = "sothis infernal",
         phaseLimit = 20,
         maxTurnBeforeEngage = 3,
         parallelCount = 20,
         canRearrange = false,
         toRating = UnitAction::toRating,
-        calculateScore = BattleState::calculateScoreV2
+        calculateScore = BattleState::toScore
     )
     runBlocking {
         val jobInfo = jobConfig.toJobInfo()

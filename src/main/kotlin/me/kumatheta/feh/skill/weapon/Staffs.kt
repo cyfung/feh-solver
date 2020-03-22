@@ -1,7 +1,7 @@
 package me.kumatheta.feh.skill.weapon
 
 import me.kumatheta.feh.NegativeStatus
-import me.kumatheta.feh.SpecialDebuff
+import me.kumatheta.feh.skill.effect.SpecialDebuff
 import me.kumatheta.feh.Staff
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.*

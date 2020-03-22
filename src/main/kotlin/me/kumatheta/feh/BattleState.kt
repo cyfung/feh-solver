@@ -2,6 +2,7 @@ package me.kumatheta.feh
 
 import me.kumatheta.feh.skill.*
 import me.kumatheta.feh.skill.assist.movement.Pivot
+import me.kumatheta.feh.skill.effect.InCombatSupportInput
 import me.kumatheta.feh.skill.effect.startofturn.MOVE_ORDER_EFFECT
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.util.*
@@ -331,8 +332,8 @@ class BattleState private constructor(
     private fun getAttackerSkillSeq(
         attacker: HeroUnit,
         defender: HeroUnit,
-        attackerTeammates: List<SupportCombatInput>,
-        defenderTeammates: List<SupportCombatInput>
+        attackerTeammates: List<InCombatSupportInput>,
+        defenderTeammates: List<InCombatSupportInput>
     ): Sequence<Skill> {
         val attackerTeamSkills = attackerTeammates.asSequence().flatMap { supportCombatInput ->
             supportCombatInput.self.skillSet.supportInCombatBuff.asSequence().map {
@@ -353,8 +354,8 @@ class BattleState private constructor(
     private fun getDefenderSkillSeq(
         attacker: HeroUnit,
         defender: HeroUnit,
-        attackerTeammates: List<SupportCombatInput>,
-        defenderTeammates: List<SupportCombatInput>
+        attackerTeammates: List<InCombatSupportInput>,
+        defenderTeammates: List<InCombatSupportInput>
     ): Sequence<Skill> {
         val defenderTeamSkills = defenderTeammates.asSequence().flatMap { supportCombatInput ->
             supportCombatInput.self.skillSet.supportInCombatBuff.asSequence().map {
@@ -436,10 +437,10 @@ class BattleState private constructor(
 
     private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): AttackerDefenderPair<InCombatSkillSet> {
         val attackerTeammates = unitsSeq(attacker.team).filterNot { it == attacker }.map {
-            SupportCombatInput(this, it, attacker, defender)
+            InCombatSupportInput(this, it, attacker, defender)
         }.toList()
         val defenderTeammates = unitsSeq(defender.team).filterNot { it == defender }.map {
-            SupportCombatInput(this, it, attacker, defender)
+            InCombatSupportInput(this, it, attacker, defender)
         }.toList()
         val attackerSkills = InCombatSkillSet(
             battleState = this,
@@ -526,7 +527,7 @@ class BattleState private constructor(
 
     }
 
-    private val PotentialDamage.cooldownAmount: CooldownChange<AttackerDefenderPair<Int>>
+    private val PotentialDamage.cooldownAmount: AttackerDefenderPair<CooldownChange>
         get() {
             val attackerCooldownIncrease = attackerInCombat.skills.cooldownBuff
             val attackerGuard = attackerInCombat.skills.cooldownDebuff
@@ -534,13 +535,13 @@ class BattleState private constructor(
             val defenderCooldownIncrease = defenderInCombat.skills.cooldownBuff
             val defenderGuard = defenderInCombat.skills.cooldownDebuff
 
-            return CooldownChange(
-                AttackerDefenderPair(
+            return AttackerDefenderPair(
+                CooldownChange(
                     1 + attackerCooldownIncrease.unitAttack - defenderGuard.foeAttack,
-                    1 + defenderCooldownIncrease.foeAttack - attackerGuard.unitAttack
+                    1 + attackerCooldownIncrease.foeAttack - defenderGuard.unitAttack
                 ),
-                AttackerDefenderPair(
-                    1 + attackerCooldownIncrease.foeAttack - defenderGuard.unitAttack,
+                CooldownChange(
+                    1 + defenderCooldownIncrease.foeAttack - attackerGuard.unitAttack,
                     1 + defenderCooldownIncrease.unitAttack - attackerGuard.foeAttack
                 )
             )
@@ -569,6 +570,8 @@ class BattleState private constructor(
         val potentialDamage = preCalculateDamage(attacker, defender)
 
         val cooldownAmount = potentialDamage.cooldownAmount
+        val attackerAttackCooldownAmount = AttackerDefenderPair(cooldownAmount.attacker.unitAttack, cooldownAmount.defender.foeAttack)
+        val defenderAttackCooldownAmount = AttackerDefenderPair(cooldownAmount.defender.unitAttack, cooldownAmount.attacker.foeAttack)
 
         var attackerAttacked = false
         var defenderAttacked = false
@@ -582,7 +585,7 @@ class BattleState private constructor(
                         potentialDamage.attackerInCombat,
                         potentialDamage.defenderInCombat,
                         attackerAttackColorAdv,
-                        cooldownAmount.unitAttack
+                        attackerAttackCooldownAmount
                     )
                 ) {
                     defender
@@ -595,7 +598,7 @@ class BattleState private constructor(
                         potentialDamage.defenderInCombat,
                         potentialDamage.attackerInCombat,
                         defenderAttackColorAdv,
-                        cooldownAmount.foeAttack
+                        defenderAttackCooldownAmount
                     )
                 ) {
                     attacker

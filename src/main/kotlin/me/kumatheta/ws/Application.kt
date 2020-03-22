@@ -14,6 +14,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
+import me.kumatheta.feh.util.NoCacheBattleMap
 import me.kumatheta.mcts.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -28,18 +29,20 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 @ExperimentalTime
 private val jobConfig = FehJobConfig(
-    scoreManagerFactory = UCT<FehMove>().toFactory(),
-//    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
-    mapName = "duma infernal",
+//    scoreManagerFactory = UCT<FehMove>().toFactory(),
+    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
+//    scoreManagerFactory = hybridDynamicUCTTune<FehMove>(),
+    mapName = "sothis infernal",
     phaseLimit = 20,
     maxTurnBeforeEngage = 3,
     parallelCount = 20,
     canRearrange = true,
-    toRating = {
-        1
-    },
-    calculateScore = BattleState::calculateScoreV1,
+    toRating = UnitAction::toRating,
+    calculateScore = BattleState::calculateScoreV2,
     moveDownCriteria = MoveDownCriteria(null, null, 600000)
+//    toInternalBattleMap = {
+//        NoCacheBattleMap(this)
+//    }
 )
 
 @ExperimentalCoroutinesApi
@@ -193,6 +196,7 @@ private fun UnitAction.toMsgAction(): Action {
     }
 }
 
+@ExperimentalTime
 @ExperimentalCoroutinesApi
 private suspend fun <S : Score<FehMove>> resetScoreWithRetry(mcts: Mcts<FehMove, S>): S {
     repeat(10) {

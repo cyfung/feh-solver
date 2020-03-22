@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.effect.SpecialDebuff
 
 val EmptySkill = BasicSkill()
 
@@ -46,8 +47,6 @@ data class BasicSkill(
     override val counterIgnoreRange: InCombatSkill<Boolean>? = null,
     override val brave: InCombatSkill<Boolean>? = null,
     override val disablePriorityChange: InCombatSkill<Boolean>? = null,
-    override val cooldownBuff: InCombatSkill<CooldownChange<Int>?>? = null,
-    override val cooldownDebuff: InCombatSkill<CooldownChange<Int>?>? = null,
     override val triangleAdept: InCombatSkill<Int>? = null,
     override val cancelAffinity: InCombatSkill<Int>? = null,
     override val raven: InCombatSkill<Boolean>? = null,
@@ -55,6 +54,8 @@ data class BasicSkill(
     override val denyStaffAsNormal: InCombatSkill<Boolean>? = null,
 
     // per attack skill
+    override val cooldownBuff: InCombatSkill<CooldownChange?>? = null,
+    override val cooldownDebuff: InCombatSkill<CooldownChange?>? = null,
     override val percentageDamageReduce: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)? = null,
     override val flatDamageReduce: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)? = null,
     override val damageIncrease: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)? = null,

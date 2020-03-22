@@ -1,6 +1,5 @@
 package me.kumatheta.feh.skill.effect.incombatstat
 
-import me.kumatheta.feh.skill.CombatStartSkill
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.BasicSkill
 

@@ -55,9 +55,9 @@ class InCombatSkillSet(
         get() = methodSeq(Skill::brave)
     val disablePriorityChange: Sequence<InCombatSkill<Boolean>>
         get() = methodSeq(Skill::disablePriorityChange)
-    val cooldownBuff: Sequence<InCombatSkill<CooldownChange<Int>?>>
+    val cooldownBuff: Sequence<InCombatSkill<CooldownChange?>>
         get() = methodSeq(Skill::cooldownBuff)
-    val cooldownDebuff: Sequence<InCombatSkill<CooldownChange<Int>?>>
+    val cooldownDebuff: Sequence<InCombatSkill<CooldownChange?>>
         get() = methodSeq(Skill::cooldownDebuff)
     val triangleAdept: Sequence<InCombatSkill<Int>>
         get() = methodSeq(Skill::triangleAdept)

@@ -1,6 +1,7 @@
 package me.kumatheta.feh.util
 
 import me.kumatheta.feh.*
+import me.kumatheta.feh.skill.effect.SpecialDebuff
 
 val attackTargetOrder = compareByDescending<CombatResult>(
     {
