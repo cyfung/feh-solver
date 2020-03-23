@@ -1,23 +1,32 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.combatStartSkill
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.skill.CombatStatus
+import me.kumatheta.feh.skill.effect.BooleanAdjustment
+import me.kumatheta.feh.skill.effect.DisableCounter
+import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.FollowUpEffect
+import me.kumatheta.feh.skill.effect.SkillEffect
+import me.kumatheta.feh.skill.effect.skillEffects
+import me.kumatheta.feh.skill.toSkill
 
-private val FOE_EFFECT = BasicSkill(counter = combatStartSkill(-1))
-
-fun windsweep(minDiff: Int) = BasicSkill(
-    followUp = {
-        if (it.initAttack) {
-            -1
-        } else {
-            0
+fun windsweep(minDiff: Int) = skillEffects(
+    object : FollowUpEffect {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): BooleanAdjustment {
+            return if (combatStatus.initAttack) {
+                BooleanAdjustment.NEGATIVE
+            } else {
+                BooleanAdjustment.NEUTRAL
+            }
         }
     },
-    foeEffect = {
-        if (it.initAttack && !it.foe.weaponType.targetRes && it.self.virtualSpd >= it.foe.virtualSpd + minDiff) {
-            FOE_EFFECT
-        } else {
-            null
+    object : EffectOnFoe {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+            return if (combatStatus.initAttack && !combatStatus.foe.weaponType.targetRes && combatStatus.self.virtualSpd >= combatStatus.foe.virtualSpd + minDiff) {
+                sequenceOf(DisableCounter)
+            } else {
+                emptySequence()
+            }
         }
     }
-)
+).toSkill()

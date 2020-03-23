@@ -1,3 +1,10 @@
 package me.kumatheta.feh.skill.effect
 
-interface TriangleAdept : CombatStartEffect<Int>, SkillEffect
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.skill.CombatStatus
+
+class TriangleAdept(private val value: Int) : CombatStartEffect<Int>, SkillEffect {
+    override fun apply(combatStatus: CombatStatus<HeroUnit>): Int {
+        return value
+    }
+}

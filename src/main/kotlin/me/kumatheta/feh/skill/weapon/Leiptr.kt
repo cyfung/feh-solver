@@ -1,14 +1,8 @@
 package me.kumatheta.feh.skill.weapon
 
 import me.kumatheta.feh.Lance
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.BasicWeapon
-import me.kumatheta.feh.skill.inCombatSkillTrue
-import me.kumatheta.feh.skill.weaponStat
+import me.kumatheta.feh.skill.basic
+import me.kumatheta.feh.skill.effect.CounterAnyRangeBasic
+import me.kumatheta.feh.skill.plus
 
-val Leiptr = BasicWeapon(
-    Lance, BasicSkill(
-        extraStat = weaponStat(16),
-        counterIgnoreRange = inCombatSkillTrue
-    )
-)
+val Leiptr = Lance.basic(16) + CounterAnyRangeBasic

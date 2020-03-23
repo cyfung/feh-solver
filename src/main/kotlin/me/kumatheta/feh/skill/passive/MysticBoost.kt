@@ -1,13 +1,18 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.combatStartSkillTrue
-import me.kumatheta.feh.skill.inCombatSkillTrue
+import me.kumatheta.feh.skill.CombatStatus
+import me.kumatheta.feh.skill.InCombatStat
+import me.kumatheta.feh.skill.effect.DenyAdaptiveDamageEffectBasic
+import me.kumatheta.feh.skill.effect.DenyStaffAsNormalBasic
+import me.kumatheta.feh.skill.effect.PostCombatEffect
+import me.kumatheta.feh.skill.toSkill
 
-val MysticBoost3 = BasicSkill(
-    denyAdaptiveDamage = combatStartSkillTrue,
-    denyStaffAsNormal = inCombatSkillTrue,
-    combatEnd = { combatStatus, _ ->
-        combatStatus.self.heroUnit.cachedEffect.heal(6)
+val MysticBoost3 = sequenceOf(
+    DenyAdaptiveDamageEffectBasic,
+    DenyStaffAsNormalBasic,
+    object : PostCombatEffect {
+        override fun onCombatEnd(combatStatus: CombatStatus<InCombatStat>, attacked: Boolean) {
+            combatStatus.self.heroUnit.cachedEffect.heal(6)
+        }
     }
-)
+).toSkill()

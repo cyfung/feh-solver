@@ -1,94 +1,50 @@
 package me.kumatheta.feh.skill
 
-import me.kumatheta.feh.*
-import me.kumatheta.feh.skill.effect.SpecialDebuff
-import me.kumatheta.feh.skill.effect.InCombatSupportInput
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.Stat
+import me.kumatheta.feh.WeaponType
+import me.kumatheta.feh.skill.effect.SkillEffect
 
 interface Skill {
-    val postInitiateMovement: MovementEffect?
-    val extraStat: Stat?
-    val phantomStat: Stat?
-    val coolDownCountAdj: Int
-    val debuffer: Boolean
-    val specialDebuff: SpecialDebuff?
-    val neutralizeEffectiveWeaponType: Set<WeaponType>?
-    val neutralizeEffectiveMoveType: Set<MoveType>?
-    val effectiveAgainstWeaponType: Set<WeaponType>?
-    val effectiveAgainstMoveType: Set<MoveType>?
+    val effects: List<SkillEffect>
+}
 
-    // outside of combat
-    val startOfTurn: MapSkillMethod<Unit>?
-    val pass: MapSkillMethod<Boolean>?
-    val obstruct: MapSkillMethod<Boolean>?
-    val teleport: MapSkillMethod<Sequence<Position>>?
-    val guidance: ((battleState: BattleState, self: HeroUnit, target: HeroUnit) -> Boolean)?
-    val supportInCombatBuff: SupportCombatEffect?
-    val supportInCombatDebuff: SupportCombatEffect?
-    val onHealOthers: ((battleState: BattleState, self: HeroUnit, target: HeroUnit, healAmount: Int) -> Unit)?
-
-    val assistRelated: AssistRelated?
-
-    // very beginning of combat
-    val adaptiveDamage: CombatStartSkill<Boolean>?
-    val denyAdaptiveDamage: CombatStartSkill<Boolean>?
-    val foeEffect: CombatStartSkill<Skill?>?
-    val neutralizeFollowUp: CombatStartSkill<Boolean>?
-    val neutralizeBonus: CombatStartSkill<Stat?>?
-    val neutralizePenalty: CombatStartSkill<Stat?>?
-    val inCombatStat: CombatStartSkill<Stat>?
-    val additionalInCombatStat: InCombatSkill<Stat>?
-    val counter: CombatStartSkill<Int>?
-    val followUp: CombatStartSkill<Int>?
-    val desperation: CombatStartSkill<Boolean>?
-    val vantage: CombatStartSkill<Boolean>?
-
-    // actual in combat
-    val counterIgnoreRange: InCombatSkill<Boolean>?
-    val brave: InCombatSkill<Boolean>?
-    val disablePriorityChange: InCombatSkill<Boolean>?
-    val cooldownBuff: InCombatSkill<CooldownChange?>?
-    val cooldownDebuff: InCombatSkill<CooldownChange?>?
-    val triangleAdept: InCombatSkill<Int>?
-    val cancelAffinity: InCombatSkill<Int>?
-    val raven: InCombatSkill<Boolean>?
-    val staffAsNormal: InCombatSkill<Boolean>?
-    val denyStaffAsNormal: InCombatSkill<Boolean>?
-
-    // per attack skill
-    val percentageDamageReduce: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)?
-    val flatDamageReduce: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)?
-    val damageIncrease: ((CombatStatus<InCombatStat>, specialTriggered: Boolean) -> Int)?
-
-    // listener
-    val damageDealtListener: PerAttackListener<DamageDealt>?
-    val damageReceivedListener: PerAttackListener<DamageDealt>?
-
-    // combat end
-    val combatEnd: CombatEndSkill?
+val EmptySkill = object : Skill {
+    override val effects: List<SkillEffect> = emptyList()
 }
 
 class CooldownChange(val unitAttack: Int, val foeAttack: Int)
+
+val NoCooldownChange = CooldownChange(0, 0)
 
 interface Weapon : Skill {
     val weaponType: WeaponType
 }
 
-data class BasicWeapon(override val weaponType: WeaponType, val basicSkill: BasicSkill) :
-    Weapon, Skill by basicSkill
+data class BasicWeapon(override val weaponType: WeaponType, val skill: Skill) :
+    Weapon, Skill by skill
 
-abstract class Special(val coolDownCount: Int, basicSkill: BasicSkill = EmptySkill) : Skill by basicSkill
+abstract class Special private constructor(val coolDownCount: Int, skill: Skill) : Skill by skill {
+    constructor(coolDownCount: Int, skillEffects: Array<out SkillEffect>) : this(
+        coolDownCount,
+        skillEffects.asSequence().toSkill()
+    )
+}
 
-abstract class AoeSpecial(coolDownCount: Int) : Special(coolDownCount) {
+abstract class AoeSpecial(coolDownCount: Int, vararg skillEffects: SkillEffect) : Special(coolDownCount, skillEffects) {
     abstract val damageFactor: Int
 
     abstract fun getTargets(battleState: BattleState, self: HeroUnit, mainTarget: HeroUnit): Sequence<HeroUnit>
 }
 
-abstract class HealingSpecial(coolDownCount: Int) : Special(coolDownCount) {
+abstract class HealingSpecial(coolDownCount: Int, vararg skillEffects: SkillEffect) :
+    Special(coolDownCount, skillEffects) {
     abstract fun trigger(self: HeroUnit, target: HeroUnit, battleState: BattleState)
 }
 
-abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
+abstract class DamagingSpecial(coolDownCount: Int, vararg skillEffects: SkillEffect) :
+    Special(coolDownCount, skillEffects) {
     abstract fun getDamage(
         battleState: BattleState,
         self: InCombatStat,
@@ -98,7 +54,8 @@ abstract class DamagingSpecial(coolDownCount: Int) : Special(coolDownCount) {
     ): Int
 }
 
-abstract class DefenseSpecial(coolDownCount: Int) : Special(coolDownCount) {
+abstract class DefenseSpecial(coolDownCount: Int, vararg skillEffects: SkillEffect) :
+    Special(coolDownCount, skillEffects) {
     abstract fun getReducedDamage(
         battleState: BattleState,
         self: InCombatStat,
@@ -138,43 +95,6 @@ data class CombatStatus<T>(
     val foe: T,
     val initAttack: Boolean
 )
-
-typealias CombatSkill<T, U> = (CombatStatus<U>) -> T
-
-typealias CombatStartSkill<T> = CombatSkill<T, HeroUnit>
-
-typealias InCombatSkill<T> = CombatSkill<T, InCombatStat>
-
-typealias CombatEndSkill = (CombatStatus<InCombatStat>, attacked: Boolean) -> Unit
-
-typealias PerAttackListener<T> = (CombatStatus<InCombatStat>, value: T) -> Unit
-
-typealias MapSkillMethod<T> = (battleState: BattleState, self: HeroUnit) -> T
-typealias TeleportEffect = MapSkillMethod<Sequence<Position>>
-
-typealias SupportCombatEffect = (InCombatSupportInput) -> Skill?
-
-
-interface AssistRelated {
-    fun apply(battleState: BattleState, self: HeroUnit, ally: HeroUnit, assist: Assist, useAssist: Boolean)
-}
-
-fun <T, U> combatSkill(value: T): CombatSkill<T, U> {
-    return {
-        value
-    }
-}
-
-fun <T> inCombatSkill(value: T): InCombatSkill<T> =
-    combatSkill(value)
-fun <T> combatStartSkill(value: T): CombatStartSkill<T> =
-    combatSkill(value)
-
-val combatStartSkillTrue: CombatStartSkill<Boolean> =
-    combatSkill(true)
-
-val inCombatSkillTrue: InCombatSkill<Boolean> =
-    combatSkill(true)
 
 data class DamageDealt(
     val attackSpecialTriggered: Boolean,

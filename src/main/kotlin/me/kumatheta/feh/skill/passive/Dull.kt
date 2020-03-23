@@ -1,23 +1,30 @@
 package me.kumatheta.feh.skill.passive
 
-import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.combatStartSkill
+import me.kumatheta.feh.ALL_STAT_TYPES
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.skill.CombatStatus
+import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.NeutralizeBonusBasic
+import me.kumatheta.feh.skill.effect.SkillEffect
 
-private val ZERO = BasicSkill(neutralizeBonus = combatStartSkill(Stat.ZERO))
+private val NEUTRALIZE_ALL_STAT = NeutralizeBonusBasic(ALL_STAT_TYPES)
 
-val DullClose3 = BasicSkill(foeEffect = {
-    if (it.foe.weaponType.isRanged) {
-        null
-    } else {
-        ZERO
+object DullClose3 : EffectOnFoe {
+    override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+        return if (combatStatus.foe.weaponType.isRanged) {
+            emptySequence()
+        } else {
+            sequenceOf(NEUTRALIZE_ALL_STAT)
+        }
     }
-})
+}
 
-val DullRange3 = BasicSkill(foeEffect = {
-    if (it.foe.weaponType.isRanged) {
-        ZERO
-    } else {
-        null
+object DullRange3 : EffectOnFoe {
+    override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+        return if (combatStatus.foe.weaponType.isRanged) {
+            sequenceOf(NEUTRALIZE_ALL_STAT)
+        } else {
+            emptySequence()
+        }
     }
-})
+}

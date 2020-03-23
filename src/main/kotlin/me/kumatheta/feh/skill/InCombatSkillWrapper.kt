@@ -1,10 +1,11 @@
 package me.kumatheta.feh.skill
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.effect.CancelAffinity
 
 class InCombatSkillWrapper(
     private val self: InCombatStat,
-    private val foe: InCombatStat,
+    foe: InCombatStat,
     private val baseSkillSet: InCombatSkillSet
 ) {
     init {
@@ -26,22 +27,10 @@ class InCombatSkillWrapper(
     val heroUnit
         get() = self.heroUnit
 
-    private fun <T> Sequence<MapSkillMethod<T>>.mapSkillApplyAll(): Sequence<T> {
-        return map { it(combatStatus.battleState, combatStatus.self.heroUnit) }
-    }
-
-    private fun <T> Sequence<InCombatSkill<T>>.applyAll(): Sequence<T> {
-        return map { it(combatStatus) }
-    }
-
     private fun <T> Sequence<(CombatStatus<InCombatStat>, specialTriggered: Boolean) -> T>.applyAllPerAttack(
         specialTriggered: Boolean
     ): Sequence<T> {
         return map { it(combatStatus, specialTriggered) }
-    }
-
-    private fun <T> Sequence<PerAttackListener<T>>.applyAllPerAttack(value: T) {
-        return forEach { it(combatStatus, value) }
     }
 
     private fun Sequence<CooldownChange>.max(): CooldownChange {
@@ -53,59 +42,61 @@ class InCombatSkillWrapper(
         }
     }
 
-
-
     val adaptiveDamage: Boolean
         get() = baseSkillSet.adaptiveDamage
     val denyAdaptiveDamage: Boolean
         get() = baseSkillSet.denyAdaptiveDamage
 
-    val canCounter: Boolean = baseSkillSet.counter.sum() >= 0
+    val canCounter: Boolean = baseSkillSet.canCounter
     val followUp: Int
-        get() = baseSkillSet.followUp.sum()
+        get() = baseSkillSet.followUp
     val desperation: Boolean
-        get() = baseSkillSet.desperation.any { it }
+        get() = baseSkillSet.desperation
     val vantage: Boolean
-        get() = baseSkillSet.vantage.any { it }
+        get() = baseSkillSet.vantage
 
-    val additionalInCombatStat: Stat = baseSkillSet.additionalInCombatStat.applyAll().fold(Stat.ZERO) { acc, stat ->
-        acc + stat
-    }
-    val staffAsNormal: Boolean = baseSkillSet.staffAsNormal.applyAll().any{ it }
-    val denyStaffAsNormal: Boolean = baseSkillSet.denyStaffAsNormal.applyAll().any { it }
+    val additionalInCombatStat: Stat =
+        baseSkillSet.additionalInCombatStat.map { it.apply(combatStatus) }.fold(Stat.ZERO) { acc, stat ->
+            acc + stat
+        }
+    val staffAsNormal: Boolean = baseSkillSet.staffAsNormal
+    val denyStaffAsNormal: Boolean = baseSkillSet.denyStaffAsNormal
 
     val raven: Boolean
-        get() = baseSkillSet.raven.applyAll().any { it }
-    val cancelAffinity: Int
-        get() = baseSkillSet.cancelAffinity.applyAll().max() ?: 0
+        get() = baseSkillSet.raven
+    val cancelAffinity: CancelAffinity.Type?
+        get() = baseSkillSet.cancelAffinity
     val triangleAdept: Int
-        get() = baseSkillSet.triangleAdept.applyAll().max() ?: 0
-    val cooldownBuff: CooldownChange
-        get() = baseSkillSet.cooldownBuff.applyAll().filterNotNull().max()
-    val cooldownDebuff: CooldownChange
-        get() = baseSkillSet.cooldownDebuff.applyAll().filterNotNull().max()
-    val counterIgnoreRange: Boolean
-        get() = baseSkillSet.counterIgnoreRange.applyAll().any { it }
+        get() = baseSkillSet.triangleAdept
+    val counterAnyRange: Boolean
+        get() = baseSkillSet.counterAnyRange
     val brave: Boolean
-        get() = baseSkillSet.brave.applyAll().any { it }
+        get() = baseSkillSet.brave
     val disablePriorityChange: Boolean
-        get() = baseSkillSet.disablePriorityChange.applyAll().any { it }
+        get() = baseSkillSet.disablePriorityChange
+
+    val coolDownChargeEffect
+        get() = baseSkillSet.coolDownChargeEffect.map { it.getAdjustment(combatStatus) }
 
     fun getPercentageDamageReduce(specialTriggered: Boolean): Sequence<Int> =
-        baseSkillSet.percentageDamageReduce.applyAllPerAttack(specialTriggered).filterNot { it == 0 }
+        baseSkillSet.percentageDamageReduce.map { it.getPercentageDamageReduce(combatStatus, specialTriggered) }
+            .filterNot { it == 0 }
 
     fun getFlatDamageReduce(specialTriggered: Boolean): Int =
-        baseSkillSet.flatDamageReduce.applyAllPerAttack(specialTriggered).sum()
+        baseSkillSet.flatDamageReduce.map { it.getDamageReduce(combatStatus, specialTriggered) }.sum()
 
     fun getDamageIncrease(specialTriggered: Boolean): Int =
-        baseSkillSet.damageIncrease.applyAllPerAttack(specialTriggered).sum()
+        baseSkillSet.damageIncrease.map { it.getDamageIncrease(combatStatus, specialTriggered) }.sum()
 
-    fun damageDealt(damageDealt: DamageDealt) = baseSkillSet.damageDealtListener.applyAllPerAttack(damageDealt)
-    fun damageReceived(damageDealt: DamageDealt) = baseSkillSet.damageReceivedListener.applyAllPerAttack(damageDealt)
+    fun damageDealt(damageDealt: DamageDealt) =
+        baseSkillSet.damageDealtListener.forEach { it.onDamageDealt(combatStatus, damageDealt) }
+
+    fun damageReceived(damageDealt: DamageDealt) =
+        baseSkillSet.damageReceivedListener.forEach { it.onDamageReceived(combatStatus, damageDealt) }
 
     fun postCombat(attacked: Boolean) = baseSkillSet.postCombat.forEach {
-        it(combatStatus, attacked)
+        it.onCombatEnd(combatStatus, attacked)
     }
 
-    val neutralizeFollowUp = baseSkillSet.neutralizeFollowUp.any { it }
+    val neutralizeFollowUp = baseSkillSet.neutralizeFollowUp
 }

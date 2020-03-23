@@ -10,6 +10,8 @@ enum class StatType {
     RES
 }
 
+val ALL_STAT_TYPES = StatType.values().asList()
+
 data class Stat(
     val hp: Int = 0,
     val atk: Int = 0,

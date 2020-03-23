@@ -7,3 +7,7 @@ enum class BooleanAdjustment(val value: Int) {
 }
 
 interface SkillEffect
+
+fun skillEffects(vararg skillEffects: SkillEffect): Sequence<SkillEffect> {
+    return skillEffects.asSequence()
+}

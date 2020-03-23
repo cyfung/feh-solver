@@ -1,15 +1,8 @@
 package me.kumatheta.feh.skill.weapon
 
 import me.kumatheta.feh.Lance
-import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.BasicWeapon
+import me.kumatheta.feh.skill.basic
 import me.kumatheta.feh.skill.effect.startofturn.threaten
-import me.kumatheta.feh.skill.weaponStat
+import me.kumatheta.feh.skill.plus
 
-val Fensalir = BasicWeapon(
-    Lance, BasicSkill(
-        extraStat = weaponStat(16),
-        startOfTurn = threaten(Stat(atk = -4)).startOfTurn!!
-    )
-)
+val Fensalir = Lance.basic(16) + threaten(atk = -4)

@@ -1,8 +1,11 @@
 package me.kumatheta.feh.skill
 
-import me.kumatheta.feh.*
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.CombatResult
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.Position
 
-sealed class Assist(val isRange: Boolean, basicSkill: BasicSkill=EmptySkill) : Skill by basicSkill {
+sealed class Assist(val isRange: Boolean, skill: Skill = EmptySkill) : Skill by skill {
     abstract fun apply(
         self: HeroUnit,
         target: HeroUnit,
@@ -19,8 +22,8 @@ sealed class Assist(val isRange: Boolean, basicSkill: BasicSkill=EmptySkill) : S
 
 abstract class MovementAssist(val canBeAggressive: Boolean, val movementEffect: MovementEffect) :
     Assist(false) {
-    final fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position
-        = movementEffect.selfEndPosition(selfPosition, targetPosition)
+    final fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position =
+        movementEffect.selfEndPosition(selfPosition, targetPosition)
 
     open fun onMove(self: HeroUnit, target: HeroUnit, battleState: BattleState) {
     }

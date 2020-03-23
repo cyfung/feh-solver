@@ -4,11 +4,11 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.foe
-import me.kumatheta.feh.skill.BasicSkill
+import me.kumatheta.feh.skill.effect.StartOfTurnEffect
 import me.kumatheta.feh.util.surroundings
 
-fun sabotage(stat: Stat) = BasicSkill(
-    startOfTurn = { battleState: BattleState, self: HeroUnit ->
+class Sabotage(private val stat: Stat) : StartOfTurnEffect {
+    override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
         val threshold = self.startOfTurnStat.res - 3
         battleState.unitsSeq(self.team.foe).filter { it.visibleStat.res <= threshold }.filter { foe ->
             foe.position.surroundings(battleState.maxPosition).any {
@@ -19,4 +19,10 @@ fun sabotage(stat: Stat) = BasicSkill(
             it.applyDebuff(stat)
         }
     }
-)
+}
+
+fun sabotage(atk: Int = 0,
+                  spd: Int = 0,
+                  def: Int = 0,
+                  res: Int = 0
+) = Sabotage(Stat(atk = atk, spd = spd, def = def, res = res))

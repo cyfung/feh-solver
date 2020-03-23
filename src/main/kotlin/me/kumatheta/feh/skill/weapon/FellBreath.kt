@@ -1,30 +1,38 @@
 package me.kumatheta.feh.skill.weapon
 
 import me.kumatheta.feh.DragonC
+import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.*
+import me.kumatheta.feh.skill.CombatStatus
+import me.kumatheta.feh.skill.basic
+import me.kumatheta.feh.skill.effect.DisableFollowUp
+import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.InCombatStatEffect
+import me.kumatheta.feh.skill.effect.SkillEffect
+import me.kumatheta.feh.skill.effect.others.DragonAdaptive
+import me.kumatheta.feh.skill.effect.skillEffects
+import me.kumatheta.feh.skill.plus
 
 private val BUFF = Stat(atk = 6, res = 6)
 
-private val FOE_EFFECT = BasicSkill(followUp = combatSkill(-1))
-
-val FellBreath = BasicWeapon(
-    DragonC, BasicSkill(
-        extraStat = weaponStat(19),
-        adaptiveDamage = DragonAdaptive.adaptiveDamage!!,
-        inCombatStat = {
-            if (it.foe.currentHp < it.foe.maxHp) {
+val FellBreath = DragonC.basic(19) + skillEffects(
+    DragonAdaptive,
+    object : InCombatStatEffect {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): Stat {
+            return if (combatStatus.foe.currentHp < combatStatus.foe.maxHp) {
                 BUFF
             } else {
                 Stat.ZERO
             }
-        },
-        foeEffect = {
-            if (it.foe.currentHp < it.foe.maxHp) {
-                FOE_EFFECT
+        }
+    },
+    object : EffectOnFoe {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+            return if (combatStatus.foe.currentHp < combatStatus.foe.maxHp) {
+                sequenceOf(DisableFollowUp)
             } else {
-                null
+                emptySequence()
             }
         }
-    )
+    }
 )

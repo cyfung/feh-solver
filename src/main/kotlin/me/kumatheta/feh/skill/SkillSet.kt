@@ -1,35 +1,45 @@
 package me.kumatheta.feh.skill
 
-class SkillSet(skills: Sequence<Skill>) {
-    constructor(skills: List<Skill>) : this(skills.asSequence())
+import me.kumatheta.feh.skill.effect.AssistEffect
+import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.GuidanceEffect
+import me.kumatheta.feh.skill.effect.HealEffect
+import me.kumatheta.feh.skill.effect.InCombatSupport
+import me.kumatheta.feh.skill.effect.ObstructEffect
+import me.kumatheta.feh.skill.effect.PassEffect
+import me.kumatheta.feh.skill.effect.PostInitiateMovement
+import me.kumatheta.feh.skill.effect.SkillEffect
+import me.kumatheta.feh.skill.effect.StartOfTurnEffect
+import me.kumatheta.feh.skill.effect.TeleportEffect
 
-    val skills = skills.toList()
+class SkillSet(skills: Sequence<SkillEffect>) {
+    private val skillEffects = skills.toList()
 
     val postInitiateMovement: MovementEffect?
 
     init {
-        val movements = this.skills.mapNotNull(Skill::postInitiateMovement)
+        val movements = this.skillEffects.filterIsInstance<PostInitiateMovement>()
         if (movements.size > 1) {
             throw IllegalStateException("more than one possible movement post combat")
         }
-        postInitiateMovement = movements.singleOrNull()
+        postInitiateMovement = movements.singleOrNull()?.movementEffect
     }
 
-    val startOfTurn = this.skills.mapNotNull(Skill::startOfTurn)
-    val pass = this.skills.mapNotNull(Skill::pass)
-    val obstruct = this.skills.mapNotNull(Skill::obstruct)
-    val teleport = this.skills.mapNotNull(Skill::teleport)
-    val guidance = this.skills.mapNotNull(Skill::guidance)
+    val startOfTurn = this.skillEffects.filterIsInstance<StartOfTurnEffect>()
+    val pass = this.skillEffects.filterIsInstance<PassEffect>()
+    val obstruct = this.skillEffects.filterIsInstance<ObstructEffect>()
+    val teleport = this.skillEffects.filterIsInstance<TeleportEffect>()
+    val guidance = this.skillEffects.filterIsInstance<GuidanceEffect>()
 
-    val foeEffect = this.skills.mapNotNull(Skill::foeEffect)
+    val effectOnFoe = this.skillEffects.filterIsInstance<EffectOnFoe>()
 
-    val supportInCombatBuff = this.skills.mapNotNull(Skill::supportInCombatBuff)
-    val supportInCombatDebuff = this.skills.mapNotNull(Skill::supportInCombatDebuff)
-    val onHealOthers = this.skills.mapNotNull(Skill::onHealOthers)
+    val inCombatSupport = this.skillEffects.filterIsInstance<InCombatSupport>()
+    val healEffect = this.skillEffects.filterIsInstance<HealEffect>()
+    val assistEffect = this.skillEffects.filterIsInstance<AssistEffect>()
 
-    val assistRelated = this.skills.mapNotNull(Skill::assistRelated)
+    val skillEffectSeq = skillEffects.asSequence()
 
-    fun <T> groupAsSet(f: (Skill) -> Set<T>?): Set<T> {
-        return skills.asSequence().mapNotNull(f).flatMap { it.asSequence() }.toSet()
+    inline fun <reified R : SkillEffect> get(): Sequence<R> {
+        return skillEffectSeq.filterIsInstance<R>()
     }
 }

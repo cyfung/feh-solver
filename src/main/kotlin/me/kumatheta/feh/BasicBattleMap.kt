@@ -1,6 +1,15 @@
 package me.kumatheta.feh
 
-import me.kumatheta.feh.skill.*
+import me.kumatheta.feh.skill.ALL_ASSISTS
+import me.kumatheta.feh.skill.ALL_PASSIVES
+import me.kumatheta.feh.skill.ALL_SPECIALS
+import me.kumatheta.feh.skill.ALL_WEAPONS
+import me.kumatheta.feh.skill.Assist
+import me.kumatheta.feh.skill.BASIC_REFINABLE_WEAPONS
+import me.kumatheta.feh.skill.Passive
+import me.kumatheta.feh.skill.Special
+import me.kumatheta.feh.skill.Weapon
+import me.kumatheta.feh.skill.getBasicRefine
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 import java.nio.file.Files
 import java.nio.file.Path
@@ -122,34 +131,15 @@ private fun getWeapon(name: String): Weapon {
         if (trimBaseRefine.length != 1) {
             throw IllegalArgumentException("baseRefine can only be one of A,S,D,R")
         }
-        val spdRefineWeapon = ALL_WEAPONS["$weaponName*S"]
-        val refineType = trimBaseRefine[0]
-        if (refineType == 'S') {
-            spdRefineWeapon
-        } else {
-            val spdRefineExtraStat = spdRefineWeapon.extraStat!!
-            when (refineType) {
-                'A' -> spdRefineWeapon.copy(
-                    basicSkill = spdRefineWeapon.basicSkill.copy(
-                        extraStat = spdRefineExtraStat.copy(
-                            spd = 0,
-                            atk = spdRefineExtraStat.atk + spdRefineExtraStat.spd - 1
-                        )
-                    )
-                )
-                'D' -> spdRefineWeapon.copy(
-                    basicSkill = spdRefineWeapon.basicSkill.copy(
-                        extraStat = spdRefineExtraStat.copy(spd = 0, def = spdRefineExtraStat.spd + 1)
-                    )
-                )
-                'R' -> spdRefineWeapon.copy(
-                    basicSkill = spdRefineWeapon.basicSkill.copy(
-                        extraStat = spdRefineExtraStat.copy(spd = 0, res = spdRefineExtraStat.spd + 1)
-                    )
-                )
-                else -> throw IllegalArgumentException("color can only be one of A,S,D,R")
-            }
+        val refinableWeapon = BASIC_REFINABLE_WEAPONS[weaponName]
+        val statType = when (trimBaseRefine[0]) {
+            'A' -> StatType.ATK
+            'S' -> StatType.SPD
+            'D' -> StatType.DEF
+            'R' -> StatType.RES
+            else -> throw IllegalArgumentException("color can only be one of A,S,D,R")
         }
+        refinableWeapon.getBasicRefine(statType)
     } else {
         ALL_WEAPONS[weaponName]
     }

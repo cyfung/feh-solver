@@ -1,39 +1,48 @@
 package me.kumatheta.feh.skill.effect.supportincombat
 
+import me.kumatheta.feh.AttackerDefenderPair
 import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.Skill
-import me.kumatheta.feh.skill.combatStartSkill
+import me.kumatheta.feh.skill.effect.InCombatSupport
+import me.kumatheta.feh.skill.effect.InCombatSupportInput
+import me.kumatheta.feh.skill.effect.SkillEffect
+import me.kumatheta.feh.skill.effect.emptyAttackerDefenderSequences
+import me.kumatheta.feh.skill.effect.forAlly
+import me.kumatheta.feh.skill.toInCombatStatEffect
 
-fun drive(buff: Stat, moveType: MoveType? = null) =
-    drive(
-        BasicSkill(
-            inCombatStat = combatStartSkill(buff)
-        ), moveType
-    )
-
-fun drive(buff: Skill, moveType: MoveType?) =
+fun drive(buff: SkillEffect, moveType: MoveType?) =
     if (moveType == null) {
-        BasicSkill(
-            supportInCombatBuff = {
-                if (it.targetAlly.position.distanceTo(it.self.position) <= 2) {
-                    buff
+        object : InCombatSupport {
+            override fun getSupportSkills(inCombatSupportInput: InCombatSupportInput): AttackerDefenderPair<Sequence<SkillEffect>> {
+                return if (inCombatSupportInput.targetAlly.position.distanceTo(inCombatSupportInput.self.position) <= 2) {
+                    inCombatSupportInput.forAlly(buff)
                 } else {
-                    null
+                    emptyAttackerDefenderSequences()
                 }
             }
-        )
+        }
     } else {
-        BasicSkill(
-            supportInCombatBuff =
-            {
-                if (it.targetAlly.moveType == moveType && it.targetAlly.position.distanceTo(it.self.position) <= 2) {
-                    buff
+        object : InCombatSupport {
+            override fun getSupportSkills(inCombatSupportInput: InCombatSupportInput): AttackerDefenderPair<Sequence<SkillEffect>> {
+                return if (inCombatSupportInput.targetAlly.moveType == moveType &&
+                    inCombatSupportInput.targetAlly.position.distanceTo(inCombatSupportInput.self.position) <= 2
+                ) {
+                    inCombatSupportInput.forAlly(buff)
                 } else {
-                    null
+                    emptyAttackerDefenderSequences()
                 }
             }
-        )
+        }
     }
 
+fun drive(buff: Stat, moveType: MoveType? = null): InCombatSupport {
+    return drive(buff.toInCombatStatEffect(), moveType)
+}
+
+fun drive(
+    atk: Int = 0,
+    spd: Int = 0,
+    def: Int = 0,
+    res: Int = 0,
+    moveType: MoveType? = null
+) = drive(Stat(atk = atk, spd = spd, def = def, res = res), moveType)

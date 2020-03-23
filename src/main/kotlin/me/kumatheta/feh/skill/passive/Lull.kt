@@ -1,25 +1,23 @@
 package me.kumatheta.feh.skill.passive
 
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.CombatStartSkill
-import me.kumatheta.feh.skill.Skill
-import me.kumatheta.feh.skill.combatStartSkill
+import me.kumatheta.feh.StatType
+import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.EffectOnFoeBasic
+import me.kumatheta.feh.skill.effect.NeutralizeBonusBasic
+import me.kumatheta.feh.skill.effect.skillEffects
+import me.kumatheta.feh.skill.toInCombatStatEffect
 
-
-fun lull(stat: Stat): BasicSkill {
-    val foeEffect = BasicSkill(
-        neutralizeBonus =
-        combatStartSkill(
-            Stat(
-                atk = if (stat.atk > 0) 0 else 1,
-                spd = if (stat.spd > 0) 0 else 1,
-                def = if (stat.def > 0) 0 else 1,
-                res = if (stat.res > 0) 0 else 1
-            )
-        ), inCombatStat = combatStartSkill(stat)
-    )
-    return BasicSkill(foeEffect = {
-        foeEffect
-    })
+fun lull(stat: Stat): EffectOnFoe {
+    val statTypes = sequence {
+        if (stat.atk > 0) yield(StatType.ATK)
+        if (stat.spd > 0) yield(StatType.SPD)
+        if (stat.def > 0) yield(StatType.DEF)
+        if (stat.res > 0) yield(StatType.RES)
+    }.toSet()
+    val foeEffect = skillEffects(
+        NeutralizeBonusBasic(statTypes),
+        stat.toInCombatStatEffect()
+    ).toList()
+    return EffectOnFoeBasic(foeEffect)
 }

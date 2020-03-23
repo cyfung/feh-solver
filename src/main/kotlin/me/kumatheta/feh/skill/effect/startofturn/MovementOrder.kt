@@ -1,25 +1,31 @@
 package me.kumatheta.feh.skill.effect.startofturn
 
-import me.kumatheta.feh.*
-import me.kumatheta.feh.skill.BasicSkill
-import me.kumatheta.feh.skill.MapSkillMethod
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.MoveType
+import me.kumatheta.feh.Position
+import me.kumatheta.feh.PositiveStatus
 import me.kumatheta.feh.skill.adjacentAllies
+import me.kumatheta.feh.skill.effect.StartOfTurnEffect
+import me.kumatheta.feh.skill.effect.TeleportEffect
 import me.kumatheta.feh.util.surroundings
 
-val MOVE_ORDER_EFFECT: MapSkillMethod<Sequence<Position>> = { battleState, self ->
-    battleState.unitsSeq(self.team).filter { it != self }.filter {
-        it.position.distanceTo(self.position) <= 2
-    }.flatMap {
-        it.position.surroundings(battleState.maxPosition)
+object MoveOrderEffect : TeleportEffect {
+    override fun getTeleportLocations(battleState: BattleState, self: HeroUnit): Sequence<Position> {
+        return battleState.unitsSeq(self.team).filter { it != self }.filter {
+            it.position.distanceTo(self.position) <= 2
+        }.flatMap {
+            it.position.surroundings(battleState.maxPosition)
+        }
     }
 }
 
-val airOrder3 = BasicSkill(
-    startOfTurn = { battleState: BattleState, self: HeroUnit ->
+object AirOrder3 : StartOfTurnEffect {
+    override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
         self.adjacentAllies(battleState).filter {
             it.moveType == MoveType.FLYING
         }.forEach {
             it.addPositiveStatus(PositiveStatus.MOVEMENT_ORDER)
         }
     }
-)
+}

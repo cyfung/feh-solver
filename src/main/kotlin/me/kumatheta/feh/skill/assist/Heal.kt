@@ -40,7 +40,8 @@ fun applyHeal(
     } else {
         self.reduceCooldown(1)
     }
-    self.skillSet.onHealOthers.forEach { it(battleState, self, target, healAmount)  }
+    self.skillSet.healEffect.forEach { it.onHeal(battleState, self, target, healAmount, true)  }
+    target.skillSet.healEffect.forEach { it.onHeal(battleState, target, self, healAmount, false)  }
 }
 
 abstract class Heal(private val threshold: Int, isRange: Boolean = false) : NormalAssist(isRange) {

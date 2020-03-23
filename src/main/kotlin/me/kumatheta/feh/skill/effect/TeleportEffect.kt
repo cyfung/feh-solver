@@ -4,6 +4,6 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 
-interface TeleportEffect {
+interface TeleportEffect : SkillEffect {
     fun getTeleportLocations(battleState: BattleState, self: HeroUnit): Sequence<Position>
 }

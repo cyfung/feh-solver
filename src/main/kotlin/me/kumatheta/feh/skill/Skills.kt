@@ -3,6 +3,10 @@ package me.kumatheta.feh.skill
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.effect.ExtraStat
+import me.kumatheta.feh.skill.effect.InCombatStatEffect
+import me.kumatheta.feh.skill.effect.PostInitiateMovement
+import me.kumatheta.feh.skill.effect.SkillEffect
 
 fun aoeDebuffFoe(
     combatStatus: CombatStatus<InCombatStat>,
@@ -45,3 +49,29 @@ fun HeroUnit.allies(battleState: BattleState) =
 fun HeroUnit.inCardinalDirection(target: HeroUnit) =
     target.position.x == position.x || target.position.y == position.y
 
+fun MovementEffect.toPostInitiateMovement() = PostInitiateMovement(this)
+
+fun SkillEffect.toSkill(): Skill {
+    return object : Skill {
+        override val effects: List<SkillEffect> = listOf(this@toSkill)
+    }
+}
+
+fun Sequence<SkillEffect>.toSkill(): Skill {
+    return object : Skill {
+        override val effects: List<SkillEffect> = this@toSkill.toList()
+    }
+}
+
+
+fun Stat.toExtraStat(): ExtraStat {
+    return ExtraStat(this)
+}
+
+fun Stat.toInCombatStatEffect(): InCombatStatEffect {
+    return object: InCombatStatEffect {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): Stat {
+            return this@toInCombatStatEffect
+        }
+    }
+}
