@@ -8,7 +8,7 @@ import me.kumatheta.feh.skill.effect.CoolDownChargeEffect
 import me.kumatheta.feh.skill.effect.EffectOnFoe
 import me.kumatheta.feh.skill.effect.SkillEffect
 
-private val COOL_DOWN_DEBUFF = CooldownChange(1, 1)
+private val COOL_DOWN_DEBUFF = CooldownChange(-1, -1)
 
 private val FOE_EFFECT = object: CoolDownChargeEffect {
     override fun getAdjustment(combatStatus: CombatStatus<InCombatStat>): CooldownChange {

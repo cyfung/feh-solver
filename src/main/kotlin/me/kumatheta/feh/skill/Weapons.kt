@@ -20,6 +20,7 @@ import me.kumatheta.feh.skill.effect.CoolDownCountAdjust
 import me.kumatheta.feh.skill.effect.DealSpecialDamage
 import me.kumatheta.feh.skill.effect.DisableCounter
 import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.EffectOnFoeBasic
 import me.kumatheta.feh.skill.effect.EffectiveAgainstMovement
 import me.kumatheta.feh.skill.effect.ExtraInCombatStatEffect
 import me.kumatheta.feh.skill.effect.ExtraStat
@@ -140,7 +141,7 @@ val FIXED_WEAPONS = sequenceOf(
     "Hidskjalf" to Hidskjalf,
     "Fell Breath" to FellBreath,
 
-    "Trilemma+ Dazzling" to TrilemmaPlus + DisableCounter
+    "Trilemma+ Dazzling" to TrilemmaPlus + EffectOnFoeBasic(listOf(DisableCounter))
 )
 val ALL_WEAPONS: SkillMap<BasicWeapon> = (FIXED_WEAPONS + STANDARD_REFINABLE_WEAPONS).toSkillMap()
 val BASIC_REFINABLE_WEAPONS = (nonStandardRefinableWeapons() + STANDARD_REFINABLE_WEAPONS).toSkillMap()

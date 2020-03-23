@@ -171,7 +171,7 @@ class BattleState private constructor(
                 val target = try {
                     getUnit(unitAction.assistTargetId)
                 } catch (e: Exception) {
-                    println("$unitAction failed, assist not found, $locationMap")
+                    println("$unitAction failed, assist target not found, $locationMap")
                     throw e
                 }
                 assist.apply(heroUnit, target, this)
@@ -1626,7 +1626,7 @@ class BattleState private constructor(
 
     fun getChessPiece(position: Position) = locationMap[position]
 
-    fun getUnit(heroUnitId: Int): HeroUnit =
+    private fun getUnit(heroUnitId: Int): HeroUnit =
         locationMap.values.asSequence().filterIsInstance<HeroUnit>().first { it.id == heroUnitId }
 
     private fun moveTargets(
@@ -1808,10 +1808,10 @@ class BattleState private constructor(
 private fun Stat.neutralize(statTypes: Set<StatType>): Stat {
     return Stat(
         hp = 0,
-        atk = if (statTypes.contains(StatType.ATK)) atk else 0,
-        spd = if (statTypes.contains(StatType.SPD)) spd else 0,
-        def = if (statTypes.contains(StatType.DEF)) def else 0,
-        res = if (statTypes.contains(StatType.RES)) res else 0
+        atk = if (statTypes.contains(StatType.ATK)) 0 else atk,
+        spd = if (statTypes.contains(StatType.SPD)) 0 else spd,
+        def = if (statTypes.contains(StatType.DEF)) 0 else def,
+        res = if (statTypes.contains(StatType.RES)) 0 else res
     )
 }
 

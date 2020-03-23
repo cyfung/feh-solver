@@ -27,21 +27,6 @@ class InCombatSkillWrapper(
     val heroUnit
         get() = self.heroUnit
 
-    private fun <T> Sequence<(CombatStatus<InCombatStat>, specialTriggered: Boolean) -> T>.applyAllPerAttack(
-        specialTriggered: Boolean
-    ): Sequence<T> {
-        return map { it(combatStatus, specialTriggered) }
-    }
-
-    private fun Sequence<CooldownChange>.max(): CooldownChange {
-        return fold(CooldownChange(0, 0)) { acc, cooldownChange ->
-            CooldownChange(
-                kotlin.math.max(acc.unitAttack, cooldownChange.foeAttack),
-                kotlin.math.max(acc.foeAttack, cooldownChange.unitAttack)
-            )
-        }
-    }
-
     val adaptiveDamage: Boolean
         get() = baseSkillSet.adaptiveDamage
     val denyAdaptiveDamage: Boolean
