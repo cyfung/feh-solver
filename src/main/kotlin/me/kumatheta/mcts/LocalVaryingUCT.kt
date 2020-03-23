@@ -3,7 +3,19 @@ package me.kumatheta.mcts
 import kotlin.math.ln
 import kotlin.math.sqrt
 
+fun <T : Move> hybridLocalVaryingUCT(): CombinedScoreManagerFactory<T, UCTScore<T>> {
+    return CombinedScoreManagerFactory<T, UCTScore<T>>(
+        manager1 = LocalVaryingUCT(explorationConstantC = 1.5),
+            manager2 = LocalVaryingUCT(WeightedScoreProvider(0.1), explorationConstantC = 1.5),
+        ratio = 6.0/4,
+        childSelector = {
+            (it.totalScore / it.tries + 0.15 * it.bestScore).toLong()
+        }
+    )
+}
+
 class LocalVaryingUCT<T : Move>(
+    private val scoreProvider: ScoreProvider = NormalScoreProvider,
     private val explorationConstantC: Double = sqrt(2.0)
 ) : ScoreManager<T, UCTScore<T>> {
 
@@ -20,7 +32,8 @@ class LocalVaryingUCT<T : Move>(
         } else {
             high - ref
         }
-        val averageScore = (childScore.totalScore.toDouble() / childTries - ref) / normalizeFactor
+        val realAverage = childScore.totalScore.toDouble() / childTries
+        val averageScore = scoreProvider.averageScore(ref, realAverage, childScore.bestScore, normalizeFactor)
         return averageScore +
                 explorationConstantC * sqrt(ln(tries.toDouble()) / childTries.toDouble())
     }

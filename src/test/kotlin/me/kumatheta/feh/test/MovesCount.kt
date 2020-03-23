@@ -1,9 +1,18 @@
 package me.kumatheta.feh.test
 
 import kotlinx.coroutines.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.list
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.NormalMove
+import me.kumatheta.feh.mcts.newFehBoard
+import me.kumatheta.feh.mcts.toRating
+import me.kumatheta.feh.mcts.toScore
+import me.kumatheta.feh.mcts.tryAndGetDetails
+import me.kumatheta.feh.mcts.tryMoves
+import me.kumatheta.feh.message.UpdateInfo
 import me.kumatheta.feh.util.CacheBattleMap
+import me.kumatheta.ws.toUpdateInfoList
 import java.nio.file.Paths
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -139,7 +148,7 @@ val grandmaster51Moves = listOf(
 @ExperimentalCoroutinesApi
 @ExperimentalTime
 fun main() {
-    val dataSet = "bhb morgan morgan"
+    val dataSet = "sothis infernal"
     Paths.get("data/$dataSet")
     val positionMap = readMap(Paths.get("data/$dataSet/$dataSet - map.csv"))
     val (_, spawnMap) = readUnits(Paths.get("data/$dataSet/$dataSet - spawn.csv"))
@@ -152,12 +161,15 @@ fun main() {
     val state = BattleState(CacheBattleMap(battleMap))
     state.rearrange((1..state.playerCount).toList())
 
-//    val phraseLimit = 1
-//    var board = newFehBoard(phraseLimit, state, 3, false)
-    val testMoves = morganMorganMoves
+    val testMoves = sothisMoves
+    var board = newFehBoard(20, state, 3, false, toRating = UnitAction::toRating, calculateScore = BattleState::toScore)
+    val test = board.tryMoves(testMoves)
+    println(test.winningTeam)
+    println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
+
     runBlocking {
         GlobalScope.launch {
-            (4 downTo 0 step 2).forEach {
+            (10 downTo 0 step 2).forEach {
                 countPhase(testMoves, state.copy(), it)
             }
         }.join()

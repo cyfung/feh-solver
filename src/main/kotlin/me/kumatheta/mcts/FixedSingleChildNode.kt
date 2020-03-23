@@ -24,7 +24,7 @@ class FakeNode<T : Move, S : Score<T>>(
         // because of race condition, this may still get called after FakeNode is replaced with the original node
     }
 
-    override fun getBestChild(): Node<T, S>? {
+    override fun getBestChild(childSelector: (S) -> Long): Node<T, S>? {
         throw UnsupportedOperationException()
     }
 

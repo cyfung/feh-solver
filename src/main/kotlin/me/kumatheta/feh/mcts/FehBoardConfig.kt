@@ -40,10 +40,9 @@ fun BattleState.calculateTacticsDrillScore(config: FehBoardConfig): Long {
 fun BattleState.oldCalculateHeroBattleScore(config: FehBoardConfig): Long {
     val phaseRemaining = config.phaseLimit - phase
     return enemyDied * 500L +
-            (playerCount - playerDied) * 400L +
-            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
+            (playerCount - playerDied) * 600L +
+            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 4 +
             unitsSeq(Team.ENEMY).sumBy { it.maxHp - it.currentHp } * 5 +
-            phaseRemaining * 20 +
             if (winningTeam == Team.PLAYER) {
                 5000L
             } else {
@@ -98,14 +97,14 @@ fun BattleState.toScore(config: FehBoardConfig): Long {
     val phaseRemaining = config.phaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
-            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 8 +
-            unitsSeq(Team.ENEMY).sumBy { (it.maxHp - it.currentHp) * 400 / it.maxHp } +
+            unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 3 +
+            unitsSeq(Team.ENEMY).sumBy { (it.maxHp - it.currentHp) * 150 / it.maxHp } +
+            phaseRemaining * 40 +
             if (unitsSeq(Team.ENEMY).any { it.id == config.bossId }) {
                 0
             } else {
-                250
+                300
             } +
-            phaseRemaining * 20 +
             if (winningTeam == Team.PLAYER) {
                 5000L
             } else {

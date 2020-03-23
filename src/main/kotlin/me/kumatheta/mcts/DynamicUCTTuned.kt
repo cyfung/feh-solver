@@ -5,9 +5,12 @@ import kotlin.math.sqrt
 
 fun <T : Move> hybridDynamicUCTTune(): CombinedScoreManagerFactory<T, DynamicUCTTunedScore<T>> {
     return CombinedScoreManagerFactory<T, DynamicUCTTunedScore<T>>(
-        manager1 = DynamicUCTTuned(bestScoreWeight = 0.0),
-        manager2 = DynamicUCTTuned(),
-        ratio = 7.0 / 3
+        manager1 = DynamicUCTTuned(),
+        manager2 = DynamicUCTTuned(WeightedScoreProvider()),
+        ratio = 1.0,
+        childSelector = {
+            (it.totalScore / it.tries + 0.15 * it.bestScore).toLong()
+        }
     )
 }
 
@@ -20,7 +23,7 @@ class DynamicUCTTunedScore<T : Move>(
 ) : Score<T>
 
 class DynamicUCTTuned<T : Move>(
-    private val bestScoreWeight: Double = 0.15,
+    private val scoreProvider: ScoreProvider = NormalScoreProvider,
     private val explorationConstant: Double = 1.5
 ) : ScoreManager<T, DynamicUCTTunedScore<T>> {
 
@@ -33,13 +36,12 @@ class DynamicUCTTuned<T : Move>(
         val average = score.totalScore / score.tries
         val high = score.bestScore
         val realAverage = childScore.totalScore.toDouble() / childTries
-        val weighedAverage = (realAverage + bestScoreWeight * childScore.bestScore) / (1 + bestScoreWeight)
         val normalizeFactor = if (high <= average) {
             average
         } else {
             (high - average) * 2
         }
-        val averageScore = (weighedAverage - average) / normalizeFactor
+        val averageScore = scoreProvider.averageScore(average, realAverage, childScore.bestScore, normalizeFactor)
         val v =
             (childScore.scoreSquareSum.toDouble() / childTries - realAverage * realAverage) / normalizeFactor / normalizeFactor + sqrt(
                 2 * ln(tries.toDouble()) / childTries.toDouble()

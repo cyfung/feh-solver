@@ -11,7 +11,7 @@ interface Node<T : Move, S : Score<T>> {
 
     suspend fun selectAndPlayOut(scoreManager: ScoreManager<T,S>, updateScore: (Long, List<T>) -> Unit): Node<T, S>?
     fun removeChild(index: Int)
-    fun getBestChild(): Node<T, S>?
+    fun getBestChild(childSelector: (S) -> Long): Node<T, S>?
     fun noMoreChild(): Boolean
 
     fun onRemove()

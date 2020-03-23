@@ -6,6 +6,7 @@ import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.UnitAction
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.util.NoCacheBattleMap
+import me.kumatheta.mcts.DynamicUCTTuned
 import me.kumatheta.mcts.UCT
 import me.kumatheta.mcts.VaryingUCT
 import me.kumatheta.mcts.hybridDynamicUCTTune
@@ -19,13 +20,13 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 fun main() {
     val jobConfig = FehJobConfig(
-        scoreManagerFactory = hybridDynamicUCTTune<FehMove>(),
+        scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
         mapName = "sothis infernal",
         phaseLimit = 20,
         maxTurnBeforeEngage = 3,
         parallelCount = 20,
         canRearrange = false,
-        toRating = UnitAction::toRating,
+        toRating = UnitAction::toRatingV2,
         calculateScore = BattleState::toScore
     )
     runBlocking {

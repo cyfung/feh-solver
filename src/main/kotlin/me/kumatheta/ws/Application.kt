@@ -30,16 +30,17 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @ExperimentalTime
 private val jobConfig = FehJobConfig(
 //    scoreManagerFactory = UCT<FehMove>().toFactory(),
-    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
-//    scoreManagerFactory = hybridDynamicUCTTune<FehMove>(),
+//    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
+//    scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
+    scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
     mapName = "sothis infernal",
     phaseLimit = 20,
     maxTurnBeforeEngage = 3,
     parallelCount = 20,
     canRearrange = true,
-    toRating = UnitAction::toRating,
-    calculateScore = BattleState::calculateScoreV2,
-    moveDownCriteria = MoveDownCriteria(null, null, 600000)
+    toRating = UnitAction::toRatingV2,
+    calculateScore = BattleState::toScore,
+    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)
 //    }

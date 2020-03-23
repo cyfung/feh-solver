@@ -1,7 +1,12 @@
 package me.kumatheta.mcts
 
-import kotlinx.coroutines.*
-import java.util.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
+import java.util.LinkedList
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -63,12 +68,16 @@ class Mcts<T : Move, out S : Score<T>>(
     val rootScore: S
         get() = rootRef.get().score
 
-    suspend fun resetRecentScore(): S {
+    fun resetRecentScore(): S {
         val score = recentScoreRef.get()
         GlobalScope.launch {
             var prev = score
             val clockMark = MonoClock.markNow()
-            while (!recentScoreRef.compareAndSet(prev, scoreManagerFactory.newEmptyScore()) || clockMark.elapsedNow().inSeconds > 2) {
+            while (!recentScoreRef.compareAndSet(
+                    prev,
+                    scoreManagerFactory.newEmptyScore()
+                ) || clockMark.elapsedNow().inSeconds > 2
+            ) {
                 val newScore = recentScoreRef.get()
                 if (newScore.bestScore > score.bestScore) {
                     break
@@ -85,7 +94,7 @@ class Mcts<T : Move, out S : Score<T>>(
 
     fun moveDown() {
         val newRoot = rootRef.updateAndGet { rootNode ->
-            rootNode.getBestChild() ?: throw IllegalStateException("no more child")
+            rootNode.getBestChild(scoreManagerFactory.childSelector) ?: throw IllegalStateException("no more child")
         }
         val oldRoot = newRoot.parent ?: throw IllegalStateException()
         newRoot.parent = oldRoot.fakeNode

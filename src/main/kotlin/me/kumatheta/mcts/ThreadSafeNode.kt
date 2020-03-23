@@ -27,7 +27,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
     private val outstandingChildCount = AtomicInteger(children.size)
 
     @ExperimentalCoroutinesApi
-    override fun getBestChild(): Node<T, S>? {
+    override fun getBestChild(childSelector: (S) -> Long): Node<T, S>? {
         return children.asSequence().mapNotNull { it.get()?.second }.mapNotNull {
             if (it.isCompleted) {
                 it.getCompleted()
@@ -36,7 +36,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
             }
         }.maxBy {
             val score = it.scoreRef.get()
-            score.totalScore.toDouble() / score.tries
+            childSelector(score)
         }
     }
 

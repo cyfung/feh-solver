@@ -612,10 +612,6 @@ class BattleState private constructor(
         val potentialDamage = preCalculateDamage(attacker, defender)
 
         val cooldownAmount = potentialDamage.cooldownAmount
-        val attackerAttackCooldownAmount =
-            AttackerDefenderPair(cooldownAmount.attacker.unitAttack, cooldownAmount.defender.foeAttack)
-        val defenderAttackCooldownAmount =
-            AttackerDefenderPair(cooldownAmount.defender.unitAttack, cooldownAmount.attacker.foeAttack)
 
         var attackerAttacked = false
         var defenderAttacked = false
@@ -629,7 +625,8 @@ class BattleState private constructor(
                         potentialDamage.attackerInCombat,
                         potentialDamage.defenderInCombat,
                         attackerAttackColorAdv,
-                        attackerAttackCooldownAmount
+                        cooldownAmount.attacker.unitAttack,
+                        cooldownAmount.defender.foeAttack
                     )
                 ) {
                     defender
@@ -642,7 +639,8 @@ class BattleState private constructor(
                         potentialDamage.defenderInCombat,
                         potentialDamage.attackerInCombat,
                         defenderAttackColorAdv,
-                        defenderAttackCooldownAmount
+                        cooldownAmount.defender.unitAttack,
+                        cooldownAmount.attacker.foeAttack
                     )
                 ) {
                     attacker
@@ -710,10 +708,9 @@ class BattleState private constructor(
         damageDealer: FullInCombatStat,
         damageReceiver: FullInCombatStat,
         colorAdvantage: Int,
-        cooldownAmount: AttackerDefenderPair<Int>
+        damageDealerCooldown: Int,
+        damageReceiverCooldown: Int
     ): Boolean {
-        val damageDealerCooldown = cooldownAmount.attacker
-        val damageReceiverCooldown = cooldownAmount.defender
         val damagingSpecial =
             if (damageDealer.heroUnit.cooldown == 0) {
                 damageDealer.heroUnit.special as? DamagingSpecial

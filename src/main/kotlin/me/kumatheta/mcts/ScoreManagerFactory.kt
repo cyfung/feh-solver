@@ -5,6 +5,7 @@ import kotlin.random.Random
 interface ScoreManagerFactory<T : Move, S : Score<T>> {
     fun newScoreManager(): ScoreManager<T, S>
     fun newEmptyScore(): S
+    val childSelector: (S) -> Long
 }
 
 interface ScoreRefRequired {
@@ -14,7 +15,10 @@ interface ScoreRefRequired {
 class CombinedScoreManagerFactory<T : Move, S : Score<T>>(
     private val manager1: ScoreManager<T, S>,
     private val manager2: ScoreManager<T, S>,
-    ratio: Double
+    ratio: Double,
+    override val childSelector: (S) -> Long = {
+        it.totalScore / it.tries
+    }
 ) : ScoreManagerFactory<T, S> {
     private val manager1Chance = ratio / (1 + ratio)
 
@@ -29,10 +33,9 @@ class CombinedScoreManagerFactory<T : Move, S : Score<T>>(
     override fun newEmptyScore(): S {
         return manager1.newEmptyScore()
     }
-
 }
 
-fun <T : Move, S : Score<T>> ScoreManager<T, S>.toFactory(): ScoreManagerFactory<T, S> {
+fun <T : Move, S : Score<T>> ScoreManager<T, S>.toFactory(childSelector: (S) -> Long = { it.totalScore / it.tries }): ScoreManagerFactory<T, S> {
     return if (this is ScoreRefRequired) {
         object : ScoreManagerFactory<T, S>, ScoreRefRequired {
             override fun newScoreManager(): ScoreManager<T, S> {
@@ -46,6 +49,9 @@ fun <T : Move, S : Score<T>> ScoreManager<T, S>.toFactory(): ScoreManagerFactory
             override fun updateScoreRef(average: Long, high: Long) {
                 this@toFactory.updateScoreRef(average, high)
             }
+
+            override val childSelector: (S) -> Long
+                get() = childSelector
         }
     } else {
         object : ScoreManagerFactory<T, S> {
@@ -56,6 +62,9 @@ fun <T : Move, S : Score<T>> ScoreManager<T, S>.toFactory(): ScoreManagerFactory
             override fun newEmptyScore(): S {
                 return this@toFactory.newEmptyScore()
             }
+
+            override val childSelector: (S) -> Long
+                get() = childSelector
         }
     }
 }

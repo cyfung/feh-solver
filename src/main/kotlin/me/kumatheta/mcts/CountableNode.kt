@@ -102,8 +102,8 @@ class CountableNode<T : Move, S : Score<T>>(
     @Volatile
     private var _isFixed = isFixed
 
-    override fun getBestChild(): Node<T, S>? {
-        return countableNodeManager.getDelegateNode(this).getBestChild()
+    override fun getBestChild(childSelector: (S) -> Long): Node<T, S>? {
+        return countableNodeManager.getDelegateNode(this).getBestChild(childSelector)
     }
 
     override suspend fun selectAndPlayOut(

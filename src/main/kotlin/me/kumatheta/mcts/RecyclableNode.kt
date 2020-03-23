@@ -55,8 +55,8 @@ class RecyclableNode<T : Move, S : Score<T>>(
             recycleManager.getDelegateNode(this).parent = value
         }
 
-    override fun getBestChild(): Node<T, S>? {
-        return recycleManager.getDelegateNode(this).getBestChild()
+    override fun getBestChild(childSelector: (S) -> Long): Node<T, S>? {
+        return recycleManager.getDelegateNode(this).getBestChild(childSelector)
     }
 
     @ExperimentalCoroutinesApi
