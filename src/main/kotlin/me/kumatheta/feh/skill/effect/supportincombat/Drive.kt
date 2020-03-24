@@ -3,6 +3,7 @@ package me.kumatheta.feh.skill.effect.supportincombat
 import me.kumatheta.feh.AttackerDefenderPair
 import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.InCombatSupport
 import me.kumatheta.feh.skill.effect.InCombatSupportInput
 import me.kumatheta.feh.skill.effect.SkillEffect
@@ -10,10 +11,10 @@ import me.kumatheta.feh.skill.effect.emptyAttackerDefenderSequences
 import me.kumatheta.feh.skill.effect.forAlly
 import me.kumatheta.feh.skill.toInCombatStatEffect
 
-fun drive(buff: SkillEffect, moveType: MoveType?) =
+fun drive(buff: InCombatSkillEffect, moveType: MoveType?) =
     if (moveType == null) {
         object : InCombatSupport {
-            override fun getSupportSkills(inCombatSupportInput: InCombatSupportInput): AttackerDefenderPair<Sequence<SkillEffect>> {
+            override fun getSupportSkills(inCombatSupportInput: InCombatSupportInput): AttackerDefenderPair<Sequence<InCombatSkillEffect>> {
                 return if (inCombatSupportInput.targetAlly.position.distanceTo(inCombatSupportInput.self.position) <= 2) {
                     inCombatSupportInput.forAlly(buff)
                 } else {
@@ -23,7 +24,7 @@ fun drive(buff: SkillEffect, moveType: MoveType?) =
         }
     } else {
         object : InCombatSupport {
-            override fun getSupportSkills(inCombatSupportInput: InCombatSupportInput): AttackerDefenderPair<Sequence<SkillEffect>> {
+            override fun getSupportSkills(inCombatSupportInput: InCombatSupportInput): AttackerDefenderPair<Sequence<InCombatSkillEffect>> {
                 return if (inCombatSupportInput.targetAlly.moveType == moveType &&
                     inCombatSupportInput.targetAlly.position.distanceTo(inCombatSupportInput.self.position) <= 2
                 ) {

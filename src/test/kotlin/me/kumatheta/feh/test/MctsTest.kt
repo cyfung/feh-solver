@@ -5,12 +5,7 @@ import kotlinx.coroutines.runBlocking
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.UnitAction
 import me.kumatheta.feh.mcts.*
-import me.kumatheta.feh.util.NoCacheBattleMap
-import me.kumatheta.mcts.DynamicUCTTuned
-import me.kumatheta.mcts.UCT
-import me.kumatheta.mcts.VaryingUCT
 import me.kumatheta.mcts.hybridDynamicUCTTune
-import me.kumatheta.mcts.toFactory
 import me.kumatheta.ws.FehJobConfig
 import me.kumatheta.ws.startNewJob
 import me.kumatheta.ws.toJobInfo
@@ -20,13 +15,13 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 fun main() {
     val jobConfig = FehJobConfig(
-        scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
-        mapName = "sothis infernal",
-        phaseLimit = 20,
+        scoreManagerFactory = hybridDynamicUCTTune<FehMove>(),
+        mapName = "grandmaster 51",
+        phaseLimit = 7,
         maxTurnBeforeEngage = 3,
         parallelCount = 20,
         canRearrange = false,
-        toRating = UnitAction::toRatingV2,
+        toRating = UnitAction::dancerFirst,
         calculateScore = BattleState::toScore
     )
     runBlocking {

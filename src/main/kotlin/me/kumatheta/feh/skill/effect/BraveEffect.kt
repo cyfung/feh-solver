@@ -1,3 +1,3 @@
 package me.kumatheta.feh.skill.effect
 
-interface BraveEffect : CombatStartEffect<Boolean>, SkillEffect
+interface BraveEffect : CombatStartEffect<Boolean>, InCombatSkillEffect

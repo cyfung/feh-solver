@@ -4,6 +4,7 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.StatType
 import me.kumatheta.feh.skill.effect.EffectOnFoe
 import me.kumatheta.feh.skill.effect.EffectOnFoeBasic
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.NeutralizeBonusBasic
 import me.kumatheta.feh.skill.effect.skillEffects
 import me.kumatheta.feh.skill.toInCombatStatEffect
@@ -15,7 +16,7 @@ fun lull(stat: Stat): EffectOnFoe {
         if (stat.def > 0) yield(StatType.DEF)
         if (stat.res > 0) yield(StatType.RES)
     }.toSet()
-    val foeEffect = skillEffects(
+    val foeEffect: List<InCombatSkillEffect> = skillEffects<InCombatSkillEffect>(
         NeutralizeBonusBasic(statTypes),
         stat.toInCombatStatEffect()
     ).toList()

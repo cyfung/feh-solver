@@ -105,9 +105,38 @@ fun BattleState.toScore(config: FehBoardConfig): Long {
             } else {
                 300
             } +
+            if (phaseRemaining < 0) {
+                0L
+            } else {
+                1300L
+            } +
             if (winningTeam == Team.PLAYER) {
                 5000L
             } else {
                 0L
             }
+}
+
+fun UnitAction.dancerFirst(config: FehBoardConfig): Int {
+    val assist = config.assistMap[heroUnitId]
+    return if (assist is Refresh) {
+        when (this) {
+            is MoveAndAssist -> {
+                5
+            }
+            else -> {
+                0
+            }
+        }
+    } else {
+        when (this) {
+            is MoveAndAttack -> 3
+            is MoveAndAssist -> when (assist) {
+                is Heal -> 3
+                is MovementAssist -> 2
+                else -> 1
+            }
+            else -> 1
+        }
+    }
 }

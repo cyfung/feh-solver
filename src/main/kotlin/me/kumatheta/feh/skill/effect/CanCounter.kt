@@ -3,7 +3,7 @@ package me.kumatheta.feh.skill.effect
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.skill.CombatStatus
 
-interface CanCounter : SkillEffect, CombatStartEffect<BooleanAdjustment>
+interface CanCounter : InCombatSkillEffect, CombatStartEffect<BooleanAdjustment>
 
 object DisableCounter : CanCounter {
     override fun apply(combatStatus: CombatStatus<HeroUnit>): BooleanAdjustment {

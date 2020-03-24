@@ -7,6 +7,7 @@ import me.kumatheta.feh.skill.CombatStatus
 import me.kumatheta.feh.skill.basic
 import me.kumatheta.feh.skill.effect.DisableFollowUp
 import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.InCombatStatEffect
 import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.others.DragonAdaptive
@@ -27,7 +28,7 @@ val FellBreath = DragonC.basic(19) + skillEffects(
         }
     },
     object : EffectOnFoe {
-        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<InCombatSkillEffect> {
             return if (combatStatus.foe.currentHp < combatStatus.foe.maxHp) {
                 sequenceOf(DisableFollowUp)
             } else {

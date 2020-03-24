@@ -8,6 +8,8 @@ enum class BooleanAdjustment(val value: Int) {
 
 interface SkillEffect
 
-fun skillEffects(vararg skillEffects: SkillEffect): Sequence<SkillEffect> {
+fun <T: SkillEffect> skillEffects(vararg skillEffects: T): Sequence<T> {
     return skillEffects.asSequence()
 }
+
+interface InCombatSkillEffect : SkillEffect

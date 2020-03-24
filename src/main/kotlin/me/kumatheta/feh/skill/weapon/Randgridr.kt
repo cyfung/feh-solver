@@ -8,6 +8,7 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.StatType
 import me.kumatheta.feh.skill.*
 import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.InCombatStatEffectBasic
 import me.kumatheta.feh.skill.effect.NeutralizePenalty
 import me.kumatheta.feh.skill.effect.SkillEffect
@@ -26,7 +27,7 @@ val Randgridr = BowB.basic(17) + skillEffects(
         }
     },
     object : EffectOnFoe {
-        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<InCombatSkillEffect> {
             return if (combatStatus.foe.currentHp == combatStatus.foe.maxHp) {
                 sequenceOf(FOE_EFFECT)
             } else {

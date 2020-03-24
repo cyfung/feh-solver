@@ -17,6 +17,7 @@ import me.kumatheta.feh.skill.ProtectiveMovementAssist
 import me.kumatheta.feh.skill.allies
 import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.effect.CancelAffinity
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.InCombatSupportInput
 import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.startofturn.MoveOrderEffect
@@ -371,9 +372,9 @@ class BattleState private constructor(
     private fun getAttackerSkillSeq(
         attacker: HeroUnit,
         defender: HeroUnit,
-        attackerTeamSkills: Sequence<SkillEffect>,
-        defenderTeamSkills: Sequence<SkillEffect>
-    ): Sequence<SkillEffect> {
+        attackerTeamSkills: Sequence<InCombatSkillEffect>,
+        defenderTeamSkills: Sequence<InCombatSkillEffect>
+    ): Sequence<InCombatSkillEffect> {
         return attacker.skillSet.skillEffectSeq + attackerTeamSkills + defenderTeamSkills +
                 defender.skillSet.effectOnFoe.asSequence().flatMap {
                     it.apply(CombatStatus(this, defender, attacker, false))
@@ -383,9 +384,9 @@ class BattleState private constructor(
     private fun getDefenderSkillSeq(
         attacker: HeroUnit,
         defender: HeroUnit,
-        attackerTeamSkills: Sequence<SkillEffect>,
-        defenderTeamSkills: Sequence<SkillEffect>
-    ): Sequence<SkillEffect> {
+        attackerTeamSkills: Sequence<InCombatSkillEffect>,
+        defenderTeamSkills: Sequence<InCombatSkillEffect>
+    ): Sequence<InCombatSkillEffect> {
         return defender.skillSet.skillEffectSeq + defenderTeamSkills + attackerTeamSkills +
                 attacker.skillSet.effectOnFoe.asSequence().flatMap {
                     it.apply(CombatStatus(this, attacker, defender, true))

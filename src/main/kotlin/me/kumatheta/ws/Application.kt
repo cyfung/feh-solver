@@ -14,7 +14,6 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.*
 import me.kumatheta.feh.mcts.*
 import me.kumatheta.feh.message.*
-import me.kumatheta.feh.util.NoCacheBattleMap
 import me.kumatheta.mcts.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -38,7 +37,7 @@ private val jobConfig = FehJobConfig(
     maxTurnBeforeEngage = 3,
     parallelCount = 20,
     canRearrange = true,
-    toRating = UnitAction::toRatingV2,
+    toRating = UnitAction::dancerFirst,
     calculateScore = BattleState::toScore,
     moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {

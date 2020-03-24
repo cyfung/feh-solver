@@ -24,6 +24,7 @@ import me.kumatheta.feh.skill.effect.EffectOnFoeBasic
 import me.kumatheta.feh.skill.effect.EffectiveAgainstMovement
 import me.kumatheta.feh.skill.effect.ExtraInCombatStatEffect
 import me.kumatheta.feh.skill.effect.ExtraStat
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.NeutralizeBonusBasic
 import me.kumatheta.feh.skill.effect.RavenBasic
 import me.kumatheta.feh.skill.effect.SkillEffect
@@ -197,7 +198,7 @@ private fun WeaponType.effective(
     val foeEffect = if (neutralizeBonus) {
         val neutralizeEffect = NeutralizeBonusBasic(ALL_STAT_TYPES)
         val effect = object : EffectOnFoe {
-            override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+            override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<InCombatSkillEffect> {
                 return if (combatStatus.foe.moveType == moveType) {
                     sequenceOf(neutralizeEffect)
                 } else {

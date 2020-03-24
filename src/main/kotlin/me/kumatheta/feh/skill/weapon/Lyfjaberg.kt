@@ -9,6 +9,7 @@ import me.kumatheta.feh.skill.aoeDebuffFoe
 import me.kumatheta.feh.skill.basic
 import me.kumatheta.feh.skill.effect.DisableCounter
 import me.kumatheta.feh.skill.effect.EffectOnFoe
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.InCombatStatEffect
 import me.kumatheta.feh.skill.effect.PostCombatEffect
 import me.kumatheta.feh.skill.effect.SkillEffect
@@ -31,7 +32,7 @@ val Lyfjaberg = DaggerC.basic(14, res = 3) + skillEffects(
         }
     },
     object : EffectOnFoe {
-        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<SkillEffect> {
+        override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<InCombatSkillEffect> {
             return if (combatStatus.initAttack && combatStatus.self.hpThreshold(50) >= 0) {
                 sequenceOf(DisableCounter)
             } else {

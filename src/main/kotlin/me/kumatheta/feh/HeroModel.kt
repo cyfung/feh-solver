@@ -6,6 +6,7 @@ import me.kumatheta.feh.skill.Skill
 import me.kumatheta.feh.skill.SkillSet
 import me.kumatheta.feh.skill.Special
 import me.kumatheta.feh.skill.Weapon
+import me.kumatheta.feh.skill.effect.CoolDownCountAdjust
 import me.kumatheta.feh.skill.effect.Debuffer
 import me.kumatheta.feh.skill.effect.EffectiveAgainstMovement
 import me.kumatheta.feh.skill.effect.EffectiveAgainstWeapon
@@ -13,7 +14,7 @@ import me.kumatheta.feh.skill.effect.ExtraStat
 import me.kumatheta.feh.skill.effect.NeutralizeEffectiveAgainstMovement
 import me.kumatheta.feh.skill.effect.NeutralizeEffectiveAgainstWeapon
 import me.kumatheta.feh.skill.effect.PhantomStat
-import me.kumatheta.feh.skill.effect.CoolDownCountAdjust
+import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.SpecialDebuff
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 
@@ -46,29 +47,43 @@ fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
     }
 }
 
-open class HeroModel(
+class HeroModel private constructor(
     override val name: String,
     override val imageName: String,
-    final override val group: Int?,
+    override val group: Int?,
     val engageDelay: Int?,
-    final override val moveType: MoveType,
+    override val moveType: MoveType,
     val weapon: Weapon,
-    final override val assist: Assist?,
-    final override val special: Special?,
+    override val assist: Assist?,
+    override val special: Special?,
     stat: Stat,
-    passives: List<Passive>,
-    isFinalStat: Boolean = false
+    isFinalStat: Boolean,
+    skillEffects: List<SkillEffect>
 ) : Hero {
-    final override val isEmptyHanded: Boolean = weapon is EmptyWeapon
-    final override val weaponType = weapon.weaponType
-    final override val skillSet =
-        SkillSet(
-            passives.asSequence().plus(weapon).plusIfNotNull(assist).plusIfNotNull(
-                special
-            ).flatMap { it.effects.asSequence() }
-        )
-    final override val debuffer = skillSet.get<Debuffer>().any()
-    final override val specialDebuffer = skillSet.get<SpecialDebuff>().maxBy {
+
+    constructor(
+        name: String,
+        imageName: String,
+        group: Int?,
+        engageDelay: Int?,
+        moveType: MoveType,
+        weapon: Weapon,
+        assist: Assist?,
+        special: Special?,
+        stat: Stat,
+        passives: List<Passive>,
+        isFinalStat: Boolean = false
+    ) : this(
+        name, imageName, group, engageDelay, moveType, weapon, assist, special, stat, isFinalStat,
+        passives.asSequence().plus(weapon).plusIfNotNull(assist)
+            .plusIfNotNull(special).flatMap { it.effects.asSequence() }.toList()
+    )
+
+    override val isEmptyHanded: Boolean = weapon is EmptyWeapon
+    override val weaponType = weapon.weaponType
+    override val skillSet = SkillSet(skillEffects)
+    override val debuffer = skillEffects.filterIsInstance<Debuffer>().any()
+    override val specialDebuffer = skillEffects.filterIsInstance<SpecialDebuff>().maxBy {
         if (it == SpecialDebuff.ALWAYS_AVAILABLE) {
             0
         } else {
@@ -76,28 +91,28 @@ open class HeroModel(
         }
     }
 
-    final override val effectiveAgainstMoveType = skillSet.get<EffectiveAgainstMovement>().map { it.moveType }.toSet()
-    final override val effectiveAgainstWeaponType = skillSet.get<EffectiveAgainstWeapon>().map { it.weaponType }.toSet()
-    final override val neutralizeEffectiveMoveType =
-        skillSet.get<NeutralizeEffectiveAgainstMovement>().map { it.moveType }.contains(moveType)
-    final override val neutralizeEffectiveWeaponType =
-        skillSet.get<NeutralizeEffectiveAgainstWeapon>().map { it.weaponType }.contains(weaponType)
+    override val effectiveAgainstMoveType = skillEffects.filterIsInstance<EffectiveAgainstMovement>().map { it.moveType }.toSet()
+    override val effectiveAgainstWeaponType = skillEffects.filterIsInstance<EffectiveAgainstWeapon>().map { it.weaponType }.toSet()
+    override val neutralizeEffectiveMoveType =
+        skillEffects.filterIsInstance<NeutralizeEffectiveAgainstMovement>().map { it.moveType }.contains(moveType)
+    override val neutralizeEffectiveWeaponType =
+        skillEffects.filterIsInstance<NeutralizeEffectiveAgainstWeapon>().map { it.weaponType }.contains(weaponType)
 
-    final override val baseStat: Stat = if (isFinalStat) {
+    override val baseStat: Stat = if (isFinalStat) {
         stat
     } else {
-        skillSet.get<ExtraStat>().fold(stat) { sum, extraStat ->
+        skillEffects.filterIsInstance<ExtraStat>().fold(stat) { sum, extraStat ->
             sum + extraStat.value
         }
     }
 
-    final override val phantomStat: Stat =
-        skillSet.get<PhantomStat>().fold(Stat.ZERO) { sum, stat ->
+    override val phantomStat: Stat =
+        skillEffects.filterIsInstance<PhantomStat>().fold(Stat.ZERO) { sum, stat ->
             sum + stat.value
         }
 
     override val cooldownCount: Int? = if (special?.coolDownCount != null) {
-        special.coolDownCount + skillSet.get<CoolDownCountAdjust>().sumBy { it.value }
+        special.coolDownCount + skillEffects.filterIsInstance<CoolDownCountAdjust>().sumBy { it.value }
     } else {
         null
     }

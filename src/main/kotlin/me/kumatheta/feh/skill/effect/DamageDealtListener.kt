@@ -4,6 +4,6 @@ import me.kumatheta.feh.skill.CombatStatus
 import me.kumatheta.feh.skill.DamageDealt
 import me.kumatheta.feh.skill.InCombatStat
 
-interface DamageDealtListener : SkillEffect {
+interface DamageDealtListener : InCombatSkillEffect {
     fun onDamageDealt(combatStatus: CombatStatus<InCombatStat>, damageDealt: DamageDealt)
 }

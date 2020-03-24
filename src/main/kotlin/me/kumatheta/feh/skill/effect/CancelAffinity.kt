@@ -1,6 +1,6 @@
 package me.kumatheta.feh.skill.effect
 
-interface CancelAffinity : CombatStartEffect<CancelAffinity.Type?>, SkillEffect {
+interface CancelAffinity : CombatStartEffect<CancelAffinity.Type?>, InCombatSkillEffect {
     enum class Type {
         CANCEL_AFFINITY_1,
         CANCEL_AFFINITY_2,

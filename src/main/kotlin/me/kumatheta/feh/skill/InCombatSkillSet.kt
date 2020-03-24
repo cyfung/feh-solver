@@ -17,9 +17,11 @@ import me.kumatheta.feh.skill.effect.DamageReceivedListener
 import me.kumatheta.feh.skill.effect.DenyAdaptiveDamageEffect
 import me.kumatheta.feh.skill.effect.DenyStaffAsNormal
 import me.kumatheta.feh.skill.effect.DesperationEffect
+import me.kumatheta.feh.skill.effect.DisablePriorityChange
 import me.kumatheta.feh.skill.effect.ExtraInCombatStatEffect
 import me.kumatheta.feh.skill.effect.FlatDamageReduce
 import me.kumatheta.feh.skill.effect.FollowUpEffect
+import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.InCombatStatEffect
 import me.kumatheta.feh.skill.effect.NeutralizeBonus
 import me.kumatheta.feh.skill.effect.NeutralizeFollowUp
@@ -37,16 +39,17 @@ class InCombatSkillSet(
     self: HeroUnit,
     foe: HeroUnit,
     initAttack: Boolean,
-    skillEffects: Sequence<SkillEffect>
+    skillEffects: Sequence<InCombatSkillEffect>
 ) {
     val combatStatus = CombatStatus(battleState, self, foe, initAttack)
     private val skillEffects = skillEffects.toList()
 
-    private inline fun <reified R : SkillEffect> get(): Sequence<R> {
+    private inline fun <reified R : InCombatSkillEffect> get(): Sequence<R> {
         return this.skillEffects.asSequence().filterIsInstance<R>()
     }
 
     private inline fun <T, reified R : CombatStartEffect<T>> applyAll(): Sequence<T> {
+
         return this.skillEffects.asSequence().filterIsInstance<R>().applyAll()
     }
 
@@ -73,7 +76,7 @@ class InCombatSkillSet(
     val brave
         get() = any<BraveEffect>()
     val disablePriorityChange
-        get() = any<BraveEffect>()
+        get() = any<DisablePriorityChange>()
     val desperation
         get() = any<DesperationEffect>()
     val vantage

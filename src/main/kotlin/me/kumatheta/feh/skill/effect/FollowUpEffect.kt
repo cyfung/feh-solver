@@ -3,7 +3,7 @@ package me.kumatheta.feh.skill.effect
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.skill.CombatStatus
 
-interface FollowUpEffect : SkillEffect, CombatStartEffect<BooleanAdjustment>
+interface FollowUpEffect : InCombatSkillEffect, CombatStartEffect<BooleanAdjustment>
 
 object DisableFollowUp: FollowUpEffect {
     override fun apply(combatStatus: CombatStatus<HeroUnit>): BooleanAdjustment {
