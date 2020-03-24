@@ -8,7 +8,7 @@ import me.kumatheta.feh.skill.effect.PostCombatEffect
 class Seal(private val stat: Stat) : PostCombatEffect {
     override fun onCombatEnd(combatStatus: CombatStatus<InCombatStat>, attacked: Boolean) {
         if (!combatStatus.self.heroUnit.isDead && !combatStatus.foe.heroUnit.isDead) {
-            combatStatus.foe.heroUnit.applyDebuff(stat)
+            combatStatus.foe.heroUnit.cachedEffect.applyDebuff(stat)
         }
     }
 }

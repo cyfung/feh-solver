@@ -40,6 +40,25 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
         }
     }
 
+    override suspend fun playOut(
+        scoreManager: ScoreManager<T, S>,
+        move: T,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
+        if (childInitTicket.get() > 0) {
+            val oldIndex = childInitTicket.getAndSet(0)
+            (0 until oldIndex).forEach {
+                playOut(it, updateScore, scoreManager)
+            }
+        }
+        val completableDeferred = children.asSequence().map {
+            it.get()
+        }.firstOrNull() {
+            it?.first == move
+        }?.second
+        return completableDeferred?.await()
+    }
+
     override suspend fun selectAndPlayOut(
         scoreManager: ScoreManager<T, S>,
         updateScore: (Long, List<T>) -> Unit
@@ -74,33 +93,41 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
         } else {
             // the children could be removed because this is a newly generated node
             // and the child is removed from the call from an old child of the previous node
-            val (move, deferred) = children[index].get() ?: return null
-            // expand
-            val copy = board.applyMove(move)
-            val score = copy.score
-            if (score != null) {
-                updateScore(score, listOf(move))
-                removeChild(index)
-                require(deferred.isCompleted)
-            } else {
-                // play out
-                val (childScore, moves) = copy.playOut(random)
-                val child = childBuilder(
-                    this,
-                    index,
-                    copy,
-                    move,
-                    childScore,
-                    moves,
-                    scoreManager
-                )
-                updateScore(childScore, (sequenceOf(move) + moves).toList())
-                val completed = deferred.complete(child)
-                if (!completed) {
-                    child.onRemove()
-                }
-            }
+            playOut(index, updateScore, scoreManager)
             null
+        }
+    }
+
+    private fun playOut(
+        index: Int,
+        updateScore: (Long, List<T>) -> Unit,
+        scoreManager: ScoreManager<T, S>
+    ) {
+        val (move, deferred) = children[index].get() ?: return
+        // expand
+        val copy = board.applyMove(move)
+        val score = copy.score
+        if (score != null) {
+            updateScore(score, listOf(move))
+            removeChild(index)
+            require(deferred.isCompleted)
+        } else {
+            // play out
+            val (childScore, moves) = copy.playOut(random)
+            val child = childBuilder(
+                this,
+                index,
+                copy,
+                move,
+                childScore,
+                moves,
+                scoreManager
+            )
+            updateScore(childScore, (sequenceOf(move) + moves).toList())
+            val completed = deferred.complete(child)
+            if (!completed) {
+                child.onRemove()
+            }
         }
     }
 

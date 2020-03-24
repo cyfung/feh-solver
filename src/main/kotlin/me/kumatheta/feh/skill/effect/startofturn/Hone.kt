@@ -12,7 +12,7 @@ fun hone(buff: Stat, moveType: MoveType? = null) =
         object : StartOfTurnEffect {
             override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
                 self.adjacentAllies(battleState).forEach {
-                    it.applyBuff(buff)
+                    it.cachedEffect.applyBuff(buff)
                 }
             }
         }
@@ -20,7 +20,7 @@ fun hone(buff: Stat, moveType: MoveType? = null) =
         object : StartOfTurnEffect {
             override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
                 self.adjacentAllies(battleState).filter { it.moveType == moveType }.forEach {
-                    it.applyBuff(buff)
+                    it.cachedEffect.applyBuff(buff)
                 }
             }
         }

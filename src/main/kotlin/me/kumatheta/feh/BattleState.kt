@@ -136,7 +136,10 @@ class BattleState private constructor(
     }
 
     fun unitsSeq(team: Team) =
-        locationMap.values.asSequence().filterIsInstance<HeroUnit>().filter { it.team == team }
+        allUnits().filter { it.team == team }
+
+    private fun allUnits() =
+        locationMap.values.asSequence().filterIsInstance<HeroUnit>()
 
     private fun executeMove(unitAction: UnitAction): Team? {
         check(winningTeam == null)
@@ -297,14 +300,16 @@ class BattleState private constructor(
     }
 
     private fun startOfTurn(team: Team): List<HeroUnit> {
+        val allUnits = allUnits().toList()
         val units = unitsSeq(team).toList()
         units.forEach(HeroUnit::startOfTurn)
+        allUnits.forEach(HeroUnit::cacheOn)
         units.forEach { heroUnit ->
             heroUnit.skillSet.startOfTurn.forEach {
                 it.onStartOfTurn(this, heroUnit)
             }
         }
-        units.forEach(HeroUnit::applyCachedEffect)
+        allUnits.forEach(HeroUnit::applyCachedEffect)
         return units
     }
 
@@ -659,12 +664,11 @@ class BattleState private constructor(
             }
         }
 
+        val allUnits = (allUnits() + attacker + defender).toSet()
+        allUnits.forEach(HeroUnit::cacheOn)
         potentialDamage.attackerInCombat.skills.postCombat(attackerAttacked)
         potentialDamage.defenderInCombat.skills.postCombat(defenderAttacked)
-
-        locationMap.values.asSequence().filterIsInstance<HeroUnit>().forEach {
-            it.endOfCombat()
-        }
+        allUnits.forEach(HeroUnit::endOfCombat)
 
         if (!attacker.engaged) {
             setGroupEngaged(attacker)

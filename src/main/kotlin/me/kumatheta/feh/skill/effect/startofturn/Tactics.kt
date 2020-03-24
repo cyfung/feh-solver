@@ -13,7 +13,7 @@ class Tactics(private val stat: Stat) : StartOfTurnEffect {
         team.filterNot { it == self }.filter { counts[it.moveType] ?: 0 <= 2 }.filter {
             it.position.distanceTo(pos) <= 2
         }.forEach {
-            it.applyBuff(stat)
+            it.cachedEffect.applyBuff(stat)
         }
     }
 }

@@ -12,7 +12,7 @@ class Opening<R : Comparable<R>>(
     private val selector: (HeroUnit) -> R
 ) : StartOfTurnEffect {
     override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
-        self.allies(battleState).maxBy(selector)?.applyBuff(stat)
+        self.allies(battleState).maxBy(selector)?.cachedEffect?.applyBuff(stat)
     }
 }
 

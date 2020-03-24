@@ -21,7 +21,7 @@ class Ploy(
 
 fun resBasedPloy3(stat: Stat) = Ploy { self, foe ->
     if (foe.visibleStat.res < self.startOfTurnStat.res) {
-        foe.applyDebuff(stat)
+        foe.cachedEffect.applyDebuff(stat)
     }
 }
 fun resBasedPloy3(atk: Int = 0,

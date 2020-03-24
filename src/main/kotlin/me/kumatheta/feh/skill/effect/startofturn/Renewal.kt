@@ -7,7 +7,7 @@ import me.kumatheta.feh.skill.effect.StartOfTurnEffect
 class Renewal(private val turn: Int) : StartOfTurnEffect {
     override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
         if (battleState.turn % turn == 1) {
-            self.heal(10)
+            self.cachedEffect.heal(10)
         }
     }
 }

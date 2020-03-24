@@ -135,4 +135,12 @@ class CountableNode<T : Move, S : Score<T>>(
         }
     }
 
+    override suspend fun playOut(
+        scoreManager: ScoreManager<T, S>,
+        move: T,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
+        return countableNodeManager.getDelegateNode(this).playOut(scoreManager, move, updateScore)
+    }
+
 }

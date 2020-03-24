@@ -16,6 +16,7 @@ interface Node<T : Move, S : Score<T>> {
 
     fun onRemove()
     fun removeAllChildren()
+    suspend fun playOut(scoreManager: ScoreManager<T, S>, move: T, updateScore: (Long, List<T>) -> Unit): Node<T, S>?
 }
 
 val <T : Move, S : Score<T>> Node<T, S>.score: S

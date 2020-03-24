@@ -16,7 +16,7 @@ fun aoeNegativeStatus(negativeStatus: NegativeStatus, range: Int, applyToTarget:
 
 fun aoeDebuff(range: Int, applyToTarget: Boolean, debuff: Stat): AoeEnemy {
     return AoeEnemy(range, applyToTarget) {
-        it.applyDebuff(debuff)
+        it.cachedEffect.applyDebuff(debuff)
     }
 }
 

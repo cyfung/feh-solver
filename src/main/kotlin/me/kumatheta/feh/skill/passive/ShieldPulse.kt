@@ -12,7 +12,7 @@ val ShieldPulse3 = sequenceOf(
     object : StartOfTurnEffect {
         override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
             if (battleState.turn == 1) {
-                self.reduceCooldown(2)
+                self.cachedEffect.cooldown -= 2
             }
         }
     },

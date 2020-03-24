@@ -10,6 +10,10 @@ class CachedEffect {
         }
     var hp: Int = 0
         private set
+    var debuff: Stat = Stat.ZERO
+        private set
+    var buff: Stat = Stat.ZERO
+        private set
 
     fun takeNonLethalDamage(damage: Int) {
         hp -= damage
@@ -18,6 +22,16 @@ class CachedEffect {
 
     fun heal(healAmount: Int) {
         hp += healAmount
+        updated = true
+    }
+
+    fun applyDebuff(stat: Stat) {
+        debuff = min(debuff, stat)
+        updated = true
+    }
+
+    fun applyBuff(stat: Stat) {
+        buff = max(buff, stat)
         updated = true
     }
 

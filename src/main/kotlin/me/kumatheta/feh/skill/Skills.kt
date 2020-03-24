@@ -12,10 +12,9 @@ fun aoeDebuffFoe(
     combatStatus: CombatStatus<InCombatStat>,
     stat: Stat
 ) {
-    combatStatus.battleState.unitsSeq(combatStatus.foe.heroUnit.team)
-        .filter { it.position.distanceTo(combatStatus.foe.heroUnit.position) <= 2 }
+    combatStatus.foe.heroUnit.nearbyAlliesAndSelf(combatStatus.battleState, 2)
         .forEach {
-            it.applyDebuff(stat)
+            it.cachedEffect.applyDebuff(stat)
         }
 }
 
@@ -26,13 +25,17 @@ fun aoeBuffAlly(
     combatStatus.battleState.unitsSeq(combatStatus.self.heroUnit.team)
         .filter { it.position.distanceTo(combatStatus.self.heroUnit.position) <= 2 }
         .forEach {
-            it.applyBuff(stat)
+            it.cachedEffect.applyBuff(stat)
         }
 }
 
 fun HeroUnit.adjacentAllies(
     battleState: BattleState
 ) = allies(battleState).filter { it.position.distanceTo(position) == 1 }
+
+fun HeroUnit.adjacentAlliesAndSelf(
+    battleState: BattleState
+) = alliesAndSelf(battleState).filter { it.position.distanceTo(position) == 1 }
 
 fun HeroUnit.nearbyAllies(
     battleState: BattleState,
@@ -43,8 +46,20 @@ fun HeroUnit.nearbyAllies(
     }
 }
 
+fun HeroUnit.nearbyAlliesAndSelf(
+    battleState: BattleState,
+    maxRange: Int
+): Sequence<HeroUnit> {
+    return alliesAndSelf(battleState).filter {
+        it.position.distanceTo(position) <= maxRange
+    }
+}
+
 fun HeroUnit.allies(battleState: BattleState) =
     battleState.unitsSeq(team).filterNot { it == this }
+
+fun HeroUnit.alliesAndSelf(battleState: BattleState) =
+    battleState.unitsSeq(team)
 
 fun HeroUnit.inCardinalDirection(target: HeroUnit) =
     target.position.x == position.x || target.position.y == position.y
@@ -69,7 +84,7 @@ fun Stat.toExtraStat(): ExtraStat {
 }
 
 fun Stat.toInCombatStatEffect(): InCombatStatEffect {
-    return object: InCombatStatEffect {
+    return object : InCombatStatEffect {
         override fun apply(combatStatus: CombatStatus<HeroUnit>): Stat {
             return this@toInCombatStatEffect
         }

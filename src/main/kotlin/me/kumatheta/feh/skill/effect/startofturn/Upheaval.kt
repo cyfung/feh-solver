@@ -9,7 +9,7 @@ object Upheaval : StartOfTurnEffect {
     override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
         if (battleState.turn == 1) {
             battleState.unitsSeq(self.team.foe).forEach {
-                it.takeNonLethalDamage(7)
+                it.cachedEffect.takeNonLethalDamage(7)
             }
         }
     }

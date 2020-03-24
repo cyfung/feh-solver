@@ -4,6 +4,7 @@ import me.kumatheta.feh.skill.AoeSpecial
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.skill.adjacentAllies
+import me.kumatheta.feh.skill.adjacentAlliesAndSelf
 import me.kumatheta.feh.skill.allies
 import kotlin.math.absoluteValue
 
@@ -51,6 +52,6 @@ object BlazingWind : AoeSpecial(4) {
         get() = 150
 
     override fun getTargets(battleState: BattleState, self: HeroUnit, mainTarget: HeroUnit): Sequence<HeroUnit> {
-        return mainTarget.adjacentAllies(battleState) + mainTarget
+        return mainTarget.adjacentAlliesAndSelf(battleState)
     }
 }

@@ -11,7 +11,7 @@ object SparklingBoost : StartOfTurnEffect {
             it to hpLost
         }.groupBy({ it.second }, { it.first }).maxBy { it.key }?.value
         if (!allyWithHighestHpLost.isNullOrEmpty()) {
-            allyWithHighestHpLost.forEach { it.heal(10) }
+            allyWithHighestHpLost.forEach { it.cachedEffect.heal(10) }
         }
     }
 }

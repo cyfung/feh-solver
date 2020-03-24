@@ -102,6 +102,33 @@ class Mcts<T : Move, out S : Score<T>>(
         moveDownCountRef.getAndIncrement()
     }
 
+    suspend fun playOut(moves: List<T>): Boolean {
+        val root = rootRef.get()
+        val fixedNodes = generateSequence(root) {
+            it.parent
+        }.toList().asReversed()
+        if (moves.size < fixedNodes.size) {
+            return false
+        }
+        if (fixedNodes.size > 1) {
+            val moveSeq = moves.asSequence()
+            val sameStartingMoves = fixedNodes.asSequence().drop(1).zip(moveSeq).all {
+                it.first.lastMove == it.second
+            }
+            if (!sameStartingMoves) {
+                return false
+            }
+        }
+        val scoreManager = scoreManagerFactory.newScoreManager()
+        var node: Node<T, S> = root
+        moves.subList(fixedNodes.size - 1, moves.size).asSequence().forEach {
+            node = node.playOut(scoreManager, it) { newScore, playoutMoves ->
+                updateScore(scoreManager, node, newScore, playoutMoves)
+            }?: return true
+        }
+        return true
+    }
+
     private suspend fun selectAndPlayOut(scoreManager: ScoreManager<T, S>) {
         var node: Node<T, S> = rootRef.get()
         while (true) {

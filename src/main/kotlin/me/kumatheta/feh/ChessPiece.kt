@@ -24,8 +24,9 @@ class HeroUnit(
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
 
-    var cachedEffect = CachedEffect()
-        private set
+    private var _cachedEffect: CachedEffect? = null
+    val cachedEffect
+        get() = _cachedEffect?: error("not the right time to use cached effect")
 
     private val positiveStatus = mutableSetOf<PositiveStatus>()
     fun addPositiveStatus(status: PositiveStatus) {
@@ -114,6 +115,7 @@ class HeroUnit(
     val combatSkillData = mutableMapOf<String, Any>()
 
     override fun copy(): HeroUnit {
+        require(_cachedEffect == null)
         val newUnit = HeroUnit(id, heroModel, team, position)
         newUnit.available = available
         newUnit.buff = buff
@@ -152,6 +154,7 @@ class HeroUnit(
     }
 
     fun takeNonLethalDamage(damage: Int): Int {
+        require(_cachedEffect == null)
         check(damage >= 0)
         if (damage == 0) return 0
         currentHp -= damage
@@ -176,6 +179,7 @@ class HeroUnit(
     }
 
     fun reduceCooldown(count: Int) {
+        require(_cachedEffect == null)
         val cooldown = cooldown ?: return
         this.cooldown = when {
             count <= 0 -> return
@@ -184,6 +188,7 @@ class HeroUnit(
     }
 
     fun addCooldown(count: Int) {
+        require(_cachedEffect == null)
         val cooldown = cooldown ?: return
         val cooldownCount = heroModel.cooldownCount ?: return
         this.cooldown = when {
@@ -193,10 +198,12 @@ class HeroUnit(
     }
 
     fun applyDebuff(stat: Stat) {
+        require(_cachedEffect == null)
         debuff = min(debuff, stat)
     }
 
     fun applyBuff(stat: Stat) {
+        require(_cachedEffect == null)
         buff = max(buff, stat)
     }
 
@@ -241,6 +248,7 @@ class HeroUnit(
     }
 
     fun heal(healAmount: Int): Int {
+        require(_cachedEffect == null)
         currentHp += healAmount
         return if (currentHp > maxHp) {
             val actualHeal = healAmount - (currentHp - maxHp)
@@ -269,7 +277,15 @@ class HeroUnit(
         combatSkillData.clear()
     }
 
+    fun cacheOn() {
+        _cachedEffect = CachedEffect()
+    }
+
     fun applyCachedEffect() {
+        val cachedEffect = _cachedEffect
+        this._cachedEffect = null
+        requireNotNull(cachedEffect)
+
         if (!cachedEffect.updated) return
         val hp = cachedEffect.hp
         if (hp > 0) {
@@ -283,7 +299,14 @@ class HeroUnit(
         } else if (cooldownChange < 0) {
             reduceCooldown(-cooldownChange)
         }
-        cachedEffect = CachedEffect()
+        val cachedBuff = cachedEffect.buff
+        if (cachedBuff !== Stat.ZERO) {
+            applyBuff(cachedBuff)
+        }
+        val cachedDebuff = cachedEffect.debuff
+        if (cachedDebuff !== Stat.ZERO) {
+            applyDebuff(cachedDebuff)
+        }
     }
 
     fun hpThreshold(percentage: Int): Int {

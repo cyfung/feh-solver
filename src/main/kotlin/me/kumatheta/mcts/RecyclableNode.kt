@@ -118,4 +118,12 @@ class RecyclableNode<T : Move, S : Score<T>>(
     override fun removeAllChildren() {
         TODO("Not yet implemented")
     }
+
+    override suspend fun playOut(
+        scoreManager: ScoreManager<T, S>,
+        move: T,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
+        TODO("Not yet implemented")
+    }
 }

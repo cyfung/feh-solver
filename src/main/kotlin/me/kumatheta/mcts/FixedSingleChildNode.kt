@@ -39,4 +39,12 @@ class FakeNode<T : Move, S : Score<T>>(
     override fun removeAllChildren() {
         throw UnsupportedOperationException()
     }
+
+    override suspend fun playOut(
+        scoreManager: ScoreManager<T, S>,
+        move: T,
+        updateScore: (Long, List<T>) -> Unit
+    ): Node<T, S>? {
+        throw UnsupportedOperationException()
+    }
 }

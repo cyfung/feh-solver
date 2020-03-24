@@ -21,7 +21,7 @@ class Smoke(private val effect: (HeroUnit) -> Unit) : PostCombatEffect {
 
 fun smoke(debuff: Stat): Smoke {
     return Smoke {
-        it.applyDebuff(debuff)
+        it.cachedEffect.applyDebuff(debuff)
     }
 }
 fun smoke(atk: Int = 0,
