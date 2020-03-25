@@ -10,7 +10,7 @@ class Threaten(private val stat: Stat): StartOfTurnEffect {
     override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
         val position = self.position
         battleState.unitsSeq(self.team.foe).filter { it.position.distanceTo(position) <= 2 }.forEach {
-            it.applyDebuff(stat)
+            it.cachedEffect.applyDebuff(stat)
         }
     }
 }

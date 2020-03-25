@@ -62,7 +62,9 @@ private fun nonStandardRefinableWeapons() = sequenceOf(
             true,
             Stat(atk = -7, spd = -7)
         )
-    )
+    ),
+    "Thoron+" to MagicB.basic(14),
+    "Silver Lance+" to Lance.basic(16)
 )
 
 private val STANDARD_REFINABLE_WEAPONS = listOf(
@@ -70,7 +72,6 @@ private val STANDARD_REFINABLE_WEAPONS = listOf(
     "Slaying Lance+" to Lance.basic(14) + SlayingEffect,
     "Slaying Axe+" to Axe.basic(14) + SlayingEffect,
     "Slaying Edge+" to Sword.basic(14) + SlayingEffect,
-    "Thoron+" to MagicB.basic(14),
     "Rexcailbur+" to MagicG.basic(14),
     "Silver Axe+" to Axe.basic(16),
     "Wo Gun+" to Axe.basic(14) + DealSpecialDamage,
@@ -85,7 +86,8 @@ private val STANDARD_REFINABLE_WEAPONS = listOf(
     "Armorsmasher+" to Sword.effective(14, MoveType.ARMORED),
     "Slaying Hammer+" to Axe.effective(14, MoveType.ARMORED),
     "Blarserpent+" to MagicB.basic(12) + rangeDefStat(def = 6, res = 6),
-    "Guard Bow+" to BowC.basic(12) + rangeDefStat(def = 6, res = 6)
+    "Guard Bow+" to BowC.basic(12) + rangeDefStat(def = 6, res = 6),
+    "Keen Gronnwolf+" to MagicG.effective(12, MoveType.CAVALRY)
 )
 
 val FIXED_WEAPONS = sequenceOf(
@@ -94,6 +96,7 @@ val FIXED_WEAPONS = sequenceOf(
     "Brave Sword+" to Sword.brave(8),
     "Brave Lance+" to Lance.brave(8),
     "Brave Axe+" to Axe.brave(8),
+    "Raudrraven+" to MagicR.basic(11) + RavenBasic,
     "Gronnraven+" to MagicG.basic(11) + RavenBasic,
     "Emerald Axe+" to Axe.basic(12) + TriangleAdept(20),
 

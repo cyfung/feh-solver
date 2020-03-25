@@ -32,14 +32,8 @@ private val jobConfig = FehJobConfig(
 //    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
 //    scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
     scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
-    mapName = "sothis infernal",
-    phaseLimit = 20,
-    maxTurnBeforeEngage = 3,
-    parallelCount = 20,
-    canRearrange = true,
-    toRating = UnitAction::dancerFirst,
-    calculateScore = BattleState::toScore,
-    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
+    mapName = "robin f ghb abyssal"
+//    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)
 //    }

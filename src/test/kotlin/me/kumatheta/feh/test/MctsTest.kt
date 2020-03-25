@@ -25,13 +25,7 @@ fun main() {
     val jobConfig = FehJobConfig(
         scoreManagerFactory = hybridDynamicUCTTune<FehMove>(),
 //        scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
-        mapName = "duma infernal",
-        phaseLimit = 20,
-        maxTurnBeforeEngage = 3,
-        parallelCount = 20,
-        canRearrange = true,
-        toRating = UnitAction::dancerFirst,
-        calculateScore = BattleState::toScore
+        mapName = "robin f ghb abyssal"
     )
     runBlocking {
         val jobInfo = jobConfig.toJobInfo()

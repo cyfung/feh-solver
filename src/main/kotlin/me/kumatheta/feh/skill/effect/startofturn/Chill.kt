@@ -13,7 +13,7 @@ class Chill<R : Comparable<R>>(
     override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
         battleState.unitsSeq(self.team.foe).maxBy {
             criteria(it)
-        }?.applyDebuff(debuff)
+        }?.cachedEffect?.applyDebuff(debuff)
     }
 }
 

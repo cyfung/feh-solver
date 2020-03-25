@@ -6,6 +6,7 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.Sword
+import me.kumatheta.feh.skill.assist.movement.DrawBackEffect
 import me.kumatheta.feh.skill.assist.movement.HitAndRunEffect
 import me.kumatheta.feh.skill.assist.movement.SwapEffect
 import me.kumatheta.feh.skill.effect.CounterAnyRangeBasic
@@ -26,6 +27,7 @@ import me.kumatheta.feh.skill.effect.followup.QuickRiposte
 import me.kumatheta.feh.skill.effect.incombatstat.blow
 import me.kumatheta.feh.skill.effect.incombatstat.bond
 import me.kumatheta.feh.skill.effect.incombatstat.boost
+import me.kumatheta.feh.skill.effect.incombatstat.brazen
 import me.kumatheta.feh.skill.effect.incombatstat.rangeDefStat
 import me.kumatheta.feh.skill.effect.incombatstat.solo
 import me.kumatheta.feh.skill.effect.incombatstat.stance
@@ -74,7 +76,9 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Upheaval" to Upheaval,
     "Close Counter" to CounterAnyRangeBasic,
     "Distant Counter" to CounterAnyRangeBasic,
+    "Seal Atk/Spd 2" to seal(atk = -5, spd = -5),
     "Seal Atk/Def 2" to seal(atk = -5, def = -5),
+    "Seal Def/Res 2" to seal(def = -5, res = -5),
 
     "Atk/Def Bond 1" to bond(atk = 3, def = 3),
     "Atk/Def Bond 2" to bond(atk = 4, def = 4),
@@ -98,13 +102,16 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Swift Sparrow 2" to blow(atk = 4, spd = 4),
     "Sturdy Blow 2" to blow(atk = 4, def = 4),
     "Mirror Strike 2" to blow(atk = 4, res = 4),
-    "Swift Strike 2" to blow(spd = 4, def = 4),
+    "Steady Blow 2" to blow(spd = 4, def = 4),
+    "Swift Strike 2" to blow(spd = 4, res = 4),
 
     "Fierce Stance 3" to stance(atk = 6),
     "Steady Stance 3" to stance(def = 6),
     "Mirror Stance 2" to stance(atk = 4, res = 4),
     "Steady Posture 2" to stance(spd = 4, def = 4),
     "Bracing Stance 2" to stance(def = 4, res = 4),
+
+    "Brazen Def/Res 3" to brazen(def = 7, res = 7),
 
     "Guidance 3" to Guidance3,
 
@@ -146,6 +153,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
 
     "Lunge" to SwapEffect.toPostInitiateMovement(),
     "Hit and Run" to HitAndRunEffect.toPostInitiateMovement(),
+    "Drag Back" to DrawBackEffect.toPostInitiateMovement(),
 
     "Chill Def 3" to chill(def = -7) {
         it.visibleStat.def
@@ -165,6 +173,8 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
 
     "Infantry Pulse 3" to InfantryPulse(minDiff = 1),
     "Threaten Def 3" to threaten(def = -5),
+    "Threaten Res 3" to threaten(res = -5),
+    "Threaten Atk 3" to threaten(atk = -5),
 
     "Pass 3" to Pass(percentageHp = 25),
     "Obstruct 3" to Obstruct(percentageHp = 25),
@@ -178,7 +188,8 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "B Duel Flying 3" to Stat(hp = 5).toExtraStat(),
     "Atk/Spd 2" to Stat(atk = 2, spd = 2).toExtraStat(),
 
-    "Spur Atk/Spd 2" to spur(atk = 2, spd = 2),
+    "Spur Atk/Spd 1" to spur(atk = 2, spd = 2),
+    "Spur Atk/Spd 2" to spur(atk = 3, spd = 3),
     "Spur Def/Res 2" to spur(def = 3, res = 3),
     "Spur Def 3" to spur(def = 4),
     "Spur Res 3" to spur(res = 4),
@@ -225,7 +236,7 @@ fun mixedEffectSkills(): Sequence<Pair<String, Skill>> = sequenceOf(
 
     "Sword Breaker 3" to breaker(Sword, 50),
     "Bow Breaker 3" to breaker(BowC, 50),
-    "B Tome breaker 3" to breaker(MagicB, 50),
+    "B Tomebreaker 3" to breaker(MagicB, 50),
 
     "Wary Fighter 3" to waryFighter(50),
     "Windsweep 3" to windsweep(1),
