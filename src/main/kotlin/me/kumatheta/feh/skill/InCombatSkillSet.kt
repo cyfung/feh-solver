@@ -5,6 +5,7 @@ import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.StatType
 import me.kumatheta.feh.skill.effect.AdaptiveDamageEffect
+import me.kumatheta.feh.skill.effect.BooleanAdjustment
 import me.kumatheta.feh.skill.effect.BraveEffect
 import me.kumatheta.feh.skill.effect.CanCounter
 import me.kumatheta.feh.skill.effect.CancelAffinity
@@ -82,8 +83,8 @@ class InCombatSkillSet(
     val vantage
         get() = any<VantageEffect>()
 
-    val neutralizeFollowUp: Boolean
-        get() = any<NeutralizeFollowUp>()
+    val neutralizeFollowUp: Set<BooleanAdjustment>
+        get() = get<NeutralizeFollowUp>().applyAll().toSet()
     val neutralizeBonus: Set<StatType>
         get() = get<NeutralizeBonus>().applyAll().flatMap { it }.toSet()
     val neutralizePenalty: Set<StatType>
@@ -92,8 +93,8 @@ class InCombatSkillSet(
         get() = get<InCombatStatEffect>().applyAll()
     val canCounter: Boolean
         get() = get<CanCounter>().applyAll().map { it.value }.sum() >= 0
-    val followUp: Int
-        get() = get<FollowUpEffect>().applyAll().map { it.value }.sum()
+    val followUp: Sequence<BooleanAdjustment>
+        get() = get<FollowUpEffect>().applyAll()
     val triangleAdept: Int
         get() = get<TriangleAdept>().applyAll().max() ?: 0
     val cancelAffinity: CancelAffinity.Type?

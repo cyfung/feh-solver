@@ -16,10 +16,10 @@ import me.kumatheta.feh.skill.NormalAssist
 import me.kumatheta.feh.skill.ProtectiveMovementAssist
 import me.kumatheta.feh.skill.allies
 import me.kumatheta.feh.skill.assist.movement.Pivot
+import me.kumatheta.feh.skill.effect.BooleanAdjustment
 import me.kumatheta.feh.skill.effect.CancelAffinity
 import me.kumatheta.feh.skill.effect.InCombatSkillEffect
 import me.kumatheta.feh.skill.effect.InCombatSupportInput
-import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.startofturn.MoveOrderEffect
 import me.kumatheta.feh.skill.special.Miracle
 import me.kumatheta.feh.util.DistanceReceiver
@@ -327,8 +327,6 @@ class BattleState private constructor(
     ): PotentialDamage {
         val skillWrappers = getInCombatStat(attacker, defender)
 
-        val neutralizeFollowUp = skillWrappers.attacker.neutralizeFollowUp || skillWrappers.defender.neutralizeFollowUp
-
         // check adaptive
         val attackerAdaptive = skillWrappers.attacker.adaptiveDamage &&
                 !skillWrappers.defender.denyAdaptiveDamage
@@ -363,7 +361,7 @@ class BattleState private constructor(
             reducedStaffDamage = defenderReducedStaffDamage
         )
 
-        val attackOrder = createAttackOrder(attackerInCombat, defenderInCombat, spdDiff, neutralizeFollowUp)
+        val attackOrder = createAttackOrder(attackerInCombat, defenderInCombat, spdDiff)
 
         val potentialDamage = attackOrder.asSequence().filter { it }.count() * calculateBaseDamage(
             attackerInCombat,
@@ -584,8 +582,10 @@ class BattleState private constructor(
 
     private fun Sequence<CooldownChange>.reduce(): CooldownChange {
         val list = toList()
-        return CooldownChange(list.asSequence().reduce(CooldownChange::unitAttack),
-            list.asSequence().reduce(CooldownChange::foeAttack))
+        return CooldownChange(
+            list.asSequence().reduce(CooldownChange::unitAttack),
+            list.asSequence().reduce(CooldownChange::foeAttack)
+        )
     }
 
     private fun Sequence<CooldownChange>.reduce(property: KProperty1<CooldownChange, Int>): Int {
@@ -801,8 +801,7 @@ class BattleState private constructor(
     private fun createAttackOrder(
         attackerInCombat: FullInCombatStat,
         defenderInCombat: FullInCombatStat,
-        spdDiff: Int,
-        neutralizeFollowUp: Boolean
+        spdDiff: Int
     ): List<Boolean> {
         val attacker = attackerInCombat.heroUnit
         val defender = defenderInCombat.heroUnit
@@ -832,32 +831,14 @@ class BattleState private constructor(
 
         val attackerFollowup: Boolean
         val defenderFollowup: Boolean
-        if (neutralizeFollowUp) {
-            when {
-                spdDiff >= 5 -> {
-                    attackerFollowup = true
-                    defenderFollowup = false
-                }
-                spdDiff <= -5 -> {
-                    attackerFollowup = false
-                    defenderFollowup = true
-                }
-                else -> {
-                    attackerFollowup = false
-                    defenderFollowup = false
-                }
-            }
-        } else {
-            attackerFollowup = when (val guarantee =
-                attackerSkillSet.followUp) {
-                0 -> spdDiff >= 5
-                else -> guarantee > 0
-            }
-            defenderFollowup = when (val guarantee =
-                defenderSkillSet.followUp) {
-                0 -> spdDiff <= -5
-                else -> guarantee > 0
-            }
+
+        attackerFollowup = when (val guarantee = attackerSkillSet.followUp) {
+            BooleanAdjustment.NEUTRAL -> spdDiff >= 5
+            else -> guarantee == BooleanAdjustment.POSITIVE
+        }
+        defenderFollowup = when (val guarantee = defenderSkillSet.followUp) {
+            BooleanAdjustment.NEUTRAL -> spdDiff <= -5
+            else -> guarantee == BooleanAdjustment.POSITIVE
         }
 
         val attackOrder = mutableListOf<Boolean>()

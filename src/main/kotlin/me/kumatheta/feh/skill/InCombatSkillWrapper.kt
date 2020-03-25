@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.skill.effect.BooleanAdjustment
 import me.kumatheta.feh.skill.effect.CancelAffinity
 
 class InCombatSkillWrapper(
@@ -33,8 +34,23 @@ class InCombatSkillWrapper(
         get() = baseSkillSet.denyAdaptiveDamage
 
     val canCounter: Boolean = baseSkillSet.canCounter
-    val followUp: Int
-        get() = baseSkillSet.followUp
+    val followUp: BooleanAdjustment
+        get() {
+            val baseFollowUp = baseSkillSet.followUp
+            val neutralizeFollowUp = baseSkillSet.neutralizeFollowUp
+            val adjustedFollowUp = if(neutralizeFollowUp.isEmpty()) {
+                baseFollowUp
+            } else {
+                baseFollowUp.filterNot { neutralizeFollowUp.contains(it) }
+            }
+            val guarantee = adjustedFollowUp.map { it.value }.sum()
+            return when {
+                guarantee == 0 -> BooleanAdjustment.NEUTRAL
+                guarantee > 0 -> BooleanAdjustment.POSITIVE
+                else -> BooleanAdjustment.NEGATIVE
+            }
+        }
+
     val desperation: Boolean
         get() = baseSkillSet.desperation
     val vantage: Boolean
@@ -83,5 +99,4 @@ class InCombatSkillWrapper(
         it.onCombatEnd(combatStatus, attacked)
     }
 
-    val neutralizeFollowUp = baseSkillSet.neutralizeFollowUp
 }

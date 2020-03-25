@@ -12,7 +12,6 @@ import me.kumatheta.feh.skill.effect.CounterAnyRangeBasic
 import me.kumatheta.feh.skill.effect.Desperation
 import me.kumatheta.feh.skill.effect.DisablePriorityChangeBasic
 import me.kumatheta.feh.skill.effect.NeutralizeEffectiveAgainstMovement
-import me.kumatheta.feh.skill.effect.NeutralizeFollowUpBasic
 import me.kumatheta.feh.skill.effect.Obstruct
 import me.kumatheta.feh.skill.effect.Pass
 import me.kumatheta.feh.skill.effect.SkillEffect
@@ -22,6 +21,7 @@ import me.kumatheta.feh.skill.effect.Vantage
 import me.kumatheta.feh.skill.effect.cooldown.BreathEffect
 import me.kumatheta.feh.skill.effect.cooldown.FlashingBlade3
 import me.kumatheta.feh.skill.effect.cooldown.HeavyBlade3
+import me.kumatheta.feh.skill.effect.followup.NullFollowUp3
 import me.kumatheta.feh.skill.effect.followup.QuickRiposte
 import me.kumatheta.feh.skill.effect.incombatstat.blow
 import me.kumatheta.feh.skill.effect.incombatstat.bond
@@ -197,7 +197,6 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Renewal 3" to Renewal(2),
 
     "Live to Serve 3" to LiveToServe3,
-    "Null Follow-up 3" to NeutralizeFollowUpBasic,
     "Guard 3" to Guard(percentageHp = 80),
     "Triangle Adept 3" to TriangleAdept(20),
     "Dull Close 3" to DullClose3,
@@ -234,7 +233,8 @@ fun mixedEffectSkills(): Sequence<Pair<String, Skill>> = sequenceOf(
     "Poison Strike 3" to poisonStrike(10),
     "Fury 3" to fury(3),
     "Mystic Boost 3" to MysticBoost3,
-    "Shield Pulse 3" to ShieldPulse3
+    "Shield Pulse 3" to ShieldPulse3,
+    "Null Follow-up 3" to NullFollowUp3
 )
 
 val ALL_PASSIVES = (singleEffectSkills().map { it.first to it.second.toSkill() } + mixedEffectSkills()).toSkillMap()
