@@ -35,7 +35,7 @@ fun HeroUnit.adjacentAllies(
 
 fun HeroUnit.adjacentAlliesAndSelf(
     battleState: BattleState
-) = alliesAndSelf(battleState).filter { it.position.distanceTo(position) == 1 }
+) = allies(battleState).filter { it.position.distanceTo(position) == 1 } + this
 
 fun HeroUnit.nearbyAllies(
     battleState: BattleState,

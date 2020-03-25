@@ -282,6 +282,7 @@ class HeroUnit(
     }
 
     fun cacheOn() {
+        require(_cachedEffect == null)
         _cachedEffect = CachedEffect()
     }
 
