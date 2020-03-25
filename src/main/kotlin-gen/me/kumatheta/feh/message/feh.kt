@@ -79,8 +79,7 @@ data class BattleMap(
 
 @Serializable
 data class SetupInfo(
-    val battleMap: BattleMap,
-    val unitsAdded: List<UnitAdded> = emptyList()
+    val battleMap: BattleMap
 )
 
 @Serializable

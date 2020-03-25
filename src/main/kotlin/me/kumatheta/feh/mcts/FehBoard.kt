@@ -1,16 +1,17 @@
 package me.kumatheta.feh.mcts
 
+import com.marcinmoskala.math.combinations
 import com.marcinmoskala.math.permutations
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Team
 import me.kumatheta.feh.UnitAction
 import me.kumatheta.mcts.Board
 import me.kumatheta.mcts.Move
+import java.lang.IllegalStateException
 import kotlin.random.Random
 
 interface FehBoard : Board<FehMove> {
-    fun getStateCopy(): BattleState
-
     override val score: Long?
         get() = null
 
@@ -21,13 +22,12 @@ interface FehBoard : Board<FehMove> {
     }
 }
 
-abstract class BasicFehBoard(
-    private val parent: BasicFehBoard?,
+abstract class FehBoardWithState(
     private val move: FehMove?,
     private val state: BattleState,
     val config: FehBoardConfig
 ) : FehBoard {
-    final override fun getStateCopy(): BattleState {
+    fun getStateCopy(): BattleState {
         return state.copy()
     }
 
@@ -35,72 +35,120 @@ abstract class BasicFehBoard(
         return config.calculateScore(endState, config)
     }
 
+    abstract override fun applyMove(move: FehMove): FehBoard
 }
 
 fun newFehBoard(
     phaseLimit: Int,
-    state: BattleState,
     maxTurnBeforeEngage: Int,
     canRearrange: Boolean = true,
     bossId: Int = 5,
     toRating: UnitAction.(config: FehBoardConfig) -> Int,
-    calculateScore: BattleState.(config: FehBoardConfig) -> Long
+    calculateScore: BattleState.(config: FehBoardConfig) -> Long,
+    stateBuilder: (List<HeroUnit>) -> BattleState,
+    allPlayerUnits: List<HeroUnit>,
+    playerCount: Int
 ): FehBoard {
-    val internalState = state.copy()
-    val totalPlayerHp = internalState.unitsSeq(Team.PLAYER).sumBy { it.maxHp }
-    val assistMap = internalState.unitsSeq(Team.PLAYER).associate {
-        it.id to it.assist
+    val availableUnitsCount = allPlayerUnits.size
+    require(availableUnitsCount >= playerCount)
+    if (availableUnitsCount == playerCount) {
+        val internalState = stateBuilder(allPlayerUnits)
+        val totalPlayerHp = internalState.unitsSeq(Team.PLAYER).sumBy { it.maxHp }
+        val assistMap = internalState.unitsSeq(Team.PLAYER).associate {
+            it.id to it.assist
+        }
+
+        val config = FehBoardConfig(
+            phaseLimit = phaseLimit,
+            totalPlayerHp = totalPlayerHp,
+            maxTurnBeforeEngage = maxTurnBeforeEngage,
+            assistMap = assistMap,
+            bossId = bossId,
+            toRating = toRating,
+            calculateScore = calculateScore
+        )
+
+        return setupFirstState(null, canRearrange, config, internalState)
     }
+
     val config = FehBoardConfig(
         phaseLimit = phaseLimit,
-        totalPlayerHp = totalPlayerHp,
+        totalPlayerHp = 0,
         maxTurnBeforeEngage = maxTurnBeforeEngage,
-        assistMap = assistMap,
+        assistMap = emptyMap(),
         bossId = bossId,
         toRating = toRating,
         calculateScore = calculateScore
     )
 
-//    val testMoves = listOf(
-//        Rearrange(listOf(1, 4, 2, 3)),
-//        NormalMove(MoveAndBreak(heroUnitId = 3, moveTargetX = 4, moveTargetY = 2, obstacleX = 3, obstacleY = 1)),
-//        NormalMove(MoveAndBreak(heroUnitId = 2, moveTargetX = 2, moveTargetY = 1, obstacleX = 3, obstacleY = 1)),
-//        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 1, assistTargetId = 3)),
-//        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 4, moveTargetY = 4, attackTargetId = 8)),
-//        NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 1, moveTargetY = 2))//,
-//    )
-//    testMoves.take(0).forEach { move ->
-//        val exists = board.moves.any {
-//            it == move
-//        }
-//        if (!exists) {
-//            throw IllegalStateException("moves not exists $move")
-//        }
-//        board = board.applyMove(move)
-//    }
+    return TeamSelectFehBoard(
+        stateBuilder = stateBuilder,
+        config = config,
+        allPlayerUnits = allPlayerUnits,
+        playerCount = playerCount,
+        canRearrange = canRearrange
+    )
 
+}
+
+private fun setupFirstState(
+    move: FehMove?,
+    canRearrange: Boolean,
+    config: FehBoardConfig,
+    internalState: BattleState
+): FehBoardWithState {
     return if (canRearrange) {
-        RearrangeFehBoard(config, internalState)
+        RearrangeFehBoard(move, config, internalState)
     } else {
         internalState.rearrange((1..internalState.playerCount).toList())
-        newInternalBoardChain(null, null, config, internalState)
+        newInternalBoardChain(move, config, internalState)
     }
-
 }
 
 private fun newInternalBoardChain(
-    parent: BasicFehBoard?,
     move: FehMove?,
     config: FehBoardConfig,
     state: BattleState
-): FehBoard {
-    return StandardFehBoard(parent, move, config, state)
+): FehBoardWithState {
+    return StandardFehBoard(move, config, state)
+}
+
+class TeamSelectFehBoard(
+    private val stateBuilder: (List<HeroUnit>) -> BattleState,
+    private val config: FehBoardConfig,
+    private val allPlayerUnits: List<HeroUnit>,
+    playerCount: Int,
+    val canRearrange: Boolean
+) : FehBoard {
+    override val moves: List<FehMove> by lazy {
+        allPlayerUnits.indices.toSet().combinations(playerCount).map {
+            TeamSelect(it)
+        }
+    }
+
+    override fun applyMove(move: FehMove): FehBoard {
+        move as TeamSelect
+        val playerUnits = move.team.map {
+            allPlayerUnits[it]
+        }
+        val state = stateBuilder(playerUnits)
+        val totalPlayerHp = state.unitsSeq(Team.PLAYER).sumBy { it.maxHp }
+        val assistMap = state.unitsSeq(Team.PLAYER).associate {
+            it.id to it.assist
+        }
+        return setupFirstState(move, canRearrange, config.copy(totalPlayerHp = totalPlayerHp, assistMap = assistMap), state)
+    }
+
+    override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
+        return nextMoves.asSequence()
+    }
 }
 
 class RearrangeFehBoard(
+    move: FehMove?,
     config: FehBoardConfig,
     private val state: BattleState
-) : BasicFehBoard(null, null, state, config) {
+) : FehBoardWithState(move, state, config) {
     override val moves: List<FehMove> by lazy {
         (1..state.playerCount).toList().permutations().map {
             Rearrange(it)
@@ -111,7 +159,7 @@ class RearrangeFehBoard(
         move as Rearrange
         val stateCopy = getStateCopy()
         stateCopy.rearrange(move.order)
-        return newInternalBoardChain(this, move, config, stateCopy)
+        return newInternalBoardChain(move, config, stateCopy)
     }
 
     override fun suggestedOrder(nextMoves: List<FehMove>): Sequence<FehMove> {
@@ -120,14 +168,13 @@ class RearrangeFehBoard(
 }
 
 class ScoreFehBoard(
+    move: FehMove?,
+    config: FehBoardConfig,
+    state: BattleState,
     override val score: Long
-) : FehBoard {
+) : FehBoardWithState(move, state, config) {
     override val moves: List<FehMove>
         get() = emptyList()
-
-    override fun getStateCopy(): BattleState {
-        throw UnsupportedOperationException()
-    }
 
     override fun applyMove(move: FehMove): FehBoard {
         throw UnsupportedOperationException()
@@ -138,82 +185,39 @@ class ScoreFehBoard(
     }
 }
 
-fun FehBoard.tryMoves(moves: List<FehMove>, printMoves: Boolean = false): BattleState {
-    val currentState = getStateCopy()
-
+fun FehBoard.tryMoves(moves: List<FehMove>): BattleState {
+    var board = this
     moves.forEach {
-        when (it) {
-            is Rearrange -> {
-                currentState.rearrange((moves[0] as Rearrange).order)
-            }
-            is NormalMove -> {
-                val unitAction = it.unitAction
-                if (printMoves) {
-                    println(unitAction)
-                }
-                val movementResult = currentState.playerMove(unitAction)
-                when {
-                    movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER -> {
-                        // ignore
-                    }
-                    movementResult.phraseChange -> {
-                        val enemyMoves = currentState.enemyMoves()
-                        if (printMoves) {
-                            enemyMoves.forEach(::println)
-                        }
-                    }
-                }
-            }
-            else -> Unit
-        }
-
+        board = board.applyMove(it)
     }
-    return currentState
+    return (board as? FehBoardWithState)?.getStateCopy() ?: throw IllegalStateException("Incomplete moves")
 }
 
 fun FehBoard.tryAndGetDetails(moves: List<FehMove>): List<Pair<UnitAction?, BattleState>> {
-    val currentState = getStateCopy()
-    return moves.asSequence().mapNotNull {
-        when (it) {
-            is Rearrange -> {
-                currentState.rearrange((moves[0] as Rearrange).order)
-                sequenceOf(null to currentState.copy())
-            }
-            is NormalMove -> {
-                val unitAction = it.unitAction
-                val movementResult = currentState.playerMove(unitAction)
-                val seq = sequenceOf(unitAction to currentState.copy())
-                when {
-                    movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER -> {
-                        seq
-                    }
-                    movementResult.phraseChange -> {
-                        seq + currentState.enemyMoves { enemyAction ->
-                            enemyAction to currentState.copy()
-                        }.asSequence() + Pair<UnitAction?, BattleState>(null, currentState.copy())
-                    }
-                    else -> seq
-                }
-            }
-            else -> null
-        }
-    }.flatMap { it }.toList()
+    var board = this
+    val boardSeq = sequenceOf(null to board) + moves.asSequence().map {
+        board = board.applyMove(it)
+        it to board
+    }
+    return boardSeq.mapNotNull {
+        val battleState = (it.second as? FehBoardWithState)?.getStateCopy() ?: return@mapNotNull null
+        (it.first as? NormalMove)?.unitAction to battleState
+    }.toList()
 }
 
 class StandardFehBoard(
-    parent: BasicFehBoard?,
     move: FehMove?,
     config: FehBoardConfig,
     private val state: BattleState,
     private val playerMoves: Sequence<UnitAction> = state.getAllPlayerMovements()
-) : BasicFehBoard(parent, move, state, config) {
+) : FehBoardWithState(move, state, config) {
     override val moves: List<FehMove> by lazy {
         playerMoves.map {
             NormalMove(it)
         }.toList()
     }
 
-    override fun applyMove(move: FehMove): FehBoard {
+    override fun applyMove(move: FehMove): FehBoardWithState {
         move as NormalMove
         check(score == null)
         val state = getStateCopy()
@@ -235,9 +239,9 @@ class StandardFehBoard(
         }
 
         return if (score == null) {
-            newInternalBoardChain(this, move, config, state)
+            newInternalBoardChain(move, config, state)
         } else {
-            ScoreFehBoard(score)
+            ScoreFehBoard(move, config, state, score)
         }
 
     }
@@ -267,6 +271,12 @@ data class NormalMove(val unitAction: UnitAction) : FehMove {
 data class Rearrange(val order: List<Int>) : FehMove {
     override fun toString(): String {
         return "Rearrange(listOf(${order.joinToString()}))"
+    }
+}
+
+data class TeamSelect(val team: Set<Int>) : FehMove {
+    override fun toString(): String {
+        return "TeamSelect(setOf(${team.joinToString()}))"
     }
 }
 

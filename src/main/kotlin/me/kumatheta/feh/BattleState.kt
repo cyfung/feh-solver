@@ -57,7 +57,7 @@ class BattleState private constructor(
     engaged: Boolean,
     private val recordFirstPlayerDeath: Boolean
 ) {
-    var postFirstPlayerDeath: BattleState? = null
+    private var postFirstPlayerDeath: BattleState? = null
     val enemyCount
         get() = battleMap.enemyCount
     val playerCount

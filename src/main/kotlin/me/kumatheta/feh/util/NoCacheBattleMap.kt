@@ -1,15 +1,24 @@
 package me.kumatheta.feh.util
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import me.kumatheta.feh.*
+import me.kumatheta.feh.BattleMap
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.InternalBattleMap
+import me.kumatheta.feh.MoveType
+import me.kumatheta.feh.Obstacle
+import me.kumatheta.feh.Position
+import me.kumatheta.feh.Team
+import me.kumatheta.feh.Terrain
 
 @Deprecated("expired", ReplaceWith("CacheBattleMap"))
-class NoCacheBattleMap(delegate: BattleMap) : InternalBattleMap {
+class NoCacheBattleMap(
+    delegate: BattleMap,
+    playerUnits: List<HeroUnit>
+) : InternalBattleMap {
     override val maxPosition = Position(delegate.size.x - 1, delegate.size.y - 1)
     override val size: Position = delegate.size
 
     private val terrainMap: Map<Position, Terrain> = delegate.terrainMap.toMap()
-    override val chessPieceMap = delegate.toChessPieceMap().toMap()
+    override val chessPieceMap = delegate.toChessPieceMap(playerUnits).toMap()
     override val reinforceByTime = delegate.reinforceByTime.asSequence().associate { it.key to it.value.toList() }
 
     override val enemyCount: Int = delegate.enemyCount

@@ -6,12 +6,11 @@ import me.kumatheta.feh.skill.assist.Heal
 import me.kumatheta.feh.skill.assist.Refresh
 
 abstract class Grouping<T>(
-    parent: BasicFehBoard?,
     move: FehMove?,
     config: FehBoardConfig,
     private val state: BattleState,
     private val actions: Sequence<UnitAction>
-) : BasicFehBoard(parent, move, state, config) {
+) : FehBoardWithState(move, state, config) {
     private val actualMoves by lazy {
         actions.groupBy(this::selectKey)
     }
@@ -56,14 +55,14 @@ abstract class Grouping<T>(
 }
 
 class DangerLevelGrouping(
-    parent: BasicFehBoard?,
+    parent: FehBoardWithState?,
     move: FehMove?,
     config: FehBoardConfig,
     state: BattleState,
     actions: Sequence<UnitAction>,
     private val dangerAreas: Map<Position, Int>,
     private val bossDangerArea: Set<Position>
-) : Grouping<Pair<Int, Boolean>>(parent, move, config, state, actions) {
+) : Grouping<Pair<Int, Boolean>>(move, config, state, actions) {
     override fun selectKey(unitAction: UnitAction): Pair<Int, Boolean> {
         return (dangerAreas[unitAction.moveTarget] ?: 0) to bossDangerArea.contains(unitAction.moveTarget)
     }
@@ -75,7 +74,7 @@ class DangerLevelGrouping(
         group: Pair<Int, Boolean>,
         move: GroupMove<Pair<Int, Boolean>>
     ): FehBoard {
-        return StandardFehBoard(this, move, config, state, actions)
+        return StandardFehBoard(move, config, state, actions)
     }
 
     override val suggestedGroupOrder: Comparator<Pair<Int, Boolean>>? = compareBy({
@@ -91,12 +90,12 @@ class DangerLevelGrouping(
 }
 
 class UnitActionTypeGrouping(
-    parent: BasicFehBoard?,
+    parent: FehBoardWithState?,
     move: FehMove?,
     config: FehBoardConfig,
     state: BattleState,
     actions: Sequence<UnitAction>
-) : Grouping<Pair<Int, FehActionType>>(parent, move, config, state, actions) {
+) : Grouping<Pair<Int, FehActionType>>(move, config, state, actions) {
     private val dangerAreas: Map<Position, Int>
     private val bossDangerArea: Set<Position>
 

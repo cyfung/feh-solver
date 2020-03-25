@@ -32,7 +32,7 @@ private val jobConfig = FehJobConfig(
 //    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
 //    scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
     scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
-    mapName = "robin f ghb abyssal"
+    mapName = "sothis infernal"
 //    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)
@@ -111,19 +111,20 @@ fun toUpdateInfoList(
     board: FehBoard,
     moves: List<FehMove>
 ): Pair<BattleState, List<UpdateInfo>> {
-    var lastState = board.getStateCopy()
     val details = board.tryAndGetDetails(moves)
-    val list = details.map { (unitAction, state) ->
+    var oldUnits: Map<Int,HeroUnit> = emptyMap()
+    var lastState = details.first().second
+    val list = details.asSequence().drop(1).map { (unitAction, state) ->
         val action = unitAction?.toMsgAction()
-        val oldUnits = (lastState.unitsSeq(Team.PLAYER) + lastState.unitsSeq(Team.ENEMY)).associateBy { it.id }
         val newUnits = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).associateBy { it.id }
         val unitsUpdated = getUpdated(oldUnits, newUnits).toList()
         val unitsAdded =
             newUnits.values.asSequence().filterNot { oldUnits.containsKey(it.id) }.map(HeroUnit::toUnitAdded)
                 .toList()
         lastState = state
+        oldUnits = newUnits
         UpdateInfo(action ?: NULL_ACTION, unitsUpdated, unitsAdded)
-    }
+    }.toList()
     return lastState to list
 }
 

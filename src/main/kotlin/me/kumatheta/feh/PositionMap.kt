@@ -18,7 +18,8 @@ class PositionMap(
     val terrainMap: Map<Position, Terrain>,
     val obstacles: Map<Position, Int>,
     val idMap: Map<Int, Position>,
-    val size: Position
+    val size: Position,
+    val playerIds: List<Int>
 )
 
 fun readMap(file: Path): PositionMap {
@@ -27,13 +28,14 @@ fun readMap(file: Path): PositionMap {
         throw IOException("map csv is empty")
     }
     val sizeData = mapLines[0].split(',')
-    if (sizeData.size < 3) {
+    if (sizeData.size < 4) {
         throw IOException("map csv wrong format")
     }
     val size = Position(sizeData[1].toInt(), sizeData[2].toInt())
     if (mapLines.size <= size.y) {
         throw IOException("map.csv wrong size, expected size (${size.x}, ${size.y})")
     }
+    val playerIds = (1..sizeData[3].toInt()).toList()
     val obstacles = mutableMapOf<Position, Int>()
     val idMap = mutableMapOf<Int, Position>()
     val terrainMap = mapLines.asSequence().drop(1).mapIndexed { index, s ->
@@ -80,5 +82,5 @@ fun readMap(file: Path): PositionMap {
         }
     }.flatMap { it }.associate { it }
 
-    return PositionMap(terrainMap, obstacles.toMap(), idMap.toMap(), size)
+    return PositionMap(terrainMap, obstacles.toMap(), idMap.toMap(), size, playerIds)
 }

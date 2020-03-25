@@ -26,7 +26,7 @@ class HeroUnit(
 
     private var _cachedEffect: CachedEffect? = null
     val cachedEffect
-        get() = _cachedEffect?: error("not the right time to use cached effect")
+        get() = _cachedEffect ?: error("not the right time to use cached effect")
 
     private val positiveStatus = mutableSetOf<PositiveStatus>()
     fun addPositiveStatus(status: PositiveStatus) {
@@ -115,8 +115,12 @@ class HeroUnit(
     val combatSkillData = mutableMapOf<String, Any>()
 
     override fun copy(): HeroUnit {
+        return copy(id = null, position = null)
+    }
+
+    fun copy(id: Int?, position: Position?): HeroUnit {
         require(_cachedEffect == null)
-        val newUnit = HeroUnit(id, heroModel, team, position)
+        val newUnit = HeroUnit(id ?: this.id, heroModel, team, position ?: this.position)
         newUnit.available = available
         newUnit.buff = buff
         newUnit.debuff = debuff

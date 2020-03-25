@@ -1,17 +1,45 @@
 package me.kumatheta.ws
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CompletableJob
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 import kotlinx.serialization.list
-import me.kumatheta.feh.*
+import me.kumatheta.feh.Axe
+import me.kumatheta.feh.BasicBattleMap
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.Beast
+import me.kumatheta.feh.Bow
+import me.kumatheta.feh.Color
+import me.kumatheta.feh.Dagger
+import me.kumatheta.feh.Dragon
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.Lance
+import me.kumatheta.feh.Magic
 import me.kumatheta.feh.MoveType
+import me.kumatheta.feh.Position
+import me.kumatheta.feh.PositionMap
+import me.kumatheta.feh.Staff
+import me.kumatheta.feh.Sword
+import me.kumatheta.feh.Team
 import me.kumatheta.feh.Terrain
+import me.kumatheta.feh.WeaponType
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.mcts.newFehBoard
 import me.kumatheta.feh.mcts.tryMoves
-import me.kumatheta.feh.message.*
+import me.kumatheta.feh.message.AttackType
+import me.kumatheta.feh.message.BattleMapPosition
+import me.kumatheta.feh.message.SetupInfo
+import me.kumatheta.feh.message.UnitAdded
+import me.kumatheta.feh.message.UpdateInfo
+import me.kumatheta.feh.readMap
+import me.kumatheta.feh.readUnits
 import me.kumatheta.mcts.Mcts
 import me.kumatheta.mcts.Score
 import me.kumatheta.mcts.ScoreManagerFactory
@@ -44,18 +72,20 @@ fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> FehJobConfig<S, M>
     val (playerMap, _) = readUnits(Paths.get("data/$mapName/$mapName - players.csv"))
     val battleMap = BasicBattleMap(
         positionMap,
-        spawnMap,
-        playerMap
+        spawnMap
     )
-    val state = BattleState(battleMap.toInternalBattleMap())
-    val setupInfo = buildSetupInfo(positionMap, battleMap, state)
+    val setupInfo = buildSetupInfo(positionMap, battleMap)
     var board = newFehBoard(
         phaseLimit,
-        state,
         maxTurnBeforeEngage,
         canRearrange = canRearrange,
         toRating = toRating,
-        calculateScore = calculateScore
+        calculateScore = calculateScore,
+        stateBuilder = {
+            BattleState(battleMap.toInternalBattleMap(it))
+        },
+        allPlayerUnits = playerMap.values.map { HeroUnit(0, it, Team.PLAYER, Position(0, 0)) },
+        playerCount = positionMap.playerIds.size
     )
     startingMoves?.forEach {
         require(board.moves.contains(it))
@@ -143,16 +173,14 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
 
 private fun buildSetupInfo(
     positionMap: PositionMap,
-    battleMap: BasicBattleMap,
-    state: BattleState
+    battleMap: BasicBattleMap
 ): SetupInfo {
-    val chessPieceMap = battleMap.toChessPieceMap()
     val battleMapPositions = positionMap.terrainMap.map { (position, terrain) ->
         BattleMapPosition(
             x = position.x,
             y = position.y,
             terrain = terrain.toMsgTerrain(),
-            obstacle = (chessPieceMap[position] as? Obstacle)?.health ?: 0
+            obstacle = positionMap.obstacles[position] ?: 0
         )
     }
     val msgBattleMap = MsgBattleMap(
@@ -160,10 +188,7 @@ private fun buildSetupInfo(
         sizeY = battleMap.size.y,
         battleMapPositions = battleMapPositions
     )
-    val unitsAdded = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).map {
-        it.toUnitAdded()
-    }.toList()
-    return SetupInfo(msgBattleMap, unitsAdded)
+    return SetupInfo(msgBattleMap)
 }
 
 private fun Terrain.toMsgTerrain(): MsgTerrain {

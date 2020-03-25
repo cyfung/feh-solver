@@ -1,16 +1,31 @@
 package me.kumatheta.feh.test
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.list
-import me.kumatheta.feh.*
+import me.kumatheta.feh.BasicBattleMap
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.MoveAndAssist
+import me.kumatheta.feh.MoveAndAttack
+import me.kumatheta.feh.MoveAndBreak
+import me.kumatheta.feh.MoveOnly
+import me.kumatheta.feh.Position
+import me.kumatheta.feh.Team
+import me.kumatheta.feh.UnitAction
 import me.kumatheta.feh.mcts.NormalMove
 import me.kumatheta.feh.mcts.newFehBoard
 import me.kumatheta.feh.mcts.toRating
 import me.kumatheta.feh.mcts.toScore
-import me.kumatheta.feh.mcts.tryAndGetDetails
 import me.kumatheta.feh.mcts.tryMoves
 import me.kumatheta.feh.message.UpdateInfo
+import me.kumatheta.feh.readMap
+import me.kumatheta.feh.readUnits
 import me.kumatheta.feh.util.CacheBattleMap
 import me.kumatheta.ws.toUpdateInfoList
 import java.nio.file.Paths
@@ -155,25 +170,32 @@ fun main() {
     val (playerMap, _) = readUnits(Paths.get("data/$dataSet/$dataSet - players.csv"))
     val battleMap = BasicBattleMap(
         positionMap,
-        spawnMap,
-        playerMap
+        spawnMap
     )
-    val state = BattleState(CacheBattleMap(battleMap))
-    state.rearrange((1..state.playerCount).toList())
-
     val testMoves = sothisMoves
-    var board = newFehBoard(20, state, 3, false, toRating = UnitAction::toRating, calculateScore = BattleState::toScore)
+    var board = newFehBoard(
+        20,
+        3,
+        false,
+        toRating = UnitAction::toRating,
+        calculateScore = BattleState::toScore,
+        stateBuilder = {
+            BattleState(CacheBattleMap(battleMap,it))
+        },
+        allPlayerUnits = playerMap.values.map { HeroUnit(0, it, Team.PLAYER, Position(0, 0)) },
+        playerCount = positionMap.playerIds.size
+    )
     val test = board.tryMoves(testMoves)
     println(test.winningTeam)
     println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 
-    runBlocking {
-        GlobalScope.launch {
-            (10 downTo 0 step 2).forEach {
-                countPhase(testMoves, state.copy(), it)
-            }
-        }.join()
-    }
+//    runBlocking {
+//        GlobalScope.launch {
+//            (10 downTo 0 step 2).forEach {
+//                countPhase(testMoves, state.copy(), it)
+//            }
+//        }.join()
+//    }
 //    val testResult = board.tryMoves(testMoves, false)
 //    println("${testResult.enemyDied}, ${testResult.playerDied}, ${testResult.winningTeam}")
 

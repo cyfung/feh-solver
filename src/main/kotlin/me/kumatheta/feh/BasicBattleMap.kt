@@ -173,26 +173,26 @@ private fun getPassive(name: String): Passive {
 
 class BasicBattleMap(
     positionMap: PositionMap,
-    spawnMap: Map<Int, Spawn>,
-    playerMap: Map<Int, HeroModel>
+    spawnMap: Map<Int, Spawn>
 ) : BattleMap {
     override val enemyCount = spawnMap.size
-    override val playerCount = playerMap.size
     private val spawnMap = spawnMap.toMap()
-    private val playerMap = playerMap.toMap()
     override val size: Position = positionMap.size
     override val terrainMap = positionMap.terrainMap.toMap()
     private val obstacles = positionMap.obstacles.toMap()
     private val idMap = positionMap.idMap.toMap()
+    private val playerIds = positionMap.playerIds.toList()
+    override val playerCount: Int = playerIds.size
 
     init {
-        val invalidId = (spawnMap.keys.asSequence() + playerMap.keys.asSequence()).filterNot {
+        val invalidId = spawnMap.keys.asSequence().filterNot {
             positionMap.idMap.containsKey(it)
         }.firstOrNull()
         require(invalidId == null) { "invalid id $invalidId" }
     }
 
-    override fun toChessPieceMap(): Map<Position, ChessPiece> {
+    override fun toChessPieceMap(playerUnits: List<HeroUnit>): Map<Position, ChessPiece> {
+        require(playerUnits.size == playerCount)
         val chessPieceSequence = spawnMap.asSequence().filter {
             it.value.spawnTime == Start
         }.map {
@@ -206,9 +206,9 @@ class BasicBattleMap(
             } else {
                 Obstacle(value, it.key, true)
             }
-        } + playerMap.asSequence().map {
-            val position = idMap[it.key] ?: throw IllegalStateException()
-            HeroUnit(it.key, it.value, Team.PLAYER, position)
+        } + playerIds.asSequence().zip(playerUnits.asSequence()).map {(id, baseUnit) ->
+            val position = idMap[id] ?: throw IllegalStateException()
+            baseUnit.copy(id, position)
         }
 
         return chessPieceSequence.associateBy { it.position }

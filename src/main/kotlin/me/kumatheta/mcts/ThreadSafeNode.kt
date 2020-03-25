@@ -20,7 +20,7 @@ class ThreadSafeNode<T : Move, S : Score<T>>(
 
     private val children = board.suggestedOrder(board.moves.shuffled(random)).map {
         AtomicReference<Pair<T, CompletableDeferred<Node<T, S>?>>?>(it to CompletableDeferred())
-    }.toList()
+    }.toList().asReversed()
 
     private val childInitTicket = AtomicInteger(children.size)
 

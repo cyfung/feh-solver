@@ -33,7 +33,7 @@ class TrialBattleMap(
         Position(1, 1)
     ).associateWith { Terrain(Terrain.Type.REGULAR, false) }
 
-    override fun toChessPieceMap(): Map<Position, ChessPiece> {
+    override fun toChessPieceMap(playerUnits: List<HeroUnit>): Map<Position, ChessPiece> {
         return sequenceOf(attacker, defender).associateBy { it.position }
     }
 
@@ -45,7 +45,7 @@ class TrialBattleMap(
 }
 
 fun BattleMap.getAllTrials(): Map<AttackerDefenderPair<Int>, TrialResult> {
-    val chessPieceMap = toChessPieceMap()
+    val chessPieceMap = toChessPieceMap(emptyList())
     val (players, initialEnemies) = chessPieceMap.values.asSequence().filterIsInstance<HeroUnit>()
         .partition { it.team == Team.PLAYER }
     val enemies = reinforceByTime.values.asSequence().flatMap { it.asSequence() } +
@@ -55,7 +55,7 @@ fun BattleMap.getAllTrials(): Map<AttackerDefenderPair<Int>, TrialResult> {
             TrialBattleMap(enemy, player)
         }
     }.associate {
-        val battleState = BattleState(CacheBattleMap(it))
+        val battleState = BattleState(CacheBattleMap(it, emptyList()))
         val attackerHpBefore = it.attacker.currentHp
         val defenderHpBefore = it.defender.currentHp
         battleState.fight(it.attacker, it.defender)
