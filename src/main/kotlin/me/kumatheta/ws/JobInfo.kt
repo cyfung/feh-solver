@@ -32,7 +32,6 @@ import me.kumatheta.feh.WeaponType
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.mcts.newFehBoard
-import me.kumatheta.feh.mcts.tryMoves
 import me.kumatheta.feh.message.AttackType
 import me.kumatheta.feh.message.BattleMapPosition
 import me.kumatheta.feh.message.SetupInfo
@@ -107,6 +106,12 @@ fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> FehJobConfig<S, M>
 @ExperimentalTime
 fun <S : Score<FehMove>> FehJobInfo<S>.startNewJob() {
     val job = GlobalScope.launch {
+        val moves = jobConfig.startingMoves?.toList()
+        if (moves != null) {
+            mcts.playOut(
+                moves
+            )
+        }
         runMcts()
     }
     job.invokeOnCompletion {
@@ -148,10 +153,10 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
             println("elapsed ${mctsStart.elapsedNow()}, moveDownCount ${mcts.moveDownCount}")
             val score = mcts.score
             val bestMoves = score.moves ?: throw IllegalStateException()
-            val testState = board.tryMoves(bestMoves)
 
             println(bestMoves)
-            println(json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, bestMoves).second))
+            val (testState, updateInfoList) = toUpdateInfoList(board, bestMoves)
+            println(json.stringify(UpdateInfo.serializer().list, updateInfoList))
 
             println("best score: ${score.bestScore}")
             if (jobConfig.scoreManagerFactory is ScoreRefRequired) {

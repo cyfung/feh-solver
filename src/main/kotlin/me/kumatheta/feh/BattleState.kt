@@ -963,7 +963,7 @@ class BattleState private constructor(
         }
     }
 
-    fun <T : Any> enemyMoves(f: (UnitAction) -> T): List<T> {
+    fun <T: Any> enemyMoves(f: (UnitAction) -> T): List<T> {
         require(!isPlayerPhrase)
         check(winningTeam == null)
         val myTeam = Team.ENEMY

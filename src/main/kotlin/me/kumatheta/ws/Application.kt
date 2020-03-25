@@ -10,11 +10,30 @@ import io.ktor.routing.put
 import io.ktor.routing.routing
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.protobuf.ProtoBuf
-import me.kumatheta.feh.*
-import me.kumatheta.feh.mcts.*
-import me.kumatheta.feh.message.*
-import me.kumatheta.mcts.*
+import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.MoveAndAssist
+import me.kumatheta.feh.MoveAndAttack
+import me.kumatheta.feh.MoveAndBreak
+import me.kumatheta.feh.MoveOnly
+import me.kumatheta.feh.Team
+import me.kumatheta.feh.UnitAction
+import me.kumatheta.feh.mcts.FehBoard
+import me.kumatheta.feh.mcts.FehMove
+import me.kumatheta.feh.mcts.NormalMove
+import me.kumatheta.feh.mcts.Rearrange
+import me.kumatheta.feh.mcts.tryAndGetDetails
+import me.kumatheta.feh.message.Action
+import me.kumatheta.feh.message.MoveSet
+import me.kumatheta.feh.message.SetupInfo
+import me.kumatheta.feh.message.UnitUpdate
+import me.kumatheta.feh.message.UpdateInfo
+import me.kumatheta.mcts.Mcts
+import me.kumatheta.mcts.Score
+import me.kumatheta.mcts.ScoreManagerFactory
+import me.kumatheta.mcts.hybridDynamicUCTTune
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
@@ -112,20 +131,18 @@ fun toUpdateInfoList(
     moves: List<FehMove>
 ): Pair<BattleState, List<UpdateInfo>> {
     val details = board.tryAndGetDetails(moves)
-    var oldUnits: Map<Int,HeroUnit> = emptyMap()
-    var lastState = details.first().second
-    val list = details.asSequence().drop(1).map { (unitAction, state) ->
+    var oldUnits: Map<Int, HeroUnit> = emptyMap()
+    val list = details.asSequence().map { (unitAction, state) ->
         val action = unitAction?.toMsgAction()
         val newUnits = (state.unitsSeq(Team.PLAYER) + state.unitsSeq(Team.ENEMY)).associateBy { it.id }
         val unitsUpdated = getUpdated(oldUnits, newUnits).toList()
         val unitsAdded =
             newUnits.values.asSequence().filterNot { oldUnits.containsKey(it.id) }.map(HeroUnit::toUnitAdded)
                 .toList()
-        lastState = state
         oldUnits = newUnits
         UpdateInfo(action ?: NULL_ACTION, unitsUpdated, unitsAdded)
     }.toList()
-    return lastState to list
+    return details.last().second to list
 }
 
 @ExperimentalCoroutinesApi
@@ -145,6 +162,33 @@ private fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> getOrStart
             return prev
         }
     } while (!jobInfoRef.compareAndSet(null, newJobInfo))
+    runBlocking {
+        newJobInfo.mcts.playOut(
+            listOf(
+                Rearrange(listOf(3, 2, 1, 4)),
+                NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3)),
+                NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 3, moveTargetY = 0)),
+                NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1)),
+                NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 0)),
+                NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 13)),
+                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13)),
+                NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1)),
+                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 13)),
+                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
+                NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 1, moveTargetY = 3)),
+                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 12)),
+                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 12)),
+                NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1)),
+                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 15)),
+                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 3, attackTargetId = 5)),
+                NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 3, assistTargetId = 3)),
+                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 5, attackTargetId = 11)),
+                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 0, moveTargetY = 3, attackTargetId = 16)),
+                NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 0, moveTargetY = 4, attackTargetId = 16))
+            )
+        )
+
+    }
 
     newJobInfo.startNewJob()
     return newJobInfo
