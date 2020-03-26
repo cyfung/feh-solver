@@ -64,6 +64,15 @@ abstract class DefenseSpecial(coolDownCount: Int, vararg skillEffects: SkillEffe
     ): Int?
 }
 
+abstract class PostCombatSpecial(coolDownCount: Int, vararg skillEffects: SkillEffect) :
+    Special(coolDownCount, skillEffects) {
+
+    abstract fun postCombat(
+        battleState: BattleState,
+        self: HeroUnit
+    )
+}
+
 typealias Passive = Skill
 
 interface InCombatStat {

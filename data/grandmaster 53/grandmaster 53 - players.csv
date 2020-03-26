@@ -1,0 +1,5 @@
+id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,
+1,,Reyson,,,,,FLYING,Heron Wing @G,Sing,,37,43,37,24,26,Steady Posture 2,Fortify Beasts
+2,,Leanne,,,,,FLYING,Heron Wing,Sing,,36,41,40,16,34,Mirror Stance 2,
+3,,Ike,Ike - Legendary,,,,INFANTRY,Ragnell,,Aether,41,52,30,35,21,Seal Atk/Def 2,Def Tactics 3
+4,,Oliver,,,,,INFANTRY,Shine+,,Blazing Light,42,45,20,23,34,Mirror Strike 2,

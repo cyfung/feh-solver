@@ -2,6 +2,7 @@ package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.ALL_STAT_TYPES
 import me.kumatheta.feh.Axe
+import me.kumatheta.feh.Bow
 import me.kumatheta.feh.BowC
 import me.kumatheta.feh.DragonC
 import me.kumatheta.feh.HeroUnit
@@ -31,6 +32,7 @@ import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.SlayingEffect
 import me.kumatheta.feh.skill.effect.TriangleAdept
 import me.kumatheta.feh.skill.effect.incombatstat.OwlEffect
+import me.kumatheta.feh.skill.effect.incombatstat.fox
 import me.kumatheta.feh.skill.effect.incombatstat.rangeDefStat
 import me.kumatheta.feh.skill.effect.incombatstat.stance
 import me.kumatheta.feh.skill.effect.others.BraveOnInit
@@ -44,6 +46,7 @@ import me.kumatheta.feh.skill.weapon.FellBreath
 import me.kumatheta.feh.skill.weapon.FlowerOfJoy
 import me.kumatheta.feh.skill.weapon.Gleipnir
 import me.kumatheta.feh.skill.weapon.GrimaTruth
+import me.kumatheta.feh.skill.weapon.HeronWing
 import me.kumatheta.feh.skill.weapon.Hidskjalf
 import me.kumatheta.feh.skill.weapon.Leiptr
 import me.kumatheta.feh.skill.weapon.Lyfjaberg
@@ -64,6 +67,7 @@ private fun nonStandardRefinableWeapons() = sequenceOf(
         )
     ),
     "Thoron+" to MagicB.basic(14),
+    "Rexcalibur+" to MagicG.basic(14),
     "Silver Lance+" to Lance.basic(16)
 )
 
@@ -72,11 +76,11 @@ private val STANDARD_REFINABLE_WEAPONS = listOf(
     "Slaying Lance+" to Lance.basic(14) + SlayingEffect,
     "Slaying Axe+" to Axe.basic(14) + SlayingEffect,
     "Slaying Edge+" to Sword.basic(14) + SlayingEffect,
-    "Rexcailbur+" to MagicG.basic(14),
     "Silver Axe+" to Axe.basic(16),
     "Wo Gun+" to Axe.basic(14) + DealSpecialDamage,
     "Blarowl+" to MagicB.basic(10) + OwlEffect,
     "Gronnowl+" to MagicG.basic(10) + OwlEffect,
+    "Raudrfox+" to MagicR.basic(12) + fox(atk=-4,spd=-4,def=-4,res=-4),
     "Shining Bow+" to BowC.basic(12) + ShiningEffect,
     "Barrier Lance+" to Lance.basic(14) + stance(res = 7),
     "Water Breath+" to DragonC.basic(14) + skillEffects(
@@ -98,10 +102,14 @@ val FIXED_WEAPONS = sequenceOf(
     "Brave Axe+" to Axe.brave(8),
     "Raudrraven+" to MagicR.basic(11) + RavenBasic,
     "Gronnraven+" to MagicG.basic(11) + RavenBasic,
+    "Blarraven+" to MagicB.basic(11) + RavenBasic,
     "Emerald Axe+" to Axe.basic(12) + TriangleAdept(20),
 
     "Flametongue+" to DragonC.basic(15),
     "Silver Axe+" to Axe.basic(15),
+    "Shine+" to MagicB.basic(13),
+    "Rexcalibur+" to MagicG.basic(13),
+    "Silver Bow+" to BowC.basic(13),
 
     "Iron Lance" to Lance.basic(6),
     "Steel Lance" to Lance.basic(8),
@@ -144,6 +152,7 @@ val FIXED_WEAPONS = sequenceOf(
     "Ragnell" to Ragnell,
     "Hidskjalf" to Hidskjalf,
     "Fell Breath" to FellBreath,
+    "Heron Wing" to HeronWing,
 
     "Trilemma+ Dazzling" to TrilemmaPlus + EffectOnFoeBasic(listOf(DisableCounter))
 )

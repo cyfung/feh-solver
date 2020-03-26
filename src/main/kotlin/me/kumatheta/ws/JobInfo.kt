@@ -106,7 +106,7 @@ fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> FehJobConfig<S, M>
 @ExperimentalTime
 fun <S : Score<FehMove>> FehJobInfo<S>.startNewJob() {
     val job = GlobalScope.launch {
-        val moves = jobConfig.startingMoves?.toList()
+        val moves = jobConfig.suggestedMoves?.toList()
         if (moves != null) {
             mcts.playOut(
                 moves

@@ -38,7 +38,7 @@ abstract class FehBoardWithState(
         return applyMove<Unit>(move, null).first
     }
 
-    abstract fun <T: Any> applyMove(
+    abstract fun <T : Any> applyMove(
         move: FehMove,
         stateListener: ((BattleState, UnitAction?) -> T)?
     ): Pair<FehBoard, Sequence<T>>
@@ -166,7 +166,7 @@ class RearrangeFehBoard(
         }
     }
 
-    override fun <T: Any> applyMove(
+    override fun <T : Any> applyMove(
         move: FehMove,
         stateListener: ((BattleState, UnitAction?) -> T)?
     ): Pair<FehBoard, Sequence<T>> {
@@ -239,7 +239,7 @@ class StandardFehBoard(
         }.toList()
     }
 
-    override fun <T: Any> applyMove(
+    override fun <T : Any> applyMove(
         move: FehMove,
         stateListener: ((BattleState, UnitAction?) -> T)?
     ): Pair<FehBoard, Sequence<T>> {
@@ -253,25 +253,29 @@ class StandardFehBoard(
         } else {
             sequenceOf(stateListener.invoke(state, nextMove))
         }
-        val score = if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
+        val score = if (config.phaseLimit < state.phase) {
             calculateScore(state, move)
-        } else if (movementResult.phraseChange) {
-            if (stateListener == null) {
-                state.enemyMoves()
-            } else {
-                seq += state.enemyMoves {
-                    stateListener.invoke(state, it)
-                }.asSequence() + stateListener.invoke(state, null)
-            }
-            if (state.playerDied > 0 || state.winningTeam != null || config.phaseLimit < state.phase) {
+        } else {
+            if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
                 calculateScore(state, move)
-            } else if (!state.engaged && state.phase > config.maxTurnBeforeEngage * 2) {
-                0L
+            } else if (movementResult.phraseChange) {
+                if (stateListener == null) {
+                    state.enemyMoves()
+                } else {
+                    seq += state.enemyMoves {
+                        stateListener.invoke(state, it)
+                    }.asSequence() + stateListener.invoke(state, null)
+                }
+                if (state.playerDied > 0 || state.winningTeam != null || config.phaseLimit < state.phase) {
+                    calculateScore(state, move)
+                } else if (!state.engaged && state.phase > config.maxTurnBeforeEngage * 2) {
+                    0L
+                } else {
+                    null
+                }
             } else {
                 null
             }
-        } else {
-            null
         }
 
         return if (score == null) {

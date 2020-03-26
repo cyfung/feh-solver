@@ -73,4 +73,18 @@ object DragonC : Dragon(Color.COLORLESS), FreeColorWeapon {
     }
 }
 
+object BeastR : Beast(Color.RED)
+object BeastB : Beast(Color.BLUE)
+object BeastG : Beast(Color.GREEN)
+object BeastC : Beast(Color.COLORLESS), FreeColorWeapon {
+    override fun toColor(color: Color): WeaponType {
+        return when (color) {
+            Color.RED -> BeastR
+            Color.GREEN -> BeastG
+            Color.BLUE -> BeastB
+            Color.COLORLESS -> this
+        }
+    }
+}
+
 

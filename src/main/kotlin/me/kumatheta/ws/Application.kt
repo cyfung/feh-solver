@@ -10,7 +10,6 @@ import io.ktor.routing.put
 import io.ktor.routing.routing
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.protobuf.ProtoBuf
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
@@ -24,6 +23,7 @@ import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.mcts.NormalMove
 import me.kumatheta.feh.mcts.Rearrange
+import me.kumatheta.feh.mcts.TeamSelect
 import me.kumatheta.feh.mcts.tryAndGetDetails
 import me.kumatheta.feh.message.Action
 import me.kumatheta.feh.message.MoveSet
@@ -51,7 +51,9 @@ private val jobConfig = FehJobConfig(
 //    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
 //    scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
     scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
-    mapName = "sothis infernal"
+    mapName = "grandmaster 53",
+    phaseLimit = 7,
+    canRearrange = false
 //    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)
@@ -162,34 +164,6 @@ private fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> getOrStart
             return prev
         }
     } while (!jobInfoRef.compareAndSet(null, newJobInfo))
-    runBlocking {
-        newJobInfo.mcts.playOut(
-            listOf(
-                Rearrange(listOf(3, 2, 1, 4)),
-                NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 3, moveTargetY = 3)),
-                NormalMove(MoveOnly(heroUnitId = 4, moveTargetX = 3, moveTargetY = 0)),
-                NormalMove(MoveOnly(heroUnitId = 1, moveTargetX = 3, moveTargetY = 1)),
-                NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 2, moveTargetY = 0)),
-                NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 2, moveTargetY = 2, attackTargetId = 13)),
-                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 1, attackTargetId = 13)),
-                NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1)),
-                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 13)),
-                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
-                NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 1, moveTargetY = 3)),
-                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 0, attackTargetId = 12)),
-                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 12)),
-                NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 3, moveTargetY = 1, assistTargetId = 1)),
-                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 4, attackTargetId = 15)),
-                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 3, moveTargetY = 3, attackTargetId = 5)),
-                NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 3, assistTargetId = 3)),
-                NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 2, moveTargetY = 5, attackTargetId = 11)),
-                NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 0, moveTargetY = 3, attackTargetId = 16)),
-                NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 0, moveTargetY = 4, attackTargetId = 16))
-            )
-        )
-
-    }
-
     newJobInfo.startNewJob()
     return newJobInfo
 }

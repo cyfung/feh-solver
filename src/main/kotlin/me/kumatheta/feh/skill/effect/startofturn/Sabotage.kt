@@ -9,7 +9,7 @@ import me.kumatheta.feh.util.surroundings
 
 class Sabotage(private val stat: Stat) : StartOfTurnEffect {
     override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
-        val threshold = self.startOfTurnStat.res - 3
+        val threshold = self.visibleStat.res - 3
         battleState.unitsSeq(self.team.foe).filter { it.visibleStat.res <= threshold }.filter { foe ->
             foe.position.surroundings(battleState.maxPosition).any {
                 val heroUnit = battleState.getChessPiece(it) as? HeroUnit ?: return@any false

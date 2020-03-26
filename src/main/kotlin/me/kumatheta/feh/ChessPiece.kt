@@ -83,15 +83,13 @@ class HeroUnit(
     val withMoveOrder: Boolean
         get() = positiveStatus.contains(PositiveStatus.MOVEMENT_ORDER)
 
+    private var visibleStatBeforeBuffDebuff = baseStat
     val visibleStat: Stat
-        get() = baseStat + debuff + if (withPanic) {
+        get() = visibleStatBeforeBuffDebuff + debuff + if (withPanic) {
             -buff
         } else {
             buff
         }
-    val startOfTurnStat: Stat
-        get() = baseStat + debuff
-
     val bonus: Stat
         get() = if (withPanic) {
             Stat.ZERO
@@ -229,8 +227,9 @@ class HeroUnit(
         available = true
     }
 
-    fun startOfTurn() {
+    fun startOfTurn(battleState: BattleState) {
         clearBonus()
+        visibleStatBeforeBuffDebuff = transform?.transform(battleState, this) ?: baseStat
         if (!engaged && engageCoolDownStarted) {
             val engageCountDown = engageCountDown
             require(engageCountDown != null)
@@ -341,7 +340,8 @@ enum class NegativeStatus {
 
 enum class PositiveStatus {
     MOVEMENT_ORDER,
-    EXTRA_TRAVEL_POWER
+    EXTRA_TRAVEL_POWER,
+    TRANSFORMED
 }
 
 class Obstacle(var health: Int, override val position: Position, val isBreakableByEnemy: Boolean) : ChessPiece() {

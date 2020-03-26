@@ -1,0 +1,11 @@
+id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
+5,1,Axe Flier,Pegasus Knight - Axe,,,,FLYING,Brave Axe+,,,37,41,35,16,31,Life and Death 3,Brazen Atk/Def 3,
+6,1,Bow Cavalier,Knight - Bow,,,2,CAVALRY,Silver Bow+,,Moonbow,40,45,22,24,26,Brazen Atk/Res 3,Vantage 3,
+7,1,Bow Cavalier,Knight - Bow,,,2,CAVALRY,Silver Bow+,,Moonbow,40,48,22,24,23,Fierce Stance 3,B Tomebreaker 3,
+8,1,Green Flier,Pegasus Knight - Green Tome,,,,FLYING,Rexcalibur+,,,34,42,37,16,35,Death Blow 3,Res+3,
+9,2,Red Flier,Mage - Red Tome,,,,FLYING,Raudrfox+,,,34,41,37,16,32,Triangle Adept 3,Guard 3,
+10,2,Bow Flier,Pegasus Knight - Bow,,,,FLYING,Silver Bow+,,,36,42,34,20,29,Close Counter,Watersweep 3,Chill Atk 3
+11,2,Red Fafnir,Manakete Winged - Red,,,3,FLYING,Flametongue+ @R,,Draconic Aura,39,47,33,32,27,Death Blow 3,Vantage 3,Poison Strike 3
+12,2,Red Mage,Mage - Red Tome,,,,INFANTRY,Raudrraven+,,,37,45,32,20,28,Atk +3,Drive Atk 2,
+13,2,Blue Flier,Pegasus Knight - Blue Tome,,,4,FLYING,Blarraven+,,Glacies,34,39,37,16,33,Warding Blow 3,Guard 3,Steady Stance 3
+14,3,Sword Flier,Pegasus Knight - Sword,,,5,FLYING,Brave Sword+,,Galeforce,47,39,35,26,39,Brazen Spd/Def 3,Lunge,Spd/Def 2

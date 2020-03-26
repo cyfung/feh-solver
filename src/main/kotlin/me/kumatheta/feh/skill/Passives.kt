@@ -1,5 +1,6 @@
 package me.kumatheta.feh.skill
 
+import me.kumatheta.feh.Beast
 import me.kumatheta.feh.BowC
 import me.kumatheta.feh.MagicB
 import me.kumatheta.feh.MoveType
@@ -43,6 +44,7 @@ import me.kumatheta.feh.skill.effect.startofturn.TimePulse3
 import me.kumatheta.feh.skill.effect.startofturn.Upheaval
 import me.kumatheta.feh.skill.effect.startofturn.chill
 import me.kumatheta.feh.skill.effect.startofturn.hone
+import me.kumatheta.feh.skill.effect.startofturn.honeWeaponType
 import me.kumatheta.feh.skill.effect.startofturn.opening
 import me.kumatheta.feh.skill.effect.startofturn.resBasedPloy3
 import me.kumatheta.feh.skill.effect.startofturn.sabotage
@@ -69,7 +71,7 @@ import me.kumatheta.feh.skill.passive.poisonStrike
 import me.kumatheta.feh.skill.passive.pulseSmoke3
 import me.kumatheta.feh.skill.passive.smoke
 import me.kumatheta.feh.skill.passive.waryFighter
-import me.kumatheta.feh.skill.passive.windsweep
+import me.kumatheta.feh.skill.passive.windWaterSweep
 import me.kumatheta.feh.skill.passive.wrath
 
 fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
@@ -99,6 +101,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Death Blow 3" to blow(atk = 6),
     "Darting Blow 3" to blow(spd = 6),
     "Armored Blow 3" to blow(def = 6),
+    "Warding Blow 3" to blow(res = 6),
     "Swift Sparrow 2" to blow(atk = 4, spd = 4),
     "Sturdy Blow 2" to blow(atk = 4, def = 4),
     "Mirror Strike 2" to blow(atk = 4, res = 4),
@@ -111,6 +114,9 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Steady Posture 2" to stance(spd = 4, def = 4),
     "Bracing Stance 2" to stance(def = 4, res = 4),
 
+    "Brazen Atk/Def 3" to brazen(atk = 7, def = 7),
+    "Brazen Atk/Res 3" to brazen(atk = 7, res = 7),
+    "Brazen Spd/Def 3" to brazen(spd = 7, def = 7),
     "Brazen Def/Res 3" to brazen(def = 7, res = 7),
 
     "Guidance 3" to Guidance3,
@@ -145,6 +151,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Hone Atk 3" to hone(atk = 4),
     "Fortify Res 4" to hone(res = 7),
     "Fortify Fliers" to hone(def = 6, res = 6, moveType = MoveType.FLYING),
+    "Fortify Beasts" to honeWeaponType<Beast>(def = 6, res = 6),
     "Wrathful Staff 3" to StaffAsNormalBasic,
     "Hardy Bearing 3" to DisablePriorityChangeBasic,
 
@@ -155,6 +162,9 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Hit and Run" to HitAndRunEffect.toPostInitiateMovement(),
     "Drag Back" to DrawBackEffect.toPostInitiateMovement(),
 
+    "Chill Atk 3" to chill(atk = -7) {
+        it.visibleStat.atk
+    },
     "Chill Def 3" to chill(def = -7) {
         it.visibleStat.def
     },
@@ -180,13 +190,16 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Obstruct 3" to Obstruct(percentageHp = 25),
 
     "HP+5" to Stat(hp = 5).toExtraStat(),
-    "Res+3" to Stat(res = 3).toExtraStat(),
+    "Atk +3" to Stat(atk = 3).toExtraStat(),
+    "Res +3" to Stat(res = 3).toExtraStat(),
     "Atk/Res 2" to Stat(atk = 2, res = 2).toExtraStat(),
     "Fortress Res 3" to Stat(atk = -3, res = 5).toExtraStat(),
     "Fortress Def 3" to Stat(atk = -3, def = 5).toExtraStat(),
     "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStat(),
     "B Duel Flying 3" to Stat(hp = 5).toExtraStat(),
     "Atk/Spd 2" to Stat(atk = 2, spd = 2).toExtraStat(),
+    "Spd/Def 2" to Stat(spd = 2, def = 2).toExtraStat(),
+    "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStat(),
 
     "Spur Atk/Spd 1" to spur(atk = 2, spd = 2),
     "Spur Atk/Spd 2" to spur(atk = 3, spd = 3),
@@ -226,7 +239,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = sequenceOf(
     "Flier Formation 3" to FlierFormation3,
     "Air Orders 3" to AirOrder3,
     "Atk Opening 3" to opening(atk = 6) {
-        it.startOfTurnStat.atk
+        it.visibleStat.atk
     }
 )
 
@@ -239,7 +252,8 @@ fun mixedEffectSkills(): Sequence<Pair<String, Skill>> = sequenceOf(
     "B Tomebreaker 3" to breaker(MagicB, 50),
 
     "Wary Fighter 3" to waryFighter(50),
-    "Windsweep 3" to windsweep(1),
+    "Watersweep 3" to windWaterSweep(1, targetRes = true),
+    "Windsweep 3" to windWaterSweep(1, targetRes = false),
     "Wrath 3" to wrath(75),
     "Poison Strike 3" to poisonStrike(10),
     "Fury 3" to fury(3),

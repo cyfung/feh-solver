@@ -14,8 +14,10 @@ import me.kumatheta.feh.skill.effect.ExtraStat
 import me.kumatheta.feh.skill.effect.NeutralizeEffectiveAgainstMovement
 import me.kumatheta.feh.skill.effect.NeutralizeEffectiveAgainstWeapon
 import me.kumatheta.feh.skill.effect.PhantomStat
+import me.kumatheta.feh.skill.effect.PostInitiateMovement
 import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.SpecialDebuff
+import me.kumatheta.feh.skill.effect.Transform
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 
 interface Hero {
@@ -37,6 +39,7 @@ interface Hero {
     val imageName: String
     val cooldownCount: Int?
     val phantomStat: Stat
+    val transform: Transform?
 }
 
 fun Sequence<Skill>.plusIfNotNull(skill: Skill?): Sequence<Skill> {
@@ -89,6 +92,15 @@ class HeroModel private constructor(
         } else {
             1
         }
+    }
+
+    override val transform: Transform?
+    init {
+        val transform = skillEffects.filterIsInstance<Transform>()
+        if (transform.size > 1) {
+            throw IllegalStateException("more than one transform")
+        }
+        this.transform = transform.singleOrNull()
     }
 
     override val effectiveAgainstMoveType = skillEffects.filterIsInstance<EffectiveAgainstMovement>().map { it.moveType }.toSet()

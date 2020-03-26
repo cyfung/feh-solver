@@ -6,6 +6,7 @@ import me.kumatheta.feh.skill.special.*
 val ALL_SPECIALS = sequenceOf(
     "Ice Mirror" to IceMirror,
     "Sirius" to Sirius,
+    "Galeforce" to Galeforce,
 
     "Blazing Light" to BlazingLight,
     "Blazing Wind" to BlazingWind,
@@ -37,7 +38,7 @@ val ALL_SPECIALS = sequenceOf(
         it.def * 4 / 5
     },
     "Glacies" to SelfStatBased(4) {
-        it.def * 4 / 5
+        it.res * 4 / 5
     },
     "Draconic Aura" to SelfStatBased(3) {
         it.atk * 3 / 10

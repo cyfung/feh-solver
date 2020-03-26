@@ -13,6 +13,7 @@ import me.kumatheta.feh.skill.InCombatSkillWrapper
 import me.kumatheta.feh.skill.InCombatStat
 import me.kumatheta.feh.skill.MovementAssist
 import me.kumatheta.feh.skill.NormalAssist
+import me.kumatheta.feh.skill.PostCombatSpecial
 import me.kumatheta.feh.skill.ProtectiveMovementAssist
 import me.kumatheta.feh.skill.allies
 import me.kumatheta.feh.skill.assist.movement.Pivot
@@ -302,7 +303,9 @@ class BattleState private constructor(
     private fun startOfTurn(team: Team): List<HeroUnit> {
         val allUnits = allUnits().toList()
         val units = unitsSeq(team).toList()
-        units.forEach(HeroUnit::startOfTurn)
+        units.forEach {
+            it.startOfTurn(this)
+        }
         allUnits.forEach(HeroUnit::cacheOn)
         units.forEach { heroUnit ->
             heroUnit.skillSet.startOfTurn.forEach {
@@ -669,6 +672,11 @@ class BattleState private constructor(
         potentialDamage.attackerInCombat.skills.postCombat(attackerAttacked)
         potentialDamage.defenderInCombat.skills.postCombat(defenderAttacked)
         allUnits.forEach(HeroUnit::endOfCombat)
+
+        if (!attacker.isDead && attacker.cooldown == 0 && attacker.special is PostCombatSpecial) {
+            attacker.special.postCombat(this, attacker)
+            attacker.resetCooldown()
+        }
 
         if (!attacker.engaged) {
             setGroupEngaged(attacker)

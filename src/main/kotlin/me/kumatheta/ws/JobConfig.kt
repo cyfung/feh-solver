@@ -29,6 +29,7 @@ data class FehJobConfig<S : Score<FehMove>, M: ScoreManagerFactory<FehMove, S>>(
         CacheBattleMap(this, it)
     },
     val startingMoves: Sequence<FehMove>? = null,
+    val suggestedMoves: Sequence<FehMove>? = null,
     val moveDownCriteria: MoveDownCriteria = MoveDownCriteria(20.minutes, 1_000_000, 620000)
 )
 

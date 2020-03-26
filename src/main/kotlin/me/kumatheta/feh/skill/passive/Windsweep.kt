@@ -11,7 +11,7 @@ import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.skillEffects
 import me.kumatheta.feh.skill.toSkill
 
-fun windsweep(minDiff: Int) = skillEffects(
+fun windWaterSweep(minDiff: Int, targetRes: Boolean) = skillEffects(
     object : FollowUpEffect {
         override fun apply(combatStatus: CombatStatus<HeroUnit>): BooleanAdjustment {
             return if (combatStatus.initAttack) {
@@ -23,7 +23,7 @@ fun windsweep(minDiff: Int) = skillEffects(
     },
     object : EffectOnFoe {
         override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<InCombatSkillEffect> {
-            return if (combatStatus.initAttack && !combatStatus.foe.weaponType.targetRes && combatStatus.self.virtualSpd >= combatStatus.foe.virtualSpd + minDiff) {
+            return if (combatStatus.initAttack && combatStatus.foe.weaponType.targetRes == targetRes && combatStatus.self.virtualSpd >= combatStatus.foe.virtualSpd + minDiff) {
                 sequenceOf(DisableCounter)
             } else {
                 emptySequence()
