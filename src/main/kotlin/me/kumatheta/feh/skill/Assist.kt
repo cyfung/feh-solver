@@ -22,7 +22,7 @@ sealed class Assist(val isRange: Boolean, skill: Skill = EmptySkill) : Skill by 
 
 abstract class MovementAssist(val canBeAggressive: Boolean, val movementEffect: MovementEffect) :
     Assist(false) {
-    final fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position =
+    fun selfEndPosition(selfPosition: Position, targetPosition: Position): Position =
         movementEffect.selfEndPosition(selfPosition, targetPosition)
 
     open fun onMove(self: HeroUnit, target: HeroUnit, battleState: BattleState) {
@@ -64,6 +64,7 @@ abstract class NormalAssist(isRange: Boolean = false) : Assist(isRange) {
     abstract fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
+        possibleAttacks: Map<HeroUnit, List<CombatResult>>,
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit?

@@ -53,7 +53,8 @@ private val jobConfig = FehJobConfig(
     scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
     mapName = "grandmaster 53",
     phaseLimit = 7,
-    canRearrange = false
+    canRearrange = false,
+    parallelCount = 1
 //    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)

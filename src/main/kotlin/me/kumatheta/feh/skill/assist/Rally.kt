@@ -1,12 +1,13 @@
 package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.Stat
 
 class Rally(private val bonus: Stat) : BuffRelatedAssist() {
-    final override fun apply(
+    override fun apply(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState
@@ -14,7 +15,7 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         target.applyBuff(bonus)
     }
 
-    final override fun isValidAction(
+    override fun isValidAction(
         self: HeroUnit,
         target: HeroUnit,
         battleState: BattleState,
@@ -23,15 +24,13 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         return target.extraBuffAmount(bonus) > 0
     }
 
-    final override fun preCombatBestTarget(
-        self: HeroUnit,
+    private fun getBestTarget(
         targets: Set<HeroUnit>,
-        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
-        distanceToClosestFoe: Map<HeroUnit, Int>
+        distanceToClosestFoe: Map<HeroUnit, Int>,
+        unitsConcerned: Collection<HeroUnit>
     ): HeroUnit? {
-        val allyThreat = lazyAllyThreat.value
-        return targets.asSequence().filter { it.available }.filter {
-            allyThreat.contains(it)
+        return targets.asSequence().filter {
+            unitsConcerned.contains(it)
         }.map {
             it to it.extraBuffAmount(bonus)
         }.filter {
@@ -41,7 +40,17 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         )?.first
     }
 
-    final override fun postCombatBestTarget(
+    override fun preCombatBestTarget(
+        self: HeroUnit,
+        targets: Set<HeroUnit>,
+        possibleAttacks: Map<HeroUnit, List<CombatResult>>,
+        lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
+        distanceToClosestFoe: Map<HeroUnit, Int>
+    ): HeroUnit? {
+        return getBestTarget(targets, distanceToClosestFoe, possibleAttacks.keys)
+    }
+
+    override fun postCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
@@ -50,15 +59,7 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         battleState: BattleState
     ): HeroUnit? {
         val allyThreat = lazyAllyThreat.value
-        return targets.asSequence().filter {
-            allyThreat.contains(it)
-        }.map {
-            it to it.extraBuffAmount(bonus)
-        }.filter {
-            it.second >= 2
-        }.minWith(
-            targetComparator(distanceToClosestFoe)
-        )?.first
+        return getBestTarget(targets, distanceToClosestFoe, allyThreat.keys)
     }
 }
 

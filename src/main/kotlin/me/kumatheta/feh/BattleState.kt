@@ -1501,7 +1501,7 @@ class BattleState private constructor(
             }
             val assistTargets = allyAssistTargets[heroUnit]?.value ?: throw IllegalStateException()
             val target =
-                assist.preCombatBestTarget(heroUnit, assistTargets.keys, lazyAllyThreat, distanceToClosestFoe)
+                assist.preCombatBestTarget(heroUnit, assistTargets.keys, possibleAttacks, lazyAllyThreat, distanceToClosestFoe)
             if (target == null) {
                 null
             } else {

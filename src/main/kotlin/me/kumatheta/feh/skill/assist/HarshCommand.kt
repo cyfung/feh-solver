@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.BattleState
+import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 
@@ -26,6 +27,7 @@ object HarshCommand : BuffRelatedAssist() {
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
+        possibleAttacks: Map<HeroUnit, List<CombatResult>>,
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {

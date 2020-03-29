@@ -43,6 +43,7 @@ object Sacrifice : NormalAssist() {
     override fun preCombatBestTarget(
         self: HeroUnit,
         targets: Set<HeroUnit>,
+        possibleAttacks: Map<HeroUnit, List<CombatResult>>,
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
