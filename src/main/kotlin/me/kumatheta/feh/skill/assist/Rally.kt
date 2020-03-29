@@ -58,8 +58,12 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         distanceToClosestFoe: Map<HeroUnit, Int>,
         battleState: BattleState
     ): HeroUnit? {
-        val allyThreat = lazyAllyThreat.value
-        return getBestTarget(targets, distanceToClosestFoe, allyThreat.keys)
+        val allyThreat = lazyAllyThreat.value.keys
+        val unitsConcerned = (allyThreat.asSequence() + battleState.unitsSeq(self.team).filter {
+            val threatened = foeThreat[it.position] ?: 0
+            threatened > 0
+        }).toSet()
+        return getBestTarget(targets, distanceToClosestFoe, unitsConcerned)
     }
 }
 
