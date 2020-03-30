@@ -1,0 +1,7 @@
+id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
+5,1,Death Knight,,1,,0,CAVALRY,Scythe of Sariel,,Blazing Flame,64,57,31,36,33,Fury 3,Escape Route 3,Close Guard 3
+6,1,Red Mage,Mage - Blue Tome,1,,5,INFANTRY,Raudrowl+,,Miracle,52,44,35,22,31,Distant Def 3,Guard 3,Drive Atk 2
+7,1,Green Mage,Mage - Green Tome,1,,4,INFANTRY,Gronnserpent+,,Blazing Thunder,52,46,35,22,31,Close Def 3,Quick Riposte 3,Distant Guard 3
+8,1,Axe Dragon,Wyvern Knight - Axe,1,,3,FLYING,Wo Gun+,Rally Def/Res+,Bonfire,57,51,30,39,21,Fire Boost 3,Aerobatics 3,Spur Atk/Spd 2
+9,1,Sword Cavalier,Knight - Sword,1,,3,CAVALRY,Firesweep S+,,Draconic Aura,61,54,27,28,33,Hp/Atk 2,Poison Strike 3,Savage Blow 3
+10,1,Bow Cavalier,Knight - Bow,1,,3,CAVALRY,Brave Bow+,,Luna,55,45,19,27,25,Atk/Def Bond 3,Wings of Mercy 3,Ward Cavalry

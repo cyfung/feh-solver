@@ -258,7 +258,7 @@ class StandardFehBoard(
         } else {
             if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
                 calculateScore(state, move)
-            } else if (movementResult.phraseChange) {
+            } else if (movementResult.phaseChange) {
                 if (stateListener == null) {
                     state.enemyMoves()
                 } else {

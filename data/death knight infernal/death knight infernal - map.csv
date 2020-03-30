@@ -1,0 +1,9 @@
+size,6,8,4,,
+R,W,R,W,R,W
+R,R1,R2,R3,R4,W
+R,W,R,W,R,W
+R,R,R,R,R,R
+W,W,R,1,W,R
+W,DR6,DR,DR7,W,R8
+W,R,DR5,R,W,R9
+W,DR,R,DR10,W,R

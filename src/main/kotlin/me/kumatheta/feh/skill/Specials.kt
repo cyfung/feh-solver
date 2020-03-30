@@ -8,6 +8,7 @@ val ALL_SPECIALS = sequenceOf(
     "Sirius" to Sirius,
     "Galeforce" to Galeforce,
 
+    "Blazing Flame" to BlazingFlame,
     "Blazing Light" to BlazingLight,
     "Blazing Wind" to BlazingWind,
     "Blazing Thunder" to BlazingThunder,

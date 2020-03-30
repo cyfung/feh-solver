@@ -47,7 +47,11 @@ class Rally(private val bonus: Stat) : BuffRelatedAssist() {
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
-        return getBestTarget(targets, distanceToClosestFoe, possibleAttacks.keys)
+        return getBestTarget(
+            targets,
+            distanceToClosestFoe,
+            possibleAttacks.asSequence().filter { it.value.isNotEmpty() }.map { it.key }.toList()
+        )
     }
 
     override fun postCombatBestTarget(

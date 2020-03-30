@@ -12,10 +12,3 @@ class Seal(private val stat: Stat) : PostCombatEffect {
         }
     }
 }
-
-fun seal(
-    atk: Int = 0,
-    spd: Int = 0,
-    def: Int = 0,
-    res: Int = 0
-) = Seal(Stat(atk = atk, spd = spd, def = def, res = res))

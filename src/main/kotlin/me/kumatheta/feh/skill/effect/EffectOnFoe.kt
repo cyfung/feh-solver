@@ -10,3 +10,13 @@ class EffectOnFoeBasic(private val skillEffects: List<InCombatSkillEffect>) : Ef
         return skillEffects.asSequence()
     }
 }
+
+object DisableFoeCounter : EffectOnFoe {
+    override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<InCombatSkillEffect> {
+        return if (combatStatus.initAttack) {
+            sequenceOf(DisableCounter)
+        } else {
+            emptySequence()
+        }
+    }
+}

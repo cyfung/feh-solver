@@ -1,11 +1,8 @@
 package me.kumatheta.feh.test
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.list
 import me.kumatheta.feh.BasicBattleMap
@@ -22,7 +19,6 @@ import me.kumatheta.feh.mcts.NormalMove
 import me.kumatheta.feh.mcts.newFehBoard
 import me.kumatheta.feh.mcts.toRating
 import me.kumatheta.feh.mcts.toScore
-import me.kumatheta.feh.mcts.tryMoves
 import me.kumatheta.feh.message.UpdateInfo
 import me.kumatheta.feh.readMap
 import me.kumatheta.feh.readUnits
@@ -185,8 +181,8 @@ fun main() {
         allPlayerUnits = playerMap.values.map { HeroUnit(0, it, Team.PLAYER, Position(0, 0)) },
         playerCount = positionMap.playerIds.size
     )
-    val test = board.tryMoves(testMoves)
-    println(test.winningTeam)
+//    val test = board.tryMoves(testMoves)
+//    println(test.winningTeam)
     println(Json.stringify(UpdateInfo.serializer().list, toUpdateInfoList(board, testMoves).second))
 
 //    runBlocking {
@@ -289,7 +285,7 @@ private suspend fun countPhase(
         } else if (state.winningTeam != null) {
             println("winning team ${state.winningTeam}")
         } else {
-            if (movementResult.phraseChange) {
+            if (movementResult.phaseChange) {
                 state.enemyMoves()
                 if (state.playerDied > 0) {
                     throw IllegalStateException()
@@ -317,7 +313,7 @@ private suspend fun BattleState.count(): Pair<Int, Int> = coroutineScope {
             if (copyState.playerDied > 0) {
                 1 to 0
             } else {
-                if (movementResult.phraseChange) {
+                if (movementResult.phaseChange) {
                     copyState.enemyMoves()
                     if (copyState.playerDied > 0) {
                         1 to 0

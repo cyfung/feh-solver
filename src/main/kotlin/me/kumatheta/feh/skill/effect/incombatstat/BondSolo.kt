@@ -19,15 +19,5 @@ class BondSolo(private val bond: Stat, private val solo: Stat) : InCombatStatEff
 }
 
 fun bond(buff: Stat) = BondSolo(bond = buff, solo = Stat.ZERO)
-fun bond(atk: Int = 0,
-         spd: Int = 0,
-         def: Int = 0,
-         res: Int = 0
-) = bond(Stat(atk = atk, spd = spd, def = def, res = res))
 
 fun solo(buff: Stat) = BondSolo(bond = Stat.ZERO, solo = buff)
-fun solo(atk: Int = 0,
-         spd: Int = 0,
-         def: Int = 0,
-         res: Int = 0
-) = solo(Stat(atk = atk, spd = spd, def = def, res = res))

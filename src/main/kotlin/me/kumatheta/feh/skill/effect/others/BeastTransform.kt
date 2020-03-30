@@ -10,14 +10,9 @@ import me.kumatheta.feh.skill.adjacentAllies
 import me.kumatheta.feh.skill.effect.Transform
 
 private fun baseTransform(battleState: BattleState, self: HeroUnit): Boolean {
-    return if (self.adjacentAllies(battleState).map { it.weaponType }.all {
+    return self.adjacentAllies(battleState).map { it.weaponType }.all {
             it is Dragon || it is Beast
-        }) {
-        self.addPositiveStatus(PositiveStatus.TRANSFORMED)
-        true
-    } else {
-        false
-    }
+        }
 }
 
 object FlyingBeast : Transform {

@@ -8,6 +8,18 @@ import me.kumatheta.feh.skill.adjacentAlliesAndSelf
 import me.kumatheta.feh.skill.allies
 import kotlin.math.absoluteValue
 
+object BlazingFlame : AoeSpecial(4) {
+    override val damageFactor: Int
+        get() = 150
+
+    override fun getTargets(battleState: BattleState, self: HeroUnit, mainTarget: HeroUnit): Sequence<HeroUnit> {
+        return mainTarget.allies(battleState).filter {
+            it.position.y  == mainTarget.position.y &&
+                    (it.position.x - mainTarget.position.x).absoluteValue <= 2
+        } + mainTarget
+    }
+}
+
 object BlazingThunder : AoeSpecial(4) {
     override val damageFactor: Int
         get() = 150

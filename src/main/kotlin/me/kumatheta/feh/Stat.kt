@@ -10,7 +10,43 @@ enum class StatType {
     RES
 }
 
+val ALL_STAT_TYPE_PAIRS = listOf(
+    StatType.ATK to StatType.SPD,
+    StatType.ATK to StatType.DEF,
+    StatType.ATK to StatType.RES,
+    StatType.SPD to StatType.DEF,
+    StatType.SPD to StatType.RES,
+    StatType.DEF to StatType.RES
+)
+
+fun Pair<StatType, StatType>.contains(statType: StatType): Boolean {
+    return first == statType || second == statType
+}
+
+fun Pair<StatType, StatType>.toStat(value: Int): Stat {
+    return Stat(
+        atk = if (contains(StatType.ATK)) value else 0,
+        spd = if (contains(StatType.SPD)) value else 0,
+        def = if (contains(StatType.DEF)) value else 0,
+        res = if (contains(StatType.RES)) value else 0
+    )
+}
+
+fun <R> statPairSequence(transform: (Pair<StatType, StatType>) -> R) = ALL_STAT_TYPE_PAIRS.asSequence().map(transform)
+
+fun <R> statSequence(transform: (StatType) -> R) = ALL_STAT_TYPES.asSequence().map(transform)
+
 val ALL_STAT_TYPES = StatType.values().asList()
+
+fun StatType.toStat(value: Int): Stat {
+    return when(this) {
+        StatType.ATK -> Stat(atk=value)
+        StatType.SPD -> Stat(spd= value)
+        StatType.DEF -> Stat(def= value)
+        StatType.RES -> Stat(res= value)
+    }
+}
+
 
 data class Stat(
     val hp: Int = 0,
@@ -24,7 +60,6 @@ data class Stat(
 
     companion object {
         val ZERO = Stat()
-        val ONES = Stat(1, 1, 1, 1, 1)
     }
 
     operator fun plus(o: Stat): Stat {
@@ -53,18 +88,6 @@ data class Stat(
         )
     }
 
-    operator fun times(stat: Stat): Stat {
-        if (this == ONES) {
-            return stat
-        }
-        return Stat(
-            hp = hp * stat.hp,
-            atk = atk * stat.atk,
-            spd = spd * stat.spd,
-            def = def * stat.def,
-            res = res * stat.res
-        )
-    }
 }
 
 fun min(s1: Stat, s2: Stat): Stat {

@@ -73,7 +73,7 @@ class BattleState private constructor(
     var winningTeam: Team? = winningTeam
         private set
 
-    class MovementResult(val gameEnd: Boolean, val teamLostUnit: Team?, val phraseChange: Boolean)
+    class MovementResult(val gameEnd: Boolean, val teamLostUnit: Team?, val phaseChange: Boolean)
 
     val maxPosition
         get() = battleMap.maxPosition

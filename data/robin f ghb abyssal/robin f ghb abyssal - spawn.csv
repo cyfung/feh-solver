@@ -1,5 +1,5 @@
 id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,,
-5,1,Robin F,,1,,1,INFANTRY,Keen Gronnwolf+ *S,,Ignis,83,51,41,39,31,Brazen Def/Res 3,B Tomebreaker 3,Spur Def/Res 2,
+5,1,Robin F,,1,,1,INFANTRY,Keen Gronnwolf+ *S,,Ignis,83,51,41,39,31,Brazen Def/Res 3,B Tomebreaker 3,Spur Def/Res 2,Atk/Def Push 4
 6,1,Blue Mage,Mage - Blue Tome,1,,3,INFANTRY,Thoron+ *D,,Bonfire,76,51,38,27,34,Darting Blow 3,Seal Atk/Def 2,Spur Res 3,
 7,1,Axe Fighter,Fighter - Axe,1,,1,INFANTRY,Slaying Axe+ *D,,Glimmer,86,51,37,40,27,Distant Def 3,Seal Def/Res 2,Threaten Atk 3,
 8,1,Red Mage,Mage - Red Tome,1,,3,INFANTRY,Raudrraven+,,Iceberg,74,48,38,24,34,Steady Blow 2,Bow Breaker 3,Threaten Res 3,

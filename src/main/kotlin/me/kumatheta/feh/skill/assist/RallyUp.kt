@@ -5,6 +5,7 @@ import me.kumatheta.feh.CombatResult
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Position
 import me.kumatheta.feh.Stat
+import me.kumatheta.feh.util.compareByDescending
 
 class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
     override fun apply(
@@ -30,35 +31,40 @@ class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
         return target.extraBuffAmount(bonus) > 0
     }
 
+    data class Target(val unit: HeroUnit, val helpedCount: Int, val reference: HeroUnit, val refBuffed: Int)
+
     private fun getBestTarget(
         targets: Set<HeroUnit>,
-        unitsConcerned: Sequence<HeroUnit>,
+        potentialUnits: Sequence<HeroUnit>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
-        return targets.asSequence().mapNotNull { target ->
-            val helped = unitsConcerned.filter { ally -> ally.position.distanceTo(target.position) <= 2 }.toList()
-            val reference = if (helped.contains(target)) {
-                target
+        val unitsConcerned = potentialUnits.map {
+            it to it.extraBuffAmount(bonus)
+        }.filter {
+            it.second >= 2
+        }
+        return targets.asSequence().flatMap { target ->
+            val helped = unitsConcerned.filter { it.first.position.distanceTo(target.position) <= 2 }.toList()
+            val targetPair = helped.firstOrNull() { it.first == target }
+            if (targetPair != null) {
+                sequenceOf(targetPair)
             } else {
-                helped.asSequence().minWith(
-                    compareBy({
-                        distanceToClosestFoe[it]
-                    }, {
-                        it.currentStatTotal
-                    })
-                ) ?: return@mapNotNull null
+                helped.asSequence()
+            }.map {
+                Target(target, helped.size, it.first, it.second)
             }
-            // helped should no longer be empty
-            Triple(target, helped.size, reference)
         }.minWith(
-            compareByDescending<Triple<HeroUnit, Int, HeroUnit>> { it.second }.thenBy {
-                distanceToClosestFoe[it.third]
+            compareByDescending<Target>(
+                { it.helpedCount },
+                { it.refBuffed }
+            ).thenBy {
+                distanceToClosestFoe[it.reference]
             }.thenByDescending {
-                it.third.currentStatTotal
+                it.reference.currentStatTotal
             }.thenByDescending {
-                it.first.id
+                it.unit.id
             }
-        )?.first
+        )?.unit
     }
 
     override fun preCombatBestTarget(
@@ -68,8 +74,8 @@ class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
         lazyAllyThreat: Lazy<Map<HeroUnit, Set<HeroUnit>>>,
         distanceToClosestFoe: Map<HeroUnit, Int>
     ): HeroUnit? {
-        val unitsConcerned = possibleAttacks.keys.asSequence().filter {
-            it != self && it.extraBuffAmount(bonus) >= 2
+        val unitsConcerned = possibleAttacks.asSequence().filter { it.value.isNotEmpty() }.map { it.key }.filter {
+            it != self
         }
         return getBestTarget(targets, unitsConcerned, distanceToClosestFoe)
     }
@@ -88,8 +94,6 @@ class RallyUp(private val bonus: Stat) : BuffRelatedAssist() {
             threatened > 0
         }).filterNot {
             it == self
-        }.filter {
-            it.extraBuffAmount(bonus) >= 2
         }.distinct()
 
         return getBestTarget(targets, unitsConcerned, distanceToClosestFoe)

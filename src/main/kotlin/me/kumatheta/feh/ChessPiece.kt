@@ -21,6 +21,8 @@ class HeroUnit(
         private set
     private var engageCoolDownStarted = heroModel.group == null
 
+    val hasPositiveStatus: Boolean
+        get() = positiveStatus.isNotEmpty()
     val hasNegativeStatus: Boolean
         get() = negativeStatus.isNotEmpty()
 
@@ -340,8 +342,7 @@ enum class NegativeStatus {
 
 enum class PositiveStatus {
     MOVEMENT_ORDER,
-    EXTRA_TRAVEL_POWER,
-    TRANSFORMED
+    EXTRA_TRAVEL_POWER
 }
 
 class Obstacle(var health: Int, override val position: Position, val isBreakableByEnemy: Boolean) : ChessPiece() {
