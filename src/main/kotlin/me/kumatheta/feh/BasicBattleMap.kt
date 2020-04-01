@@ -9,7 +9,11 @@ import me.kumatheta.feh.skill.BASIC_REFINABLE_WEAPONS
 import me.kumatheta.feh.skill.Passive
 import me.kumatheta.feh.skill.Special
 import me.kumatheta.feh.skill.Weapon
+import me.kumatheta.feh.skill.effect.DisableFoeCounter
+import me.kumatheta.feh.skill.effect.SkillEffect
+import me.kumatheta.feh.skill.effect.StaffAsNormalBasic
 import me.kumatheta.feh.skill.getBasicRefine
+import me.kumatheta.feh.skill.plus
 import me.kumatheta.feh.skill.weapon.EmptyWeapon
 import java.nio.file.Files
 import java.nio.file.Path
@@ -41,8 +45,6 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
                 else -> ReinforceByTime(time)
             }
         }
-        val name = valueIterator.next()
-        val imageName = valueIterator.next()
         val groupString = valueIterator.next()
         val engagedString = valueIterator.next()
         val cdString = valueIterator.next()
@@ -58,16 +60,9 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
             engageDelay = engagedString.toIntOrNull()
             cooldown = cdString.toIntOrNull()
         }
+        val name = valueIterator.next()
+        val imageName = valueIterator.next()
         val moveType = MoveType.valueOf(valueIterator.next())
-        val weaponName = valueIterator.next()
-        val weapon = if (weaponName.startsWith('-')) {
-            val weaponType = getWeaponType(weaponName.substring(1))
-            EmptyWeapon(weaponType)
-        } else {
-            getWeapon(weaponName)
-        }
-        val assist = getAssist(valueIterator.next())
-        val special = getSpecial(valueIterator.next())
         val stat = Stat(
             valueIterator.next().toInt(),
             valueIterator.next().toInt(),
@@ -75,6 +70,17 @@ fun readUnits(file: Path): Pair<Map<Int, HeroModel>, Map<Int, Spawn>> {
             valueIterator.next().toInt(),
             valueIterator.next().toInt()
         )
+        val weaponName = valueIterator.next()
+        val refine = valueIterator.next()
+        val colorChange = valueIterator.next()
+        val weapon = if (weaponName.startsWith('-')) {
+            val weaponType = getWeaponType(weaponName.substring(1))
+            EmptyWeapon(weaponType)
+        } else {
+            getWeapon(weaponName, refine, colorChange)
+        }
+        val assist = getAssist(valueIterator.next())
+        val special = getSpecial(valueIterator.next())
         val passives = valueIterator.asSequence().filterNot {
             it.isBlank()
         }.map {
@@ -122,34 +128,47 @@ private fun String.splitOrNull(delimiter: Char): Pair<String, String?> {
     }
 }
 
+sealed class Refine(val name: String) {
+}
 
-private fun getWeapon(name: String): Weapon {
-    val (baseName, color: String?) = name.splitOrNull('@')
-    val (weaponName, baseRefine: String?) = baseName.splitOrNull('*')
-    val weapon = if (baseRefine != null) {
-        val trimBaseRefine = baseRefine.trim()
-        if (trimBaseRefine.length != 1) {
-            throw IllegalArgumentException("baseRefine can only be one of A,S,D,R")
+class BaseRefine(val statType: StatType) : Refine(statType.name)
+
+object SpecialRefine : Refine("special")
+
+class StaffRefine(name: String, val skillEffect: SkillEffect) : Refine(name)
+
+
+val refineMap = (statSequence { BaseRefine(it) } + SpecialRefine +
+        StaffRefine("wrathful", StaffAsNormalBasic) +
+        StaffRefine("dazzling", DisableFoeCounter)).associateBy { it.name.toLowerCase() }
+
+
+private fun getWeapon(weaponName: String, refine: String, colorChange: String): Weapon {
+    val weapon = when (val actualRefine = refineMap[refine.trim().toLowerCase()]) {
+        null -> {
+            check(refine.trim().isEmpty()) {
+                "refine can only be one of ${refineMap.keys}"
+            }
+            ALL_WEAPONS[weaponName]
         }
-        val refinableWeapon = BASIC_REFINABLE_WEAPONS[weaponName]
-        val statType = when (trimBaseRefine[0]) {
-            'A' -> StatType.ATK
-            'S' -> StatType.SPD
-            'D' -> StatType.DEF
-            'R' -> StatType.RES
-            else -> throw IllegalArgumentException("color can only be one of A,S,D,R")
+        SpecialRefine -> ALL_WEAPONS["$weaponName Eff"]
+        is BaseRefine -> {
+            val refinableWeapon = BASIC_REFINABLE_WEAPONS[weaponName]
+            check(refinableWeapon.weaponType !is Staff)
+            refinableWeapon.getBasicRefine(actualRefine.statType)
         }
-        refinableWeapon.getBasicRefine(statType)
-    } else {
-        ALL_WEAPONS[weaponName]
+        is StaffRefine -> {
+            val refinableWeapon = BASIC_REFINABLE_WEAPONS[weaponName]
+            check(refinableWeapon.weaponType is Staff)
+            refinableWeapon + actualRefine.skillEffect
+        }
     }
-    return if (color != null) {
-        val weaponColor = when (color.trim()) {
+    return if (colorChange.isNotEmpty()) {
+        val weaponColor = when (colorChange.trim()) {
             "R" -> Color.RED
             "G" -> Color.GREEN
             "B" -> Color.BLUE
-            "C" -> Color.COLORLESS
-            else -> throw IllegalArgumentException("wrong weapon name $name, color can only be one of R,G,B,C")
+            else -> throw IllegalArgumentException("wrong weapon name $weaponName, color can only be one of R,G,B")
         }
         weapon.copy(weaponType = (weapon.weaponType as FreeColorWeapon).toColor(weaponColor))
     } else {
@@ -206,7 +225,7 @@ class BasicBattleMap(
             } else {
                 Obstacle(value, it.key, true)
             }
-        } + playerIds.asSequence().zip(playerUnits.asSequence()).map {(id, baseUnit) ->
+        } + playerIds.asSequence().zip(playerUnits.asSequence()).map { (id, baseUnit) ->
             val position = idMap[id] ?: throw IllegalStateException()
             baseUnit.copy(id, position)
         }

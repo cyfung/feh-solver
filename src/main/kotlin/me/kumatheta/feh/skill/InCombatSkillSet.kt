@@ -30,7 +30,6 @@ import me.kumatheta.feh.skill.effect.NeutralizePenalty
 import me.kumatheta.feh.skill.effect.PercentageDamageReduce
 import me.kumatheta.feh.skill.effect.PostCombatEffect
 import me.kumatheta.feh.skill.effect.Raven
-import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.StaffAsNormal
 import me.kumatheta.feh.skill.effect.TriangleAdept
 import me.kumatheta.feh.skill.effect.VantageEffect
@@ -113,6 +112,7 @@ class InCombatSkillSet(
         get() = get()
     val damageIncrease: Sequence<DamageIncrease>
         get() = get()
+
     // listener
     val damageDealtListener: Sequence<DamageDealtListener>
         get() = get()

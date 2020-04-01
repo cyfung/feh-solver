@@ -265,7 +265,7 @@ private fun WeaponType.toAttackType(): AttackType {
             Color.RED -> AttackType.RED_TOME
             Color.GREEN -> AttackType.GREEN_TOME
             Color.BLUE -> AttackType.BLUE_TOME
-            Color.COLORLESS -> throw IllegalArgumentException("no colorless tome")
+            Color.COLORLESS -> AttackType.COLORLESS_TOME
         }
     }
 }

@@ -37,6 +37,7 @@ enum class AttackType {
     RED_TOME,
     BLUE_TOME,
     GREEN_TOME,
+    COLORLESS_TOME,
     STAFF,
     RED_BREATH,
     BLUE_BREATH,

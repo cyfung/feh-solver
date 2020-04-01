@@ -12,13 +12,15 @@ object Shove : ProtectiveMovementAssist(true, ShoveEffect)
 
 object ShoveEffect : MovementEffect {
     override fun applyMovement(self: HeroUnit, target: HeroUnit, battleState: BattleState) {
-        val targetEndPosition = targetEndPosition(
-            battleState,
-            self,
-            self.position,
-            target.position
-        )
-        battleState.move(target, targetEndPosition)
+        if (!target.isDead) {
+            val targetEndPosition = targetEndPosition(
+                battleState,
+                self,
+                self.position,
+                target.position
+            )
+            battleState.move(target, targetEndPosition)
+        }
     }
 
     override fun isValidAction(

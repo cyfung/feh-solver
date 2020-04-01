@@ -15,11 +15,3 @@ class Opening<R : Comparable<R>>(
         self.allies(battleState).maxBy(selector)?.cachedEffect?.applyBuff(stat)
     }
 }
-
-inline fun <reified R : Comparable<R>> opening(
-    atk: Int = 0,
-    spd: Int = 0,
-    def: Int = 0,
-    res: Int = 0,
-    noinline selector: (HeroUnit) -> R
-) = Opening(Stat(atk = atk, spd = spd, def = def, res = res), selector)

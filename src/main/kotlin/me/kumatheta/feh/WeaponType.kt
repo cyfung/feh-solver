@@ -26,6 +26,8 @@ abstract class Magic(color: Color) : WeaponType(color, true, true)
 abstract class Beast(color: Color) : WeaponType(color, false, false)
 abstract class Dragon(color: Color) : WeaponType(color, false, true)
 
+val allDragonType = listOf(DragonR, DragonG, DragonB, DragonC)
+
 object DaggerR : Bow(Color.RED)
 object DaggerB : Bow(Color.BLUE)
 object DaggerG : Bow(Color.GREEN)

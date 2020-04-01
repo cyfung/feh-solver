@@ -20,8 +20,10 @@ val ALL_SPECIALS = sequenceOf(
     "Luna" to FoeDefResBased(3, 1, 2),
     "Sacred Cowl" to SacredCowl,
     "Escutcheon" to Escutcheon,
+    "Aegis" to Aegis,
 
     "Windfire Balm+" to Balm(Stat(atk=6,spd=6)),
+    "Fireflood Balm+" to Balm(Stat(atk=6,res=6)),
 
     "Imbue" to Imbue,
     "Heavenly Light" to HeavenlyLight,

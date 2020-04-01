@@ -1,0 +1,15 @@
+id,spawn time,group,engage delay,CD,name,image name,move type,hp,atk,spd,def,res,weapon,Modifier,Color,assist,special,passives,,
+5,1,,2,0,Bramimond,,INFANTRY,63,61,30,23,38,Void Tome,,,,Luna,Atk/Def Push 4,Lull Atk/Res 3,Impenetrable Dark
+6,1,,,2,Green Manakete,Manakete - Green,INFANTRY,67,56,39,37,36,Dark Breath+,Atk,G,,Sacred Cowl,Fury 3,Guard 3,Spur Def/Res 2
+7,1,,,3,Lance Knight,Armor - Lance,ARMORED,81,58,17,47,25,Barrier Lance+,Res,,,Vengeance,Water Boost 3,Wary Fighter 3,Panic Ploy 3
+8,1,,,1,Sword Fighter,Fighter - Sword,INFANTRY,68,52,37,36,24,Slaying Edge+,Atk,,,Moonbow,Atk/Spd Form 3,Wrath 3,Threat. Atk/Def 2
+9,1,,,3,Axe Knight,Armor - Axe,ARMORED,81,58,17,47,25,Rearguard+,Res,,,Aegis,Distant Def 3,Guard 3,Def Smoke 3
+10,1,,,1,Cleric,Sister - Rod,INFANTRY,50,46,34,25,42,Panic+,Dazzling,,Restore+,Fireflood Balm+,HP/Atk 2,Even Pulse Tie 3,Res Ploy 3
+11,2,,,2,Blue Thief,Thief - Blue Dagger,INFANTRY,56,47,45,18,37,The Cleaner+,Atk,B,,Reprisal,Death Blow 3,Vantage 3,Res Ploy 3
+12,2,,,3,Thief,Thief - Dagger,INFANTRY,56,47,45,18,37,Dragonslasher+,Atk,,Pivot,Draconic Aura,Atk/Def Solo 3,Wings of Mercy 3,Panic Smoke 3
+13,2,,,4,Bow Cavalier,Knight - Bow,CAVALRY,57,53,28,30,25,Guard Bow+,Def,,,Blazing Thunder,Close Def 3,Dull Ranged 3,Def Smoke 3
+14,3,,,2,Axe Fighter,Fighter - Axe,INFANTRY,68,53,43,39,27,Slaying Axe+,Spd,,,Bonfire,Fury 3,Repel 3,Panic Ploy 3
+15,3,,,3,Red Mage,Mage - Red Tome,INFANTRY,54,49,40,22,33,Raudrserpent+,Spd,,,Iceberg,Atk/Spd Solo 3,Quick Riposte 3,Atk/Res Gap 3
+16,3,,,2,Lance Flier,Pegasus Knight - Lance,INFANTRY,52,48,38,26,39,Firesweep L+,,,,Moonbow,Death Blow 3,Lunge,Res Smoke 3
+17,4,,,5,Blue Fafnir,Manakete Winged - Blue,FLYING,62,48,40,41,36,Dark Breath+,Atk,B,,Miracle,Fort. Def/Res 2,Guard 3,Threat. Atk/Spd 2
+18,4,,,3,Sword Dragon,Wyvern Knight - Sword,FLYING,57,49,25,39,23,Brave Sword+,,,,Luna,Iote's Shield,Flier Formation 3,Guidance 3

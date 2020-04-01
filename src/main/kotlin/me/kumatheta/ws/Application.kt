@@ -51,10 +51,10 @@ private val jobConfig = FehJobConfig(
 //    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
 //    scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
     scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
-    mapName = "death knight infernal",
+    mapName = "bramimond infernal",
 //    phaseLimit = 7,
 //    canRearrange = false,
-    parallelCount = 1
+    parallelCount = 4
 //    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)

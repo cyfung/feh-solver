@@ -3,6 +3,7 @@ package me.kumatheta.feh.skill
 import me.kumatheta.feh.ALL_STAT_TYPES
 import me.kumatheta.feh.Axe
 import me.kumatheta.feh.BowC
+import me.kumatheta.feh.DaggerC
 import me.kumatheta.feh.DragonC
 import me.kumatheta.feh.HeroUnit
 import me.kumatheta.feh.Lance
@@ -30,6 +31,7 @@ import me.kumatheta.feh.skill.effect.NeutralizeBonusBasic
 import me.kumatheta.feh.skill.effect.RavenBasic
 import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.SlayingEffect
+import me.kumatheta.feh.skill.effect.StaffAsNormalBasic
 import me.kumatheta.feh.skill.effect.TriangleAdept
 import me.kumatheta.feh.skill.effect.incombatstat.OwlEffect
 import me.kumatheta.feh.skill.effect.incombatstat.fox
@@ -38,10 +40,12 @@ import me.kumatheta.feh.skill.effect.incombatstat.stance
 import me.kumatheta.feh.skill.effect.others.BraveOnInit
 import me.kumatheta.feh.skill.effect.others.DragonAdaptive
 import me.kumatheta.feh.skill.effect.others.ShiningEffect
+import me.kumatheta.feh.skill.effect.postcombat.Dagger7Eff
 import me.kumatheta.feh.skill.effect.postcombat.aoeDebuff
 import me.kumatheta.feh.skill.effect.postcombat.aoeNegativeStatus
 import me.kumatheta.feh.skill.effect.skillEffects
 import me.kumatheta.feh.skill.weapon.DraconicPoleaxEff
+import me.kumatheta.feh.skill.weapon.DragonSlasherPlus
 import me.kumatheta.feh.skill.weapon.FellBreath
 import me.kumatheta.feh.skill.weapon.FlowerOfJoy
 import me.kumatheta.feh.skill.weapon.Gleipnir
@@ -50,11 +54,13 @@ import me.kumatheta.feh.skill.weapon.HeronWing
 import me.kumatheta.feh.skill.weapon.Hidskjalf
 import me.kumatheta.feh.skill.weapon.Leiptr
 import me.kumatheta.feh.skill.weapon.Lyfjaberg
+import me.kumatheta.feh.skill.weapon.PanicPlus
 import me.kumatheta.feh.skill.weapon.Ragnarok
 import me.kumatheta.feh.skill.weapon.Ragnell
 import me.kumatheta.feh.skill.weapon.Randgridr
 import me.kumatheta.feh.skill.weapon.ScytheOfSariel
 import me.kumatheta.feh.skill.weapon.SublimeSurge
+import me.kumatheta.feh.skill.weapon.TheCleanerPlus
 import me.kumatheta.feh.skill.weapon.TrilemmaPlus
 import me.kumatheta.feh.skill.weapon.VoidTome
 
@@ -88,6 +94,7 @@ private val STANDARD_REFINABLE_WEAPONS = listOf(
     "Raudrfox+" to MagicR.basic(12) + fox(atk=-4,spd=-4,def=-4,res=-4),
     "Shining Bow+" to BowC.basic(12) + ShiningEffect,
     "Barrier Lance+" to Lance.basic(14) + stance(res = 7),
+    "Rearguard+" to Axe.basic(14) + stance(def = 7),
     "Water Breath+" to DragonC.basic(14) + skillEffects(
         stance(def = 4, res = 4),
         DragonAdaptive
@@ -95,12 +102,18 @@ private val STANDARD_REFINABLE_WEAPONS = listOf(
     "Armorsmasher+" to Sword.effective(14, MoveType.ARMORED),
     "Slaying Hammer+" to Axe.effective(14, MoveType.ARMORED),
 
+    "Raudrserpent+" to MagicR.basic(12) + distantDef(def = 6, res = 6),
     "Blarserpent+" to MagicB.basic(12) + distantDef(def = 6, res = 6),
     "Gronnserpent+" to MagicG.basic(12) + distantDef(def = 6, res = 6),
 
 
     "Guard Bow+" to BowC.basic(12) + distantDef(def = 6, res = 6),
-    "Keen Gronnwolf+" to MagicG.effective(12, MoveType.CAVALRY)
+    "Keen Gronnwolf+" to MagicG.effective(12, MoveType.CAVALRY),
+
+    "Trilemma+" to TrilemmaPlus,
+    "Panic+" to PanicPlus,
+    "The Cleaner+" to TheCleanerPlus,
+    "DragonSlasher+" to DragonSlasherPlus
 )
 
 val FIXED_WEAPONS = sequenceOf(
@@ -114,6 +127,10 @@ val FIXED_WEAPONS = sequenceOf(
     "Blarraven+" to MagicB.basic(11) + RavenBasic,
     "Emerald Axe+" to Axe.basic(12) + TriangleAdept(20),
     "Firesweep S+" to Sword.basic(15) + skillEffects(
+        DisableCounter,
+        DisableFoeCounter
+    ),
+    "Firesweep L+" to Lance.basic(15) + skillEffects(
         DisableCounter,
         DisableFoeCounter
     ),
@@ -168,9 +185,7 @@ val FIXED_WEAPONS = sequenceOf(
     "Fell Breath" to FellBreath,
     "Heron Wing" to HeronWing,
     "Void Tome" to VoidTome,
-    "Scythe of Sariel" to ScytheOfSariel,
-
-    "Trilemma+ Dazzling" to TrilemmaPlus + EffectOnFoeBasic(listOf(DisableCounter))
+    "Scythe of Sariel" to ScytheOfSariel
 )
 val ALL_WEAPONS: SkillMap<BasicWeapon> = (FIXED_WEAPONS + STANDARD_REFINABLE_WEAPONS).toSkillMap()
 val BASIC_REFINABLE_WEAPONS = (nonStandardRefinableWeapons() + STANDARD_REFINABLE_WEAPONS).toSkillMap()

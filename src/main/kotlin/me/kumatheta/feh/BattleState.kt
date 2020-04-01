@@ -458,22 +458,38 @@ class BattleState private constructor(
     private fun isDefenseTile(position: Position) = battleMap.terrain(position).isDefenseTile
 
     private fun getInCombatSkills(attacker: HeroUnit, defender: HeroUnit): AttackerDefenderPair<InCombatSkillSet> {
-        val attackerTeammates = unitsSeq(attacker.team).filterNot { it == attacker }.map {
-            InCombatSupportInput(this, it, attacker, defender)
-        }.toList()
-        val defenderTeammates = unitsSeq(defender.team).filterNot { it == defender }.map {
-            InCombatSupportInput(this, it, attacker, defender)
-        }.toList()
-        val attackerTeamSkills = attackerTeammates.asSequence().flatMap { supportCombatInput ->
-            supportCombatInput.self.skillSet.inCombatSupport.asSequence().map {
-                it.getSupportSkills(supportCombatInput)
-            }
-        }.filterNotNull().toList()
-        val defenderTeamSkills = defenderTeammates.asSequence().flatMap { supportCombatInput ->
-            supportCombatInput.self.skillSet.inCombatSupport.asSequence().map {
-                it.getSupportSkills(supportCombatInput)
-            }
-        }.filterNotNull().toList()
+        val denyDefenderTeammates = attacker.skillSet.disableFoeAllySupport.any {
+            it.apply(CombatStatus(this, attacker, defender, true))
+        }
+        val denyAttackerTeammates = attacker.skillSet.disableFoeAllySupport.any {
+            it.apply(CombatStatus(this, defender, attacker, false))
+        }
+        val attackerTeamSkills = if (denyAttackerTeammates) {
+            emptyList()
+        } else {
+            val attackerTeammates = unitsSeq(attacker.team).filterNot { it == attacker }.map {
+                InCombatSupportInput(this, it, attacker, defender)
+            }.toList()
+            attackerTeammates.asSequence().flatMap { supportCombatInput ->
+                supportCombatInput.self.skillSet.inCombatSupport.asSequence().map {
+                    it.getSupportSkills(supportCombatInput)
+                }
+            }.filterNotNull().toList()
+        }
+
+        val defenderTeamSkills = if (denyDefenderTeammates) {
+            emptyList()
+        } else {
+            val defenderTeammates = unitsSeq(defender.team).filterNot { it == defender }.map {
+                InCombatSupportInput(this, it, attacker, defender)
+            }.toList()
+            defenderTeammates.asSequence().flatMap { supportCombatInput ->
+                supportCombatInput.self.skillSet.inCombatSupport.asSequence().map {
+                    it.getSupportSkills(supportCombatInput)
+                }
+            }.filterNotNull().toList()
+        }
+
         val attackerSkills = InCombatSkillSet(
             battleState = this,
             self = attacker,
@@ -971,7 +987,7 @@ class BattleState private constructor(
         }
     }
 
-    fun <T: Any> enemyMoves(f: (UnitAction) -> T): List<T> {
+    fun <T : Any> enemyMoves(f: (UnitAction) -> T): List<T> {
         require(!isPlayerPhrase)
         check(winningTeam == null)
         val myTeam = Team.ENEMY
@@ -1168,11 +1184,11 @@ class BattleState private constructor(
     ): Map<HeroUnit, Map<Position, MoveStep>> {
         return availableUnits.associateWith { heroUnit ->
             moveTargets(heroUnit, obstruct, locationMap, obstacleWalls).sortedWith(
-                    attackPositionOrder(
-                        heroUnit,
-                        foeThreat
-                    )
+                attackPositionOrder(
+                    heroUnit,
+                    foeThreat
                 )
+            )
                 .associateBy { it.position }
         }
     }
@@ -1501,7 +1517,13 @@ class BattleState private constructor(
             }
             val assistTargets = allyAssistTargets[heroUnit]?.value ?: throw IllegalStateException()
             val target =
-                assist.preCombatBestTarget(heroUnit, assistTargets.keys, possibleAttacks, lazyAllyThreat, distanceToClosestFoe)
+                assist.preCombatBestTarget(
+                    heroUnit,
+                    assistTargets.keys,
+                    possibleAttacks,
+                    lazyAllyThreat,
+                    distanceToClosestFoe
+                )
             if (target == null) {
                 null
             } else {

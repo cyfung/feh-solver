@@ -12,6 +12,7 @@ import me.kumatheta.feh.skill.assist.RecoverPlus
 import me.kumatheta.feh.skill.assist.Refresh
 import me.kumatheta.feh.skill.assist.RestorePlus
 import me.kumatheta.feh.skill.assist.movement.DrawBack
+import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.assist.movement.Reposition
 import me.kumatheta.feh.skill.assist.movement.Shove
 import me.kumatheta.feh.skill.assist.movement.Smite
@@ -45,6 +46,7 @@ val ALL_ASSISTS = (
             "Draw Back" to DrawBack,
             "Shove" to Shove,
             "Smite" to Smite,
+            "Pivot" to Pivot,
             "To Change Fate!" to ToChangeFate
         )
         ).toSkillMap()

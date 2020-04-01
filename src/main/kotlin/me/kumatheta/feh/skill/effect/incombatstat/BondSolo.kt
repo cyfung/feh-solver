@@ -5,7 +5,6 @@ import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.CombatStatus
 import me.kumatheta.feh.skill.adjacentAllies
 import me.kumatheta.feh.skill.effect.InCombatStatEffect
-import me.kumatheta.feh.skill.effect.postcombat.Seal
 
 class BondSolo(private val bond: Stat, private val solo: Stat) : InCombatStatEffect {
     override fun apply(combatStatus: CombatStatus<HeroUnit>): Stat {

@@ -1,6 +1,7 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.skill.effect.AssistEffect
+import me.kumatheta.feh.skill.effect.DisableFoeAllySupportEffect
 import me.kumatheta.feh.skill.effect.EffectOnFoe
 import me.kumatheta.feh.skill.effect.GuidanceEffect
 import me.kumatheta.feh.skill.effect.HealEffect
@@ -36,4 +37,5 @@ class SkillSet(skillEffects: List<SkillEffect>) {
     val inCombatSupport = skillEffects.filterIsInstance<InCombatSupport>()
     val healEffect = skillEffects.filterIsInstance<HealEffect>()
     val assistEffect = skillEffects.filterIsInstance<AssistEffect>()
+    val disableFoeAllySupport = skillEffects.filterIsInstance<DisableFoeAllySupportEffect>()
 }

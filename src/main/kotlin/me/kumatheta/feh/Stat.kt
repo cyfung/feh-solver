@@ -32,6 +32,15 @@ fun Pair<StatType, StatType>.toStat(value: Int): Stat {
     )
 }
 
+operator fun Stat.get(statType: StatType) : Int {
+    return when(statType) {
+        StatType.ATK -> atk
+        StatType.SPD -> spd
+        StatType.DEF -> def
+        StatType.RES -> res
+    }
+}
+
 fun <R> statPairSequence(transform: (Pair<StatType, StatType>) -> R) = ALL_STAT_TYPE_PAIRS.asSequence().map(transform)
 
 fun <R> statSequence(transform: (StatType) -> R) = ALL_STAT_TYPES.asSequence().map(transform)

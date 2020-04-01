@@ -7,11 +7,13 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.Sword
+import me.kumatheta.feh.get
 import me.kumatheta.feh.skill.assist.movement.DrawBackEffect
 import me.kumatheta.feh.skill.assist.movement.HitAndRunEffect
 import me.kumatheta.feh.skill.assist.movement.SwapEffect
 import me.kumatheta.feh.skill.effect.CounterAnyRangeBasic
 import me.kumatheta.feh.skill.effect.Desperation
+import me.kumatheta.feh.skill.effect.DisableFoeAllySupportEffectBasic
 import me.kumatheta.feh.skill.effect.DisablePriorityChangeBasic
 import me.kumatheta.feh.skill.effect.NeutralizeEffectiveAgainstMovement
 import me.kumatheta.feh.skill.effect.Obstruct
@@ -25,6 +27,7 @@ import me.kumatheta.feh.skill.effect.cooldown.FlashingBlade3
 import me.kumatheta.feh.skill.effect.cooldown.HeavyBlade3
 import me.kumatheta.feh.skill.effect.followup.NullFollowUp3
 import me.kumatheta.feh.skill.effect.followup.QuickRiposte
+import me.kumatheta.feh.skill.effect.incombatstat.allForm
 import me.kumatheta.feh.skill.effect.incombatstat.blow
 import me.kumatheta.feh.skill.effect.incombatstat.bond
 import me.kumatheta.feh.skill.effect.incombatstat.boost
@@ -38,20 +41,21 @@ import me.kumatheta.feh.skill.effect.postcombat.Seal
 import me.kumatheta.feh.skill.effect.startofturn.AirOrder3
 import me.kumatheta.feh.skill.effect.startofturn.ArmorMarch3
 import me.kumatheta.feh.skill.effect.startofturn.InfantryPulse
+import me.kumatheta.feh.skill.effect.startofturn.Opening
 import me.kumatheta.feh.skill.effect.startofturn.Ploy
+import me.kumatheta.feh.skill.effect.startofturn.PulseTie
 import me.kumatheta.feh.skill.effect.startofturn.QuickenedPulse
 import me.kumatheta.feh.skill.effect.startofturn.Renewal
 import me.kumatheta.feh.skill.effect.startofturn.SparklingBoost
 import me.kumatheta.feh.skill.effect.startofturn.TimePulse3
 import me.kumatheta.feh.skill.effect.startofturn.Upheaval
+import me.kumatheta.feh.skill.effect.startofturn.allThreaten
 import me.kumatheta.feh.skill.effect.startofturn.chill
 import me.kumatheta.feh.skill.effect.startofturn.hone
 import me.kumatheta.feh.skill.effect.startofturn.honeWeaponType
-import me.kumatheta.feh.skill.effect.startofturn.opening
 import me.kumatheta.feh.skill.effect.startofturn.resBasedPloy3
 import me.kumatheta.feh.skill.effect.startofturn.sabotage
 import me.kumatheta.feh.skill.effect.startofturn.tactics
-import me.kumatheta.feh.skill.effect.startofturn.threaten
 import me.kumatheta.feh.skill.effect.startofturn.wave
 import me.kumatheta.feh.skill.effect.supportincombat.closeGuard
 import me.kumatheta.feh.skill.effect.supportincombat.distantGuard
@@ -65,38 +69,41 @@ import me.kumatheta.feh.skill.effect.teleport.WingsOfMercy
 import me.kumatheta.feh.skill.passive.BoldFighter3
 import me.kumatheta.feh.skill.passive.DefFeint3
 import me.kumatheta.feh.skill.passive.DullClose3
-import me.kumatheta.feh.skill.passive.DullRange3
+import me.kumatheta.feh.skill.passive.DullRanged3
 import me.kumatheta.feh.skill.passive.Guard
 import me.kumatheta.feh.skill.passive.LiveToServe3
 import me.kumatheta.feh.skill.passive.MysticBoost3
+import me.kumatheta.feh.skill.passive.PanicSmoke3
+import me.kumatheta.feh.skill.passive.PulseSmoke3
+import me.kumatheta.feh.skill.passive.Repel3
 import me.kumatheta.feh.skill.passive.ShieldPulse3
 import me.kumatheta.feh.skill.passive.allLull
 import me.kumatheta.feh.skill.passive.allPush4
 import me.kumatheta.feh.skill.passive.fury
 import me.kumatheta.feh.skill.passive.poisonStrike
-import me.kumatheta.feh.skill.passive.pulseSmoke3
-import me.kumatheta.feh.skill.passive.smoke
+import me.kumatheta.feh.skill.passive.statSmoke
 import me.kumatheta.feh.skill.passive.waryFighter
 import me.kumatheta.feh.skill.passive.windWaterSweep
 import me.kumatheta.feh.skill.passive.wrath
 import me.kumatheta.feh.statPairSequence
+import me.kumatheta.feh.statSequence
 import me.kumatheta.feh.toStat
 
-fun allSeal() = (1..3).asSequence().flatMap { level ->
+fun allSeal() = (1..2).asSequence().flatMap { level ->
     statPairSequence {
         val name = "Seal ${it.first}/${it.second} $level"
         name to Seal(it.toStat(-(level * 2 + 1)))
     }
 }
 
-fun allBond() = (1..3).asSequence().flatMap {level ->
+fun allBond() = (1..3).asSequence().flatMap { level ->
     statPairSequence {
         val name = "${it.first}/${it.second} Bond $level"
         name to bond(it.toStat(2 + level))
     }
 }
 
-fun allSolo() = (1..3).asSequence().flatMap {level ->
+fun allSolo() = (1..3).asSequence().flatMap { level ->
     statPairSequence {
         val name = "${it.first}/${it.second} Solo $level"
         name to solo(it.toStat(2 * level))
@@ -104,7 +111,26 @@ fun allSolo() = (1..3).asSequence().flatMap {level ->
 }
 
 fun allSavageBlow() = (1..3).asSequence().map { level ->
-    "Savage Blow $level" to SavageBlow(1+2*level)
+    "Savage Blow $level" to SavageBlow(1 + 2 * level)
+}
+
+fun dualStat() = statPairSequence {
+    val name = "${it.first}/${it.second} 2"
+    name to it.toStat(2).toExtraStat()
+}
+
+fun allOpening() = (1..3).asSequence().flatMap { level ->
+    statPairSequence {
+        val name = "${it.first}/${it.second} Gap $level"
+        name to Opening(it.toStat(-1 + 2 * level)) { unit ->
+            unit.visibleStat[it.first] + unit.visibleStat[it.second]
+        }
+    } + statSequence {
+        val name = "$it Opening $level"
+        name to Opening(it.toStat(1 + 2 * level)) { unit ->
+            unit.visibleStat[it]
+        }
+    }
 }
 
 fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
@@ -112,8 +138,13 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
         allSolo() +
         allLull() +
         allSavageBlow() +
+        allForm() +
+        dualStat() +
+        allThreaten() +
+        allOpening() +
         sequenceOf(
             "Upheaval" to Upheaval,
+            "Impenetrable Dark" to DisableFoeAllySupportEffectBasic,
             "Close Counter" to CounterAnyRangeBasic,
             "Distant Counter" to CounterAnyRangeBasic,
 
@@ -140,9 +171,9 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
 
             "Guidance 3" to Guidance3,
 
-            "Spd Smoke 3" to smoke(spd = -7),
-            "Def Smoke 3" to smoke(def = -7),
-            "Res Smoke 3" to smoke(res = -7),
+            "Spd Smoke 3" to statSmoke(spd = -7),
+            "Def Smoke 3" to statSmoke(def = -7),
+            "Res Smoke 3" to statSmoke(res = -7),
 
             "Spd Tactics 3" to tactics(spd = 6),
             "Def Tactics 3" to tactics(def = 6),
@@ -202,9 +233,6 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
             "Even Res Wave 3" to wave(res = 6, oddTurn = false),
 
             "Infantry Pulse 3" to InfantryPulse(minDiff = 1),
-            "Threaten Def 3" to threaten(def = -5),
-            "Threaten Res 3" to threaten(res = -5),
-            "Threaten Atk 3" to threaten(atk = -5),
 
             "Pass 3" to Pass(percentageHp = 25),
             "Obstruct 3" to Obstruct(percentageHp = 25),
@@ -214,12 +242,10 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
             "Res +3" to Stat(res = 3).toExtraStat(),
             "Fortress Res 3" to Stat(atk = -3, res = 5).toExtraStat(),
             "Fortress Def 3" to Stat(atk = -3, def = 5).toExtraStat(),
+            "Fort. Def/Res 2" to Stat(atk= -3, def= 4, res =4).toExtraStat(),
             "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStat(),
             "B Duel Flying 3" to Stat(hp = 5).toExtraStat(),
             "HP/Atk 2" to Stat(hp = 4, atk = 2).toExtraStat(),
-            "Atk/Spd 2" to Stat(atk = 2, spd = 2).toExtraStat(),
-            "Atk/Res 2" to Stat(atk = 2, res = 2).toExtraStat(),
-            "Spd/Def 2" to Stat(spd = 2, def = 2).toExtraStat(),
             "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStat(),
 
             "Spur Atk/Spd 1" to spur(atk = 2, spd = 2),
@@ -230,15 +256,17 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
             "Spur Spd 1" to spur(spd = 2),
             "Spur Spd 2" to spur(spd = 3),
             "Spur Spd 3" to spur(spd = 4),
-            "Earth Boost 3" to boost(def = 6),
-            "Wind Boost 3" to boost(spd = 6),
             "Fire Boost 3" to boost(atk = 6),
+            "Wind Boost 3" to boost(spd = 6),
+            "Earth Boost 3" to boost(def = 6),
+            "Water Boost 3" to boost(res = 6),
             "Distant Guard 3" to distantGuard(Stat(def = 4, res = 4)),
             "Close Guard 3" to closeGuard(Stat(def = 4, res = 4)),
 
             "Heavy Blade 3" to HeavyBlade3,
             "Flashing Blade 3" to FlashingBlade3,
-            "Pulse Smoke 3" to pulseSmoke3,
+            "Pulse Smoke 3" to PulseSmoke3,
+            "Panic Smoke 3" to PanicSmoke3,
             "Renewal 3" to Renewal(2),
             "Escape Route 3" to EscapeRoute(50),
             "Wings of Mercy 3" to WingsOfMercy(50),
@@ -247,7 +275,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
             "Guard 3" to Guard(percentageHp = 80),
             "Triangle Adept 3" to TriangleAdept(20),
             "Dull Close 3" to DullClose3,
-            "Dull Range 3" to DullRange3,
+            "Dull Ranged 3" to DullRanged3,
             "Iote's Shield" to NeutralizeEffectiveAgainstMovement(MoveType.FLYING),
 
             "Def Feint 3" to DefFeint3,
@@ -262,9 +290,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
             "Aerobatics 3" to Aerobatics3,
             "Flier Formation 3" to FlierFormation3,
             "Air Orders 3" to AirOrder3,
-            "Atk Opening 3" to opening(atk = 6) {
-                it.visibleStat.atk
-            }
+            "Even Pulse Tie 3" to PulseTie(1, evenNumberedTurn = true)
         )
 
 fun mixedEffectSkills(): Sequence<Pair<String, Skill>> = allPush4() + sequenceOf(
@@ -283,7 +309,8 @@ fun mixedEffectSkills(): Sequence<Pair<String, Skill>> = allPush4() + sequenceOf
     "Fury 3" to fury(3),
     "Mystic Boost 3" to MysticBoost3,
     "Shield Pulse 3" to ShieldPulse3,
-    "Null Follow-up 3" to NullFollowUp3
+    "Null Follow-up 3" to NullFollowUp3,
+    "Repel 3" to Repel3
 )
 
 val ALL_PASSIVES = (singleEffectSkills().map { it.first to it.second.toSkill() } + mixedEffectSkills()).toSkillMap()

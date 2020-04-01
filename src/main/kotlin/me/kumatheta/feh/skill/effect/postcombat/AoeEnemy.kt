@@ -41,3 +41,9 @@ val trilemmaEffect = aoeNegativeStatus(
     range = 2,
     applyToTarget = true
 )
+
+val panicEffect = aoeNegativeStatus(
+    negativeStatus = NegativeStatus.PANIC,
+    range = 2,
+    applyToTarget = true
+)

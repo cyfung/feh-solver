@@ -20,7 +20,7 @@ object DullClose3 : EffectOnFoe {
     }
 }
 
-object DullRange3 : EffectOnFoe {
+object DullRanged3 : EffectOnFoe {
     override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<InCombatSkillEffect> {
         return if (combatStatus.foe.weaponType.isRanged) {
             sequenceOf(NEUTRALIZE_ALL_STAT)
