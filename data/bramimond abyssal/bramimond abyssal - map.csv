@@ -1,0 +1,9 @@
+size,6,8,4,,
+R,R,W,W,A17,R12.14
+DR5,R,W,W,A,R
+R6.11,W,W,R,A,R
+R,R,W,R1,R2,R
+R,R,W,R3,A,R
+R,R,R4,R,A,R
+R7,R,R,R,A,R
+R8.15,W,W,R9.16,A18,R10.13

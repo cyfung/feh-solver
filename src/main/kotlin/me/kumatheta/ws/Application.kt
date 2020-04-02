@@ -22,8 +22,6 @@ import me.kumatheta.feh.UnitAction
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
 import me.kumatheta.feh.mcts.NormalMove
-import me.kumatheta.feh.mcts.Rearrange
-import me.kumatheta.feh.mcts.TeamSelect
 import me.kumatheta.feh.mcts.tryAndGetDetails
 import me.kumatheta.feh.message.Action
 import me.kumatheta.feh.message.MoveSet
@@ -51,10 +49,35 @@ private val jobConfig = FehJobConfig(
 //    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
 //    scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
     scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
-    mapName = "bramimond infernal",
+    mapName = "bramimond abyssal",
 //    phaseLimit = 7,
-//    canRearrange = false,
-    parallelCount = 4
+    canRearrange = false,
+    parallelCount = 4,
+    suggestedMoves = sequenceOf(
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 3, moveTargetY = 1)),
+        NormalMove(MoveOnly(heroUnitId = 2, moveTargetX = 4, moveTargetY = 2)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 4, moveTargetY = 1, assistTargetId = 3)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 3, moveTargetY = 2, attackTargetId = 9)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1, attackTargetId = 10)),
+
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 1, attackTargetId = 13)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 4, moveTargetY = 3, attackTargetId = 13)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 5, moveTargetY = 2, assistTargetId = 3)),
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 4, moveTargetY = 1, attackTargetId = 10)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 3)),
+
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 5, moveTargetY = 0, attackTargetId = 16)),
+        NormalMove(MoveAndAttack(heroUnitId = 3, moveTargetX = 5, moveTargetY = 4, attackTargetId = 12)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 5, moveTargetY = 3, assistTargetId = 3)),
+        NormalMove(MoveAndAttack(heroUnitId = 1, moveTargetX = 5, moveTargetY = 5, attackTargetId = 14)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 6)),
+
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 5, moveTargetY = 1, attackTargetId = 18)),
+        NormalMove(MoveAndAssist(heroUnitId = 4, moveTargetX = 5, moveTargetY = 2, assistTargetId = 2)),
+        NormalMove(MoveAndAttack(heroUnitId = 2, moveTargetX = 4, moveTargetY = 2, attackTargetId = 18)),
+        NormalMove(MoveOnly(heroUnitId = 3, moveTargetX = 5, moveTargetY = 4)),
+        NormalMove(MoveAndAssist(heroUnitId = 1, moveTargetX = 5, moveTargetY = 3, assistTargetId = 3))
+    )
 //    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)

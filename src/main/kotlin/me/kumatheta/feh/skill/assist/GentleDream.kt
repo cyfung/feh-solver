@@ -2,6 +2,7 @@ package me.kumatheta.feh.skill.assist
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit
+import me.kumatheta.feh.PositiveStatus
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.skill.allies
 import me.kumatheta.feh.skill.inCardinalDirection
@@ -19,6 +20,7 @@ object GentleDream : Refresh() {
             target == it || self.inCardinalDirection(it) || target.inCardinalDirection(it)
         }.forEach {
             it.applyBuff(BUFF)
+            it.addPositiveStatus(PositiveStatus.MOVEMENT_ORDER)
         }
     }
 }

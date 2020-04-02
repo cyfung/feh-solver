@@ -20,10 +20,10 @@ object MoveOrderEffect : TeleportEffect {
     }
 }
 
-object AirOrder3 : StartOfTurnEffect {
+class Orders3(private val isFlying: Boolean) : StartOfTurnEffect {
     override fun onStartOfTurn(battleState: BattleState, self: HeroUnit) {
         self.adjacentAllies(battleState).filter {
-            it.moveType == MoveType.FLYING
+            (it.moveType == MoveType.FLYING) == isFlying
         }.forEach {
             it.addPositiveStatus(PositiveStatus.MOVEMENT_ORDER)
         }

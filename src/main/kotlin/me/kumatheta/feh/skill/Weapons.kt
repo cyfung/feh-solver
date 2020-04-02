@@ -53,6 +53,7 @@ import me.kumatheta.feh.skill.weapon.GrimaTruth
 import me.kumatheta.feh.skill.weapon.HeronWing
 import me.kumatheta.feh.skill.weapon.Hidskjalf
 import me.kumatheta.feh.skill.weapon.Leiptr
+import me.kumatheta.feh.skill.weapon.LightOfDawn
 import me.kumatheta.feh.skill.weapon.Lyfjaberg
 import me.kumatheta.feh.skill.weapon.PanicPlus
 import me.kumatheta.feh.skill.weapon.Ragnarok
@@ -185,7 +186,8 @@ val FIXED_WEAPONS = sequenceOf(
     "Fell Breath" to FellBreath,
     "Heron Wing" to HeronWing,
     "Void Tome" to VoidTome,
-    "Scythe of Sariel" to ScytheOfSariel
+    "Scythe of Sariel" to ScytheOfSariel,
+    "Light of Dawn" to LightOfDawn
 )
 val ALL_WEAPONS: SkillMap<BasicWeapon> = (FIXED_WEAPONS + STANDARD_REFINABLE_WEAPONS).toSkillMap()
 val BASIC_REFINABLE_WEAPONS = (nonStandardRefinableWeapons() + STANDARD_REFINABLE_WEAPONS).toSkillMap()

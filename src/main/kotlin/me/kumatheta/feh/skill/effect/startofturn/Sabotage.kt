@@ -16,7 +16,7 @@ class Sabotage(private val stat: Stat) : StartOfTurnEffect {
                 heroUnit.team == foe.team
             }
         }.forEach {
-            it.applyDebuff(stat)
+            it.cachedEffect.applyDebuff(stat)
         }
     }
 }

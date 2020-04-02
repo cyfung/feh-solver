@@ -28,9 +28,9 @@ abstract class Dragon(color: Color) : WeaponType(color, false, true)
 
 val allDragonType = listOf(DragonR, DragonG, DragonB, DragonC)
 
-object DaggerR : Bow(Color.RED)
-object DaggerB : Bow(Color.BLUE)
-object DaggerG : Bow(Color.GREEN)
+object DaggerR : Dagger(Color.RED)
+object DaggerB : Dagger(Color.BLUE)
+object DaggerG : Dagger(Color.GREEN)
 object DaggerC : Dagger(Color.COLORLESS), FreeColorWeapon {
     override fun toColor(color: Color): WeaponType {
         return when (color) {

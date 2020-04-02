@@ -1,0 +1,5 @@
+id,spawn time,group,engage delay,CD,name,image name,move type,hp,atk,spd,def,res,weapon,Modifier,Color,assist,special,passives,,
+1,,,,,Micaiah,Micaiah - CYL,FLYING,36,52,28,17,41,Light of Dawn,,,Sacrifice,,Atk/Res Bond 4,Yune's Whispers,Ground Orders 3
+3,,,,,Eir,,FLYING,35,46,37,14,34,Lyfjaberg,,,,Iceberg,Swift Sparrow 2,Mystic Boost 3,Sparkling Boost, Spd/Res Bond 1
+2,,,,,Ike,Ike - Legendary,INFANTRY,41,52,30,35,21,Ragnell,,,,Radiant Aether,Warding Breath,Seal Atk/Def 2,Def Tactics 3,Atk/Def Bond 1
+4,,,,,Peony,,FLYING,43,45,36,16,27,Flower of Joy,,,Gentle Dream,,B Duel Flying 3,Aerobatics 3,Fortify Res 4,Spur Spd 2

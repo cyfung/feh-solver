@@ -11,6 +11,7 @@ import me.kumatheta.feh.skill.assist.Recover
 import me.kumatheta.feh.skill.assist.RecoverPlus
 import me.kumatheta.feh.skill.assist.Refresh
 import me.kumatheta.feh.skill.assist.RestorePlus
+import me.kumatheta.feh.skill.assist.Sacrifice
 import me.kumatheta.feh.skill.assist.movement.DrawBack
 import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.assist.movement.Reposition
@@ -39,6 +40,7 @@ val ALL_ASSISTS = (
             "Sing" to Refresh(),
             "Play" to Refresh(),
             "Rally Up Atk+" to RallyUp(Stat(atk = 6)),
+            "Sacrifice" to Sacrifice,
 
             "Gentle Dream" to GentleDream,
             "Rally Atk/Spd" to Rally(Stat(atk = 3, spd = 3)),

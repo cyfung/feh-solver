@@ -87,7 +87,9 @@ fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> FehJobConfig<S, M>
         playerCount = positionMap.playerIds.size
     )
     startingMoves?.forEach {
-        require(board.moves.contains(it))
+        require(board.moves.contains(it)) {
+            "$it not exists"
+        }
         board = board.applyMove(it)
     }
 
