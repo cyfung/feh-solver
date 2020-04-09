@@ -1,0 +1,15 @@
+id,spawn time,group,engage delay,CD,name,image name,move type,hp,atk,spd,def,res,weapon,Modifier,Color,assist,special,passives,,,
+5,1,,,,Red Fafnir,Manakete Winged - Red,FLYING,39,42,39,32,24,Dark Breath+,,R,,,Atk/Def Solo 3,Odd Spd Wave 3,Armored Blow 3,
+6,1,,,,Axe Knight,Armor - Axe,ARMORED,55,52,16,40,19,Slaying Axe+,,,,Moonbow,Steady Stance 3,Wary Fighter 3,Distant Def 3,
+7,1,,,,Axe Cavalier,Knight - Axe,CAVALRY,41,51,22,25,30,Firesweep Axe+,,,,,Death Blow 3,Guard 3,Odd Atk Wave 3,Sturdy Blow 2
+8,1,,,,Lance Fighter,Fighter - Lance,INFANTRY,44,43,31,30,22,Sapphire Lance+,,,,,Death Blow 3,Sword Breaker 3,,
+9,1,,,,Sword Flier,Pegasus Knight - Sword,FLYING,37,45,40,27,36,Ruby Sword+,,,,,Fury 3,Axe Breaker 3,Atk Smoke 3,Atk/Spd 2
+10,1,,,,Red Cavalier,Knight - Red Tome,CAVALRY,33,47,31,14,34,Raudrserpent+,,,,,Spd +3,Sword Breaker 3,Seal Atk 3,
+11,2,,,,Sword Knight,Armor - Sword,ARMORED,55,49,11,37,19,Brave Sword+,,,,,Triangle Adept 3,Wary Fighter 3,Even Res Wave 3,Hone Atk 3
+12,2,,,,Sword Cavalier,Knight - Sword,CAVALRY,41,52,27,28,30,Ruby Sword+,,,,,Fury 3,Spur Def 3,Close Def 3,
+13,2,,,,Blue Fafnir,Manakete Winged - Blue,FLYING,39,44,36,32,27,Flametongue+,,B,,,Triangle Adept 3,Guard 3,Close Guard 3,Spur Atk 3
+14,2,,,,Lance Knight,Armor - Lance,ARMORED,55,55,16,37,19,Slaying Lance+,,,,Luna,Death Blow 3,Bold Fighter 3,Armor March 3,Warding Stance 3
+15,3,,,,Blue Flier,Pegasus Knight - Blue Tome,FLYING,34,45,37,16,29,Blarblade+,,,,,Triangle Adept 3,Chill Res 3,Odd Atk Wave 3,Atk/Spd Bond 3
+16,3,,,,Sword Knight,Armor - Sword,ARMORED,55,53,16,40,19,Firesweep Sword+,,,,,Axe Breaker 3,Even Res Wave 3,Armored Boots,
+17,3,,,,Green Fafnir,Manakete Winged - Green,FLYING,39,39,33,37,30,Light Breath+,,G,,,Atk/Def Solo 3,Odd Def Wave 3,Fortress Def 3,
+18,3,,,,Axe Cavalier,Knight - Axe,CAVALRY,41,54,29,20,25,Firesweep Axe+,,,,,Life and Death 3,Chill Atk 3,Drive Def 2,

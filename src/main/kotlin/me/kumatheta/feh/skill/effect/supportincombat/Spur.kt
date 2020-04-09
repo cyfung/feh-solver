@@ -21,10 +21,3 @@ class Spur(private val buff: InCombatSkillEffect) : InCombatSupport {
 }
 
 fun spur(stat: Stat): InCombatSupport = Spur(stat.toInCombatStatEffect())
-
-fun spur(
-    atk: Int = 0,
-    spd: Int = 0,
-    def: Int = 0,
-    res: Int = 0
-) = spur(Stat(atk = atk, spd = spd, def = def, res = res))

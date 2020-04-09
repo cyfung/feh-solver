@@ -17,6 +17,7 @@ import me.kumatheta.feh.skill.assist.movement.Pivot
 import me.kumatheta.feh.skill.assist.movement.Reposition
 import me.kumatheta.feh.skill.assist.movement.Shove
 import me.kumatheta.feh.skill.assist.movement.Smite
+import me.kumatheta.feh.skill.assist.movement.Swap
 import me.kumatheta.feh.skill.assist.movement.ToChangeFate
 import me.kumatheta.feh.statPairSequence
 import me.kumatheta.feh.toStat
@@ -49,6 +50,7 @@ val ALL_ASSISTS = (
             "Shove" to Shove,
             "Smite" to Smite,
             "Pivot" to Pivot,
+            "Swap" to Swap,
             "To Change Fate!" to ToChangeFate
         )
         ).toSkillMap()

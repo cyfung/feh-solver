@@ -3,15 +3,15 @@ package me.kumatheta.feh.skill.weapon
 import me.kumatheta.feh.AttackerDefenderPair
 import me.kumatheta.feh.MagicB
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.*
+import me.kumatheta.feh.skill.basic
 import me.kumatheta.feh.skill.effect.InCombatSkillEffect
-import me.kumatheta.feh.skill.effect.InCombatStatEffect
 import me.kumatheta.feh.skill.effect.InCombatStatEffectBasic
 import me.kumatheta.feh.skill.effect.InCombatSupport
 import me.kumatheta.feh.skill.effect.InCombatSupportInput
-import me.kumatheta.feh.skill.effect.SkillEffect
 import me.kumatheta.feh.skill.effect.emptyAttackerDefenderSequences
 import me.kumatheta.feh.skill.effect.forAlly
+import me.kumatheta.feh.skill.inCardinalDirection
+import me.kumatheta.feh.skill.plus
 
 private val BUFF = InCombatStatEffectBasic(Stat(atk = 3, spd = 3))
 

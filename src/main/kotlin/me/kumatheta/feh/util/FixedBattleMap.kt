@@ -19,6 +19,9 @@ class FixedBattleMap(
 
     private val terrainMap: Map<Position, Terrain> = delegate.terrainMap.toMap()
     override val chessPieceMap = delegate.toChessPieceMap(playerUnits).toMap()
+    override val engaged: Boolean = chessPieceMap.values.asSequence().filterIsInstance<HeroUnit>().any {
+        it.engaged
+    }
     override val reinforceByTime = delegate.reinforceByTime.asSequence().associate { it.key to it.value.toList() }
 
     override val enemyCount: Int = delegate.enemyCount

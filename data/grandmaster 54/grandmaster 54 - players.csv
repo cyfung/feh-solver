@@ -1,0 +1,5 @@
+id,spawn time,group,engage delay,CD,name,image name,move type,hp,atk,spd,def,res,weapon,Modifier,Color,assist,special,passives,,
+1,,,,,Laevatein,,INFANTRY,39,59,34,37,25,Laevatein,,,Swap,,Fury 3,Atk/Def Link 3,Odd Spd Wave 3
+2,,,,,Helbindi,,INFANTRY,49,51,18,35,31,Byleistr,,,,Vengeance,HP +5,Guard 3,
+3,,,,,Loki,,INFANTRY,42,47,35,16,25,Thokk,,,Restore+,Earthwater Balm+,Odd Atk Wave 3,,
+4,,,,,Laegjarn,,FLYING,46,48,39,36,17,Niu,,,,Bonfire,R Duel Flying 3,Distant Guard 3,

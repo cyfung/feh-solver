@@ -68,7 +68,7 @@ fun BattleState.calculateHeroBattleScore(config: FehBoardConfig): Long {
 
 fun UnitAction.toRating(config: FehBoardConfig): Int {
     val assist = config.assistMap[heroUnitId]
-    return if (assist is Refresh) {
+    return if (assist is Refresh || assist is Heal) {
         when (this) {
             is MoveAndAssist -> {
                 3

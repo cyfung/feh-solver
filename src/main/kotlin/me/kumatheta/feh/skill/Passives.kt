@@ -8,7 +8,6 @@ import me.kumatheta.feh.MoveType
 import me.kumatheta.feh.NegativeStatus
 import me.kumatheta.feh.Stat
 import me.kumatheta.feh.StatType
-import me.kumatheta.feh.Sword
 import me.kumatheta.feh.get
 import me.kumatheta.feh.skill.assist.movement.DrawBackEffect
 import me.kumatheta.feh.skill.assist.movement.HitAndRunEffect
@@ -71,7 +70,9 @@ import me.kumatheta.feh.skill.effect.teleport.FlierFormation3
 import me.kumatheta.feh.skill.effect.teleport.Guidance3
 import me.kumatheta.feh.skill.effect.teleport.WingsOfMercy
 import me.kumatheta.feh.skill.passive.BoldFighter3
-import me.kumatheta.feh.skill.passive.DefFeint3
+import me.kumatheta.feh.skill.effect.assist.DefFeint3
+import me.kumatheta.feh.skill.effect.assist.Link
+import me.kumatheta.feh.skill.effect.startofturn.ArmoredBoots
 import me.kumatheta.feh.skill.passive.DullClose3
 import me.kumatheta.feh.skill.passive.DullRanged3
 import me.kumatheta.feh.skill.passive.Guard
@@ -93,52 +94,104 @@ import me.kumatheta.feh.statPairSequence
 import me.kumatheta.feh.statSequence
 import me.kumatheta.feh.toStat
 
-fun allSeal() = (1..2).asSequence().flatMap { level ->
-    statPairSequence {
-        val name = "Seal ${it.first}/${it.second} $level"
-        name to Seal(it.toStat(-(level * 2 + 1)))
+val linkSkills
+    get() = (1..3).asSequence().flatMap { level ->
+        statPairSequence {
+            val name = "${it.first}/${it.second} Link $level"
+            name to Link(it.toStat(level * 2))
+        }
+    }
+
+val sealSkills
+    get() = (1..2).asSequence().flatMap { level ->
+        statPairSequence {
+            val name = "Seal ${it.first}/${it.second} $level"
+            name to Seal(it.toStat(-(level * 2 + 1)))
+        }
+    } + (1..3).asSequence().flatMap { level ->
+        statSequence {
+            val name = "Seal $it $level"
+            name to Seal(it.toStat(-(level * 2 + 1)))
+        }
+    }
+
+val duelSkills = sequenceOf("R", "G", "B").flatMap {color ->
+    sequenceOf("Flying", "Infantry").map {
+        "$color Duel $it 3" to Stat(hp = 5).toExtraStat()
     }
 }
 
-fun allBond() = (1..3).asSequence().flatMap { level ->
-    statPairSequence {
-        val name = "${it.first}/${it.second} Bond $level"
-        name to bond(it.toStat(2 + level))
+val bondSkills
+    get() = (1..3).asSequence().flatMap { level ->
+        statPairSequence {
+            val name = "${it.first}/${it.second} Bond $level"
+            name to bond(it.toStat(2 + level))
+        }
     }
-}
 
-fun allBond4() = statPairSequence {
-    val name = "${it.first}/${it.second} Bond 4"
-    val list = it.toList()
-    name to skillEffects(
-        bond(it.toStat(7)),
-        object : NeutralizePenalty {
-            override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<StatType> {
-                return if (combatStatus.self.adjacentAllies(combatStatus.battleState).any()) {
-                    list.asSequence()
-                } else {
-                    emptySequence()
+val bond4Skills
+    get() = statPairSequence {
+        val name = "${it.first}/${it.second} Bond 4"
+        val list = it.toList()
+        name to skillEffects(
+            bond(it.toStat(7)),
+            object : NeutralizePenalty {
+                override fun apply(combatStatus: CombatStatus<HeroUnit>): Sequence<StatType> {
+                    return if (combatStatus.self.adjacentAllies(combatStatus.battleState).any()) {
+                        list.asSequence()
+                    } else {
+                        emptySequence()
+                    }
                 }
             }
-        }
-    ).toSkill()
-}
-
-fun allSolo() = (1..3).asSequence().flatMap { level ->
-    statPairSequence {
-        val name = "${it.first}/${it.second} Solo $level"
-        name to solo(it.toStat(2 * level))
+        ).toSkill()
     }
-}
 
-fun allSavageBlow() = (1..3).asSequence().map { level ->
-    "Savage Blow $level" to SavageBlow(1 + 2 * level)
-}
+val soloSkills
+    get() = (1..3).asSequence().flatMap { level ->
+        statPairSequence {
+            val name = "${it.first}/${it.second} Solo $level"
+            name to solo(it.toStat(2 * level))
+        }
+    }
 
-fun dualStat() = statPairSequence {
-    val name = "${it.first}/${it.second} 2"
-    name to it.toStat(2).toExtraStat()
-}
+val savageBlowSkills
+    get() = (1..3).asSequence().map { level ->
+        "Savage Blow $level" to SavageBlow(1 + 2 * level)
+    }
+
+val dualStats
+    get() = statPairSequence {
+        val name = "${it.first}/${it.second} 2"
+        name to it.toStat(2).toExtraStat()
+    }
+
+val singleStats
+    get() = statSequence {
+        val name = "$it +3"
+        name to it.toStat(3).toExtraStat()
+    }
+
+val spurSkills
+    get() = (1..2).asSequence().flatMap { level ->
+        statPairSequence {
+            val name = "Spur ${it.first}/${it.second} $level"
+            name to spur(it.toStat(level + 1))
+        }
+    } + (1..3).asSequence().flatMap { level ->
+        statSequence {
+            val name = "Spur $it $level"
+            name to spur(it.toStat(level + 1))
+        }
+    }
+
+
+
+val baseBreakers
+    get() = swordAxeLance.map {
+        "${it.javaClass.simpleName} Breaker 3" to breaker(it, 50)
+    }
+
 
 fun allOpening() = (1..3).asSequence().flatMap { level ->
     statPairSequence {
@@ -154,13 +207,17 @@ fun allOpening() = (1..3).asSequence().flatMap { level ->
     }
 }
 
-fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
-        allBond() +
-        allSolo() +
+fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = linkSkills +
+        sealSkills +
+        duelSkills +
+        bondSkills +
+        soloSkills +
         allLull() +
-        allSavageBlow() +
+        savageBlowSkills +
         allForm() +
-        dualStat() +
+        dualStats +
+        singleStats +
+        spurSkills +
         allThreaten() +
         allOpening() +
         sequenceOf(
@@ -181,6 +238,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
 
             "Fierce Stance 3" to stance(atk = 6),
             "Steady Stance 3" to stance(def = 6),
+            "Warding Stance 3" to stance(res = 6),
             "Mirror Stance 2" to stance(atk = 4, res = 4),
             "Steady Posture 2" to stance(spd = 4, def = 4),
             "Bracing Stance 2" to stance(def = 4, res = 4),
@@ -216,6 +274,7 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
             "Vantage 3" to Vantage(75),
             "Desperation 3" to Desperation(75),
             "Armor March 3" to ArmorMarch3,
+            "Armored Boots" to ArmoredBoots,
 
             "Yune's Whispers" to sabotage(atk = -6, spd = -6),
             "Sabotage Atk 3" to sabotage(atk = -7),
@@ -260,25 +319,14 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
             "Pass 3" to Pass(percentageHp = 25),
             "Obstruct 3" to Obstruct(percentageHp = 25),
 
-            "HP+5" to Stat(hp = 5).toExtraStat(),
-            "Atk +3" to Stat(atk = 3).toExtraStat(),
-            "Res +3" to Stat(res = 3).toExtraStat(),
+            "HP +5" to Stat(hp = 5).toExtraStat(),
             "Fortress Res 3" to Stat(atk = -3, res = 5).toExtraStat(),
             "Fortress Def 3" to Stat(atk = -3, def = 5).toExtraStat(),
             "Fort. Def/Res 2" to Stat(atk = -3, def = 4, res = 4).toExtraStat(),
             "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStat(),
-            "B Duel Flying 3" to Stat(hp = 5).toExtraStat(),
             "HP/Atk 2" to Stat(hp = 4, atk = 2).toExtraStat(),
             "Life and Death 3" to Stat(atk = 5, spd = 5, def = -5, res = -5).toExtraStat(),
 
-            "Spur Atk/Spd 1" to spur(atk = 2, spd = 2),
-            "Spur Atk/Spd 2" to spur(atk = 3, spd = 3),
-            "Spur Def/Res 2" to spur(def = 3, res = 3),
-            "Spur Def 3" to spur(def = 4),
-            "Spur Res 3" to spur(res = 4),
-            "Spur Spd 1" to spur(spd = 2),
-            "Spur Spd 2" to spur(spd = 3),
-            "Spur Spd 3" to spur(spd = 4),
             "Fire Boost 3" to boost(atk = 6),
             "Wind Boost 3" to boost(spd = 6),
             "Earth Boost 3" to boost(def = 6),
@@ -317,11 +365,12 @@ fun singleEffectSkills(): Sequence<Pair<String, SkillEffect>> = allSeal() +
         )
 
 fun mixedEffectSkills(): Sequence<Pair<String, Skill>> = allPush4() +
-        allBond4() + sequenceOf(
+        bond4Skills +
+        baseBreakers +
+        sequenceOf(
     "Bold Fighter 3" to BoldFighter3,
     "Warding Breath" to sequenceOf(BreathEffect, stance(res = 4)).toSkill(),
 
-    "Sword Breaker 3" to breaker(Sword, 50),
     "Bow Breaker 3" to breaker(BowC, 50),
     "B Tomebreaker 3" to breaker(MagicB, 50),
 

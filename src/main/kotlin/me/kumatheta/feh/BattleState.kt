@@ -124,7 +124,7 @@ class BattleState private constructor(
         playerDied = 0,
         enemyDied = 0,
         winningTeam = null,
-        engaged = false,
+        engaged = battleMap.engaged,
         recordFirstPlayerDeath = recordFirstPlayerDeath
     )
 

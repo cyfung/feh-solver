@@ -1,4 +1,4 @@
-package me.kumatheta.feh.skill.passive
+package me.kumatheta.feh.skill.effect.assist
 
 import me.kumatheta.feh.BattleState
 import me.kumatheta.feh.HeroUnit

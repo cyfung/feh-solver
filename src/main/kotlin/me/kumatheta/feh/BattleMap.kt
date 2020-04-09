@@ -15,6 +15,7 @@ interface BattleMap {
 }
 
 interface InternalBattleMap {
+    val engaged: Boolean
     val notWallLocations: Map<Position, Terrain>
     val maxPosition: Position
     val size: Position

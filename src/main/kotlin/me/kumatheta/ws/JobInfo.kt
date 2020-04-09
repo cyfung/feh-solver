@@ -219,7 +219,6 @@ private fun MoveType.toMsgMoveType(): MsgMoveType {
 }
 
 fun HeroUnit.toUnitAdded(): UnitAdded {
-    check(currentHp == maxHp)
     return UnitAdded(
         name = name,
         imageName = imageName,

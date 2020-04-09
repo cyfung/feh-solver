@@ -10,6 +10,6 @@ id,spawn time,group,engage delay,CD,name,image name,move type,hp,atk,spd,def,res
 13,2,,,4,Bow Cavalier,Knight - Bow,CAVALRY,57,53,28,30,25,Guard Bow+,Def,,,Blazing Thunder,Close Def 3,Dull Ranged 3,Def Smoke 3
 14,3,,,2,Axe Fighter,Fighter - Axe,INFANTRY,68,53,43,39,27,Slaying Axe+,Spd,,,Bonfire,Fury 3,Repel 3,Panic Ploy 3
 15,3,,,3,Red Mage,Mage - Red Tome,INFANTRY,54,49,40,22,33,Raudrserpent+,Spd,,,Iceberg,Atk/Spd Solo 3,Quick Riposte 3,Atk/Res Gap 3
-16,3,,,2,Lance Flier,Pegasus Knight - Lance,INFANTRY,52,48,38,26,39,Firesweep L+,,,,Moonbow,Death Blow 3,Lunge,Res Smoke 3
+16,3,,,2,Lance Flier,Pegasus Knight - Lance,INFANTRY,52,48,38,26,39,Firesweep Lance+,,,,Moonbow,Death Blow 3,Lunge,Res Smoke 3
 17,4,,,5,Blue Fafnir,Manakete Winged - Blue,FLYING,62,48,40,41,36,Dark Breath+,Atk,B,,Miracle,Fort. Def/Res 2,Guard 3,Threat. Atk/Spd 2
 18,4,,,3,Sword Dragon,Wyvern Knight - Sword,FLYING,57,49,25,39,23,Brave Sword+,,,,Luna,Iote's Shield,Flier Formation 3,Guidance 3

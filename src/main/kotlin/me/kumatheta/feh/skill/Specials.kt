@@ -1,7 +1,26 @@
 package me.kumatheta.feh.skill
 
 import me.kumatheta.feh.Stat
-import me.kumatheta.feh.skill.special.*
+import me.kumatheta.feh.skill.special.Aegis
+import me.kumatheta.feh.skill.special.Aether
+import me.kumatheta.feh.skill.special.Balm
+import me.kumatheta.feh.skill.special.BlazingFlame
+import me.kumatheta.feh.skill.special.BlazingLight
+import me.kumatheta.feh.skill.special.BlazingThunder
+import me.kumatheta.feh.skill.special.BlazingWind
+import me.kumatheta.feh.skill.special.DamageAmplify
+import me.kumatheta.feh.skill.special.Escutcheon
+import me.kumatheta.feh.skill.special.FoeDefResBased
+import me.kumatheta.feh.skill.special.Galeforce
+import me.kumatheta.feh.skill.special.GrowingThunder
+import me.kumatheta.feh.skill.special.HeavenlyLight
+import me.kumatheta.feh.skill.special.HpMissingBased
+import me.kumatheta.feh.skill.special.IceMirror
+import me.kumatheta.feh.skill.special.Imbue
+import me.kumatheta.feh.skill.special.Miracle
+import me.kumatheta.feh.skill.special.SacredCowl
+import me.kumatheta.feh.skill.special.SelfStatBased
+import me.kumatheta.feh.skill.special.Sirius
 
 val ALL_SPECIALS = sequenceOf(
     "Ice Mirror" to IceMirror,
@@ -22,15 +41,16 @@ val ALL_SPECIALS = sequenceOf(
     "Escutcheon" to Escutcheon,
     "Aegis" to Aegis,
 
-    "Windfire Balm+" to Balm(Stat(atk=6,spd=6)),
-    "Fireflood Balm+" to Balm(Stat(atk=6,res=6)),
+    "Windfire Balm+" to Balm(Stat(atk = 6, spd = 6)),
+    "Fireflood Balm+" to Balm(Stat(atk = 6, res = 6)),
+    "Earthwater Balm+" to Balm(Stat(def = 6, res = 6)),
 
     "Imbue" to Imbue,
     "Heavenly Light" to HeavenlyLight,
     "Miracle" to Miracle,
 
-    "Reprisal" to HpMissingBased(2,3, 10),
-    "Vengeance" to HpMissingBased(2,1, 2),
+    "Reprisal" to HpMissingBased(2, 3, 10),
+    "Vengeance" to HpMissingBased(3, 1, 2),
     "Bonfire" to SelfStatBased(3) {
         it.def / 2
     },
