@@ -7,7 +7,8 @@ import me.kumatheta.feh.skill.assist.Heal
 import me.kumatheta.feh.skill.assist.Refresh
 
 data class FehBoardConfig(
-    val phaseLimit: Int,
+    val hardPhaseLimit: Int,
+    val softPhaseLimit: Int,
     val totalPlayerHp: Int,
     val maxTurnBeforeEngage: Int,
     val assistMap: Map<Int, Assist?>,
@@ -17,7 +18,7 @@ data class FehBoardConfig(
 )
 
 fun BattleState.calculateTacticsDrillScore(config: FehBoardConfig): Long {
-    val phaseRemaining = config.phaseLimit - phase
+    val phaseRemaining = config.hardPhaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 2 +
@@ -38,7 +39,7 @@ fun BattleState.calculateTacticsDrillScore(config: FehBoardConfig): Long {
 }
 
 fun BattleState.oldCalculateHeroBattleScore(config: FehBoardConfig): Long {
-    val phaseRemaining = config.phaseLimit - phase
+    val phaseRemaining = config.hardPhaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 600L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 4 +
@@ -52,7 +53,7 @@ fun BattleState.oldCalculateHeroBattleScore(config: FehBoardConfig): Long {
 }
 
 fun BattleState.calculateHeroBattleScore(config: FehBoardConfig): Long {
-    val phaseRemaining = config.phaseLimit - phase
+    val phaseRemaining = config.hardPhaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 7 +
@@ -94,7 +95,7 @@ fun UnitAction.toRating(config: FehBoardConfig): Int {
 }
 
 fun BattleState.toScore(config: FehBoardConfig): Long {
-    val phaseRemaining = config.phaseLimit - phase
+    val phaseRemaining = config.hardPhaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 400L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 3 +
@@ -110,7 +111,7 @@ fun BattleState.toScore(config: FehBoardConfig): Long {
             } else {
                 1300L
             } +
-            if (winningTeam == Team.PLAYER) {
+            if (winningTeam == Team.PLAYER && phase <= config.softPhaseLimit) {
                 5000L
             } else {
                 0L

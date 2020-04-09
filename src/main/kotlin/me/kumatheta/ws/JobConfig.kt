@@ -19,7 +19,8 @@ import kotlin.time.minutes
 data class FehJobConfig<S : Score<FehMove>, M: ScoreManagerFactory<FehMove, S>>(
     val scoreManagerFactory: M,
     val mapName: String,
-    val phaseLimit: Int = 20,
+    val hardPhaseLimit: Int = 25,
+    val softPhaseLimit: Int = 20,
     val maxTurnBeforeEngage: Int = 3,
     val canRearrange: Boolean = true,
     val parallelCount: Int = 20,

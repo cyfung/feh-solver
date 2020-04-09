@@ -21,7 +21,6 @@ import me.kumatheta.feh.Team
 import me.kumatheta.feh.UnitAction
 import me.kumatheta.feh.mcts.FehBoard
 import me.kumatheta.feh.mcts.FehMove
-import me.kumatheta.feh.mcts.NormalMove
 import me.kumatheta.feh.mcts.toRating
 import me.kumatheta.feh.mcts.tryAndGetDetails
 import me.kumatheta.feh.message.Action
@@ -50,9 +49,12 @@ private val jobConfig = FehJobConfig(
 //    scoreManagerFactory = LocalVaryingUCT<FehMove>(1.5).toFactory(),
 //    scoreManagerFactory = DynamicUCTTuned<FehMove>().toFactory(),
     scoreManagerFactory = hybridDynamicUCTTune<FehMove>(), //hybridDynamicUCTTune<FehMove>(),
-    mapName = "sothis infernal",
-//    phaseLimit = 7,
-    parallelCount = 4
+    mapName = "grandmaster 54",
+    hardPhaseLimit = 20,
+    softPhaseLimit = 9,
+    parallelCount = 1,
+    canRearrange = false,
+    toRating = UnitAction::toRating
 //    moveDownCriteria = MoveDownCriteria(null, 1000000, 600000)
 //    toInternalBattleMap = {
 //        NoCacheBattleMap(this)

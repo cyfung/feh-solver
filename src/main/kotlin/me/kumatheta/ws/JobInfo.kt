@@ -75,8 +75,9 @@ fun <S : Score<FehMove>, M : ScoreManagerFactory<FehMove, S>> FehJobConfig<S, M>
     )
     val setupInfo = buildSetupInfo(positionMap, battleMap)
     var board = newFehBoard(
-        phaseLimit,
-        maxTurnBeforeEngage,
+        hardPhaseLimit = hardPhaseLimit,
+        softPhaseLimit = softPhaseLimit,
+        maxTurnBeforeEngage = maxTurnBeforeEngage,
         canRearrange = canRearrange,
         toRating = toRating,
         calculateScore = calculateScore,
@@ -172,7 +173,7 @@ private suspend fun <S : Score<FehMove>> FehJobInfo<S>.runMcts() =
                 "memory used ${(Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
                     .freeMemory()) / 1000_000}"
             )
-            if (testState.winningTeam == Team.PLAYER) {
+            if (testState.winningTeam == Team.PLAYER && testState.phase <= jobConfig.softPhaseLimit) {
                 return@coroutineScope
             }
         }

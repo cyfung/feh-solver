@@ -3,13 +3,13 @@ package me.kumatheta.feh.mcts
 import me.kumatheta.feh.*
 
 fun BattleState.calculateScoreV1(config: FehBoardConfig): Long {
-    return (config.phaseLimit - phase) * 200L / config.phaseLimit +
+    return (config.hardPhaseLimit - phase) * 200L / config.hardPhaseLimit +
             enemyDied * 600L / enemyCount +
             (playerCount - playerDied) * 200L / playerCount
 }
 
 fun BattleState.calculateScoreV2(config: FehBoardConfig): Long {
-    val phaseRemaining = config.phaseLimit - phase
+    val phaseRemaining = config.hardPhaseLimit - phase
     return enemyDied * 500L +
             (playerCount - playerDied) * 500L +
             unitsSeq(Team.PLAYER).sumBy { it.currentHp } * 5 +

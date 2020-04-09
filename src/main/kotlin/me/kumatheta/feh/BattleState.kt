@@ -161,7 +161,7 @@ class BattleState private constructor(
             }
             is MoveAndAttack -> {
                 val target = getUnit(unitAction.attackTargetId)
-                fight(heroUnit, target).first?.team
+                fight(heroUnit, target, ignorePostCombat = false).first?.team
             }
             is MoveAndBreak -> {
                 val obstacle = locationMap[unitAction.obstacle] as Obstacle
@@ -204,11 +204,11 @@ class BattleState private constructor(
         }
     }
 
-    private fun moveAndFight(moveAndAttack: MoveAndAttack): Pair<HeroUnit?, Int> {
+    private fun moveAndFight(moveAndAttack: MoveAndAttack, ignorePostCombat: Boolean): Pair<HeroUnit?, Int> {
         val heroUnit = getUnit(moveAndAttack.heroUnitId)
         move(heroUnit, moveAndAttack.moveTarget)
         val target = getUnit(moveAndAttack.attackTargetId)
-        return fight(heroUnit, target)
+        return fight(heroUnit, target, ignorePostCombat)
     }
 
     private fun turnEnd() {
@@ -615,7 +615,7 @@ class BattleState private constructor(
     private fun List<CooldownChange>.minNegative(property: KProperty1<CooldownChange, Int>) =
         asSequence().map(property).filter { it < 0 }.min() ?: 0
 
-    internal fun fight(attacker: HeroUnit, defender: HeroUnit): Pair<HeroUnit?, Int> {
+    internal fun fight(attacker: HeroUnit, defender: HeroUnit, ignorePostCombat: Boolean): Pair<HeroUnit?, Int> {
         check(attacker.team.foe == defender.team)
         if (attacker.cooldown == 0 && attacker.special is AoeSpecial) {
             val attackerStat = attacker.aoeInCombatStat()
@@ -683,23 +683,25 @@ class BattleState private constructor(
             }
         }
 
-        val allUnits = (allUnits() + attacker + defender).toSet()
-        allUnits.forEach(HeroUnit::cacheOn)
-        potentialDamage.attackerInCombat.skills.postCombat(attackerAttacked)
-        potentialDamage.defenderInCombat.skills.postCombat(defenderAttacked)
-        allUnits.forEach(HeroUnit::endOfCombat)
+        if (!ignorePostCombat) {
+            val allUnits = (allUnits() + attacker + defender).toSet()
+            allUnits.forEach(HeroUnit::cacheOn)
+            potentialDamage.attackerInCombat.skills.postCombat(attackerAttacked)
+            potentialDamage.defenderInCombat.skills.postCombat(defenderAttacked)
+            allUnits.forEach(HeroUnit::endOfCombat)
 
-        if (!attacker.isDead && attacker.cooldown == 0 && attacker.special is PostCombatSpecial) {
-            attacker.special.postCombat(this, attacker)
-            attacker.resetCooldown()
-        }
+            if (!attacker.isDead && attacker.cooldown == 0 && attacker.special is PostCombatSpecial) {
+                attacker.special.postCombat(this, attacker)
+                attacker.resetCooldown()
+            }
 
-        if (!attacker.engaged) {
-            setGroupEngaged(attacker)
-        }
+            if (!attacker.engaged) {
+                setGroupEngaged(attacker)
+            }
 
-        if (!defender.engaged) {
-            setGroupEngaged(defender)
+            if (!defender.engaged) {
+                setGroupEngaged(defender)
+            }
         }
 
         return Pair(deadUnit, potentialDamage.potentialDamage)
@@ -1563,7 +1565,7 @@ class BattleState private constructor(
             val testUnit = testBattle.getUnit(heroUnitId)
             val testFoe = testBattle.getUnit(foeId)
             val moveAndAttack = MoveAndAttack(heroUnitId, movePosition.position, foeId)
-            val (deadUnit, potentialDamage) = testBattle.moveAndFight(moveAndAttack)
+            val (deadUnit, potentialDamage) = testBattle.moveAndFight(moveAndAttack, ignorePostCombat = true)
             val winLoss = when (deadUnit?.team) {
                 heroUnit.team -> WinLoss.LOSS
                 null -> WinLoss.DRAW

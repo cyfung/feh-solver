@@ -171,6 +171,7 @@ fun main() {
     val testMoves = sothisMoves
     var board = newFehBoard(
         20,
+        20,
         3,
         false,
         toRating = UnitAction::toRating,

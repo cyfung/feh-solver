@@ -45,7 +45,8 @@ abstract class FehBoardWithState(
 }
 
 fun newFehBoard(
-    phaseLimit: Int,
+    hardPhaseLimit: Int,
+    softPhaseLimit: Int,
     maxTurnBeforeEngage: Int,
     canRearrange: Boolean = true,
     bossId: Int = 5,
@@ -65,7 +66,8 @@ fun newFehBoard(
         }
 
         val config = FehBoardConfig(
-            phaseLimit = phaseLimit,
+            hardPhaseLimit = hardPhaseLimit,
+            softPhaseLimit = softPhaseLimit,
             totalPlayerHp = totalPlayerHp,
             maxTurnBeforeEngage = maxTurnBeforeEngage,
             assistMap = assistMap,
@@ -78,7 +80,8 @@ fun newFehBoard(
     }
 
     val config = FehBoardConfig(
-        phaseLimit = phaseLimit,
+        hardPhaseLimit = hardPhaseLimit,
+        softPhaseLimit = softPhaseLimit,
         totalPlayerHp = 0,
         maxTurnBeforeEngage = maxTurnBeforeEngage,
         assistMap = emptyMap(),
@@ -253,7 +256,7 @@ class StandardFehBoard(
         } else {
             sequenceOf(stateListener.invoke(state, nextMove))
         }
-        val score = if (config.phaseLimit < state.phase) {
+        val score = if (config.hardPhaseLimit < state.phase) {
             calculateScore(state, move)
         } else {
             if (movementResult.gameEnd || movementResult.teamLostUnit == Team.PLAYER) {
@@ -266,7 +269,7 @@ class StandardFehBoard(
                         stateListener.invoke(state, it)
                     }.asSequence() + stateListener.invoke(state, null)
                 }
-                if (state.playerDied > 0 || state.winningTeam != null || config.phaseLimit < state.phase) {
+                if (state.playerDied > 0 || state.winningTeam != null || config.hardPhaseLimit < state.phase) {
                     calculateScore(state, move)
                 } else if (!state.engaged && state.phase > config.maxTurnBeforeEngage * 2) {
                     0L
