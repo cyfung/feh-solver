@@ -1,15 +1,15 @@
-id,spawn time,name,image name,group,engage delay,CD,move type,weapon,assist,special,hp,atk,spd,def,res,passives,,
-5,1,Sothis,,,4,2,INFANTRY,Sublime Surge,,Sirius,66,54,43,35,30,Atk/Spd Solo 3,Wrath 3,Time's Pulse 3
-6,1,Blue Mage,Knight - Blue Tome,,,3,INFANTRY,Blarowl+*S,,Luna,54,45,37,22,31,Wind Boost 3,Null Follow-up 3,Odd Spd Wave 3
-7,1,Bow Fighter,Fighter - Bow,,,3,INFANTRY,Brave Bow+@C,,Bonfire,59,42,27,32,17,Atk/Def Solo 3,B Tomebreaker 3,Even Atk Wave 3
-8,1,Axe Cavalier,Knight - Axe,,,2,CAVALRY,Wo Gun+*D,,Moonbow,62,51,27,32,33,Sturdy Blow 2,Lunge,Odd Def Wave 3
-9,1,Sword Fighter,Fighter - Sword,,,1,INFANTRY,Slaying Edge+*D,,Sacred Cowl,66,48,34,33,28,Death Blow 3,Guard 3,Infantry Pulse 3
-10,1,Green Mage,Knight - Green Tome,,,2,INFANTRY,Keen Gronnwolf+Eff,,Glimmer,52,46,35,22,31,Fire Boost 3,Poison Strike 3,Res Ploy 3
-11,2,Cleric,Sister - Rod,,,1,INFANTRY,Trilemma+ Dazzling,Restore+,Windfire Balm+,46,43,31,25,38,Spd/Def Solo 3,Live to Serve 3,Atk Ploy 3
-12,2,Sword Knight,Armor - Sword,,,3,ARMORED,Armorsmasher+ Eff,,Draconic Aura,79,56,17,44,21,Death Blow 3,Wary Fighter 3,Armor March 3
-13,2,Axe Knight,Armor - Axe,,,4,ARMORED,Brave Axe+,,Ignis,76,50,12,44,21,Atk/Def Bond 3,Wary Fighter 3,Armor March 3
-14,3,Green Cavalier,Knight - Green Tome,,,3,CAVALRY,Rexcailbur+*A,,Iceberg,47,53,28,18,37,Atk/Spd Solo 3,Poison Strike 3,Spd Smoke 3
-15,3,Sword Cavalier,Knight - Sword,,,2,CAVALRY,Zanbato+ Eff,,Reprisal,60,54,30,31,36,Fury 3,Pass 3,Threaten Def 3
-16,4,Bow Cavailer,Knight - Bow,,,3,CAVALRY,Shining Bow+ *A@C,,Draconic Aura,57,51,24,27,25,Def/Res Solo 3,Chill Res 3,Distant Guard 3
-17,4,Axe Fighter,Fighter - Axe,,,3,INFANTRY,Silver Axe+ *D,,Bonfire,66,50,34,37,24,Heavy Blade 3,Quick Riposte 3,Pulse Smoke 3
-18,4,Lance Fighter,Fighter - Lance,,,5,INFANTRY,Barrier Lance+ *R,Rally Up Atk+,Miracle,66,48,34,33,28,Distant Def 3,Renewal 3,Drive Res 2
+id,spawn time,group,engage delay,CD,name,image name,move type,hp,atk,spd,def,res,weapon,,,assist,special,passives,,
+5,1,,4,2,Sothis,,INFANTRY,66,54,43,35,30,Sublime Surge,,,,Sirius,Atk/Spd Solo 3,Wrath 3,Time's Pulse 3
+6,1,,,3,Blue Mage,Knight - Blue Tome,INFANTRY,54,45,37,22,31,Blarowl+,Spd,,,Luna,Wind Boost 3,Null Follow-up 3,Odd Spd Wave 3
+7,1,,,3,Bow Fighter,Fighter - Bow,INFANTRY,59,42,27,32,17,Brave Bow+,,,,Bonfire,Atk/Def Solo 3,B Tomebreaker 3,Even Atk Wave 3
+8,1,,,2,Axe Cavalier,Knight - Axe,CAVALRY,62,51,27,32,33,Wo Gun+,Def,,,Moonbow,Sturdy Blow 2,Lunge,Odd Def Wave 3
+9,1,,,1,Sword Fighter,Fighter - Sword,INFANTRY,66,48,34,33,28,Slaying Edge+,Def,,,Sacred Cowl,Death Blow 3,Guard 3,Infantry Pulse 3
+10,1,,,2,Green Mage,Knight - Green Tome,INFANTRY,52,46,35,22,31,Keen Gronnwolf+Eff,,,,Glimmer,Fire Boost 3,Poison Strike 3,Res Ploy 3
+11,2,,,1,Cleric,Sister - Rod,INFANTRY,46,43,31,25,38,Trilemma+,Dazzling,,Restore+,Windfire Balm+,Spd/Def Solo 3,Live to Serve 3,Atk Ploy 3
+12,2,,,3,Sword Knight,Armor - Sword,ARMORED,79,56,17,44,21,Armorsmasher+ Eff,,,,Draconic Aura,Death Blow 3,Wary Fighter 3,Armor March 3
+13,2,,,4,Axe Knight,Armor - Axe,ARMORED,76,50,12,44,21,Brave Axe+,,,,Ignis,Atk/Def Bond 3,Wary Fighter 3,Armor March 3
+14,3,,,3,Green Cavalier,Knight - Green Tome,CAVALRY,47,53,28,18,37,Rexcalibur+,Atk,,,Iceberg,Atk/Spd Solo 3,Poison Strike 3,Spd Smoke 3
+15,3,,,2,Sword Cavalier,Knight - Sword,CAVALRY,60,54,30,31,36,Zanbato+ Eff,,,,Reprisal,Fury 3,Pass 3,Threaten Def 3
+16,4,,,3,Bow Cavailer,Knight - Bow,CAVALRY,57,51,24,27,25,Shining Bow+,Atk,,,Draconic Aura,Def/Res Solo 3,Chill Res 3,Distant Guard 3
+17,4,,,3,Axe Fighter,Fighter - Axe,INFANTRY,66,50,34,37,24,Silver Axe+,Def,,,Bonfire,Heavy Blade 3,Quick Riposte 3,Pulse Smoke 3
+18,4,,,5,Lance Fighter,Fighter - Lance,INFANTRY,66,48,34,33,28,Barrier Lance+,Res,,Rally Up Atk+,Miracle,Distant Def 3,Renewal 3,Drive Res 2
