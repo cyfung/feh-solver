@@ -1,6 +1,6 @@
 # feh-solver
 
-This is a project using AI to solve battles in the mobile game Fire Emblem Heroes
+This is a project using MCTS to solve battles in the mobile game Fire Emblem Heroes
 
 You may want to use https://github.com/cyfung/feh-solution-visualized to visualize the AI process
 
